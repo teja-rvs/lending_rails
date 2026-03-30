@@ -80,3 +80,5 @@ gem "rspec-rails", "~> 8.0", groups: [ :development, :test ]
 gem "factory_bot_rails", "~> 6.5", groups: [ :development, :test ]
 gem "shoulda-matchers", "~> 7.0", groups: [ :development, :test ]
 gem "strong_migrations", "~> 2.5", groups: [ :development, :test ]
+
+gem "dotenv-rails", "~> 3.2", groups: [:development, :test]

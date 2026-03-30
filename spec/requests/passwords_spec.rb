@@ -3,6 +3,14 @@ require "rails_helper"
 RSpec.describe "Passwords", type: :request do
   include ActiveJob::TestHelper
 
+  around do |example|
+    original_admin_addresses = ENV["ADMIN_EMAIL_ADDRESSES"]
+    ENV["ADMIN_EMAIL_ADDRESSES"] = "admin@example.com"
+    example.run
+  ensure
+    ENV["ADMIN_EMAIL_ADDRESSES"] = original_admin_addresses
+  end
+
   before do
     ActionMailer::Base.deliveries.clear
     clear_enqueued_jobs
@@ -20,5 +28,33 @@ RSpec.describe "Passwords", type: :request do
     expect(ActionMailer::Base.deliveries.size).to eq(1)
     expect(ActionMailer::Base.deliveries.last.to).to contain_exactly(user.email_address)
     expect(ActionMailer::Base.deliveries.last.body.encoded).to match(%r{http://example\.com/passwords/.+/edit})
+  end
+
+  it "renders the reset form without requiring an authenticated admin session" do
+    user = create(:user, email_address: "admin@example.com")
+
+    get edit_password_path(user.password_reset_token)
+
+    expect(response).to have_http_status(:ok)
+  end
+
+  it "updates the password and invalidates existing sessions without requiring an authenticated admin session" do
+    user = create(:user, email_address: "admin@example.com")
+    session_record = user.sessions.create!(user_agent: "RSpec", ip_address: "127.0.0.1")
+
+    patch password_path(user.password_reset_token), params: {
+      password: "new-password123!",
+      password_confirmation: "new-password123!"
+    }
+
+    expect(response).to redirect_to(new_session_path)
+    expect(user.reload.authenticate("new-password123!")).to be_truthy
+    expect(Session.exists?(session_record.id)).to be(false)
+  end
+
+  it "redirects invalid reset tokens back to the request form" do
+    get edit_password_path("invalid-token")
+
+    expect(response).to redirect_to(new_password_path)
   end
 end

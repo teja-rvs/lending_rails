@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   include Pundit::Authorization
 
   before_action :set_paper_trail_whodunnit
+  before_action :require_admin_user!
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
@@ -12,6 +13,17 @@ class ApplicationController < ActionController::Base
   rescue_from Pundit::NotAuthorizedError, with: :render_not_authorized
 
   private
+    def require_admin_user!
+      return if Current.user&.admin?
+
+      terminate_session if Current.session.present?
+      redirect_to main_app.new_session_path, alert: workspace_access_denied_message
+    end
+
+    def workspace_access_denied_message
+      "You are not authorized to access the lending workspace."
+    end
+
     def pundit_user
       Current.user
     end
@@ -21,6 +33,6 @@ class ApplicationController < ActionController::Base
     end
 
     def render_not_authorized
-      redirect_to root_path, alert: "You are not authorized to access that area."
+      redirect_to main_app.root_path, alert: "You are not authorized to access that area."
     end
 end

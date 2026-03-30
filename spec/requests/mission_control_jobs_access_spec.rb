@@ -9,12 +9,35 @@ RSpec.describe "Mission Control Jobs access", type: :request do
     ENV["ADMIN_EMAIL_ADDRESSES"] = original_admin_addresses
   end
 
-  it "rejects signed-in non-admin operators" do
+  def set_signed_session_cookie(session_record)
+    cookie_jar = ActionDispatch::Cookies::CookieJar.build(ActionDispatch::TestRequest.create(Rails.application.env_config), {})
+    cookie_jar.signed[:session_id] = session_record.id
+    cookies[:session_id] = cookie_jar[:session_id]
+  end
+
+  it "redirects unauthenticated visitors to sign in" do
+    get "/jobs"
+
+    expect(response).to redirect_to("/session/new")
+  end
+
+  it "rejects persisted non-admin operator sessions" do
     user = create(:user, email_address: "operator@example.com")
+    session_record = user.sessions.create!(user_agent: "RSpec", ip_address: "127.0.0.1")
+
+    set_signed_session_cookie(session_record)
+    get "/jobs"
+
+    expect(response).to redirect_to("/session/new")
+    expect(Session.exists?(session_record.id)).to be(false)
+  end
+
+  it "allows signed-in admins to access Mission Control Jobs" do
+    user = create(:user, email_address: "admin@example.com")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
     get "/jobs"
 
-    expect(response).to redirect_to(root_path)
+    expect(response).to have_http_status(:ok)
   end
 end

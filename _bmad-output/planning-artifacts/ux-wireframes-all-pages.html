@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lending_rails - Wireframes</title>
+    <style>
+      :root {
+        --bg: #f3f5f7;
+        --paper: #ffffff;
+        --line: #cfd6dd;
+        --line-strong: #9ea8b4;
+        --text: #24313f;
+        --muted: #647286;
+        --panel: #eef2f5;
+        --panel-2: #e5eaef;
+        --shadow: 0 16px 36px rgba(30, 41, 59, 0.08);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--text);
+        background: linear-gradient(180deg, #fbfcfd 0%, var(--bg) 100%);
+      }
+
+      .page {
+        width: min(1600px, calc(100vw - 40px));
+        margin: 0 auto;
+        padding: 28px 0 60px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.35fr 0.95fr;
+        gap: 22px;
+        margin-bottom: 24px;
+      }
+
+      .hero-card,
+      .legend,
+      .wireframe-card {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        border-radius: 26px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero-card,
+      .legend {
+        padding: 26px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #dde6ef;
+        color: #2e4660;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      h1 {
+        margin: 14px 0 10px;
+        font-size: clamp(34px, 5vw, 60px);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .summary-grid {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .summary-box {
+        padding: 14px;
+        border-radius: 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .summary-box strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #3c4f64;
+      }
+
+      .legend ul {
+        margin: 14px 0 0;
+        padding-left: 20px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .wireframes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+      }
+
+      .wireframe-card {
+        padding: 20px;
+      }
+
+      .wireframe-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+        margin-bottom: 14px;
+      }
+
+      .wireframe-head h2 {
+        margin: 0 0 6px;
+        font-size: 24px;
+        letter-spacing: -0.03em;
+      }
+
+      .page-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 88px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        color: #42546a;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .head-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .meta {
+        padding: 12px;
+        border-radius: 14px;
+        background: #f7f9fb;
+        border: 1px solid var(--line);
+      }
+
+      .meta strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #526273;
+      }
+
+      .mockup {
+        min-height: 610px;
+        overflow: hidden;
+        border-radius: 24px;
+        border: 1px dashed var(--line-strong);
+        background:
+          linear-gradient(180deg, #fdfefe 0%, #f2f6f9 100%);
+      }
+
+      .shell {
+        display: grid;
+        min-height: 610px;
+      }
+
+      .sidebar {
+        background: #eef3f7;
+        border-right: 1px solid var(--line);
+        padding: 22px 18px;
+      }
+
+      .brand {
+        height: 16px;
+        width: 140px;
+        border-radius: 999px;
+        background: #d9e2ea;
+        margin-bottom: 26px;
+      }
+
+      .nav-item {
+        height: 14px;
+        border-radius: 999px;
+        background: #dfe6ec;
+        margin-bottom: 14px;
+      }
+
+      .nav-item.active {
+        background: #c7d3df;
+      }
+
+      .content {
+        padding: 22px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        gap: 14px;
+      }
+
+      .title-line {
+        height: 18px;
+        width: 240px;
+        border-radius: 999px;
+        background: #cfd9e2;
+      }
+
+      .sub-line {
+        height: 10px;
+        width: 320px;
+        border-radius: 999px;
+        background: #e1e8ee;
+        margin-top: 10px;
+      }
+
+      .button {
+        height: 38px;
+        min-width: 120px;
+        border-radius: 12px;
+        background: #d8e0e8;
+        border: 1px solid #c5d0db;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .metric {
+        padding: 14px;
+        border-radius: 18px;
+        background: var(--paper);
+        border: 1px solid var(--line);
+      }
+
+      .metric-label,
+      .small-line,
+      .tiny-line {
+        border-radius: 999px;
+        background: #dfe6ec;
+      }
+
+      .metric-label {
+        height: 9px;
+        width: 88px;
+        margin-bottom: 10px;
+      }
+
+      .metric-value {
+        height: 24px;
+        width: 72px;
+        border-radius: 10px;
+        background: #ced8e2;
+        margin-bottom: 10px;
+      }
+
+      .small-line {
+        height: 9px;
+        width: 120px;
+      }
+
+      .tiny-line {
+        height: 8px;
+        width: 70px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      .panel,
+      .side-stack > div,
+      .form-card,
+      .table-card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+      }
+
+      .panel,
+      .form-card,
+      .table-card,
+      .side-stack > div {
+        padding: 16px;
+      }
+
+      .panel-title {
+        height: 12px;
+        width: 170px;
+        border-radius: 999px;
+        background: #d3dde6;
+        margin-bottom: 12px;
+      }
+
+      .table {
+        display: grid;
+        gap: 8px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 0.7fr 0.7fr;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 0;
+        border-top: 1px solid #eef2f5;
+      }
+
+      .row:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .cell {
+        height: 10px;
+        border-radius: 999px;
+        background: #e2e8ee;
+      }
+
+      .status-pill {
+        height: 24px;
+        width: 74px;
+        border-radius: 999px;
+        background: #d8e4ee;
+        border: 1px solid #c6d5e2;
+      }
+
+      .stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .callout {
+        min-height: 90px;
+        border-radius: 18px;
+        background: #f7fafc;
+        border: 1px dashed #c7d2de;
+        padding: 14px;
+      }
+
+      .line-1,
+      .line-2,
+      .line-3 {
+        height: 10px;
+        border-radius: 999px;
+        background: #dfe6ec;
+      }
+
+      .line-1 { width: 80%; margin-bottom: 10px; }
+      .line-2 { width: 62%; margin-bottom: 10px; }
+      .line-3 { width: 48%; }
+
+      .login-shell {
+        display: grid;
+        grid-template-columns: 1fr;
+        min-height: 610px;
+        place-items: center;
+        background: linear-gradient(180deg, #f8fbfd 0%, #eff4f8 100%);
+      }
+
+      .login-card {
+        width: min(440px, calc(100% - 40px));
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 26px;
+      }
+
+      .login-title {
+        height: 18px;
+        width: 180px;
+        border-radius: 999px;
+        background: #cfd9e2;
+        margin: 0 auto 14px;
+      }
+
+      .input {
+        height: 48px;
+        border-radius: 14px;
+        background: #f7fafc;
+        border: 1px solid #d5dee7;
+        margin-top: 12px;
+      }
+
+      .detail-layout {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 14px;
+      }
+
+      .section {
+        min-height: 112px;
+        border-radius: 16px;
+        background: #f9fbfc;
+        border: 1px solid #e0e7ee;
+        padding: 14px;
+        margin-top: 10px;
+      }
+
+      .mini-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .mini-box {
+        height: 70px;
+        border-radius: 16px;
+        background: #f8fafb;
+        border: 1px solid #e0e7ee;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 10px;
+      }
+
+      .timeline-item {
+        min-height: 62px;
+        border-radius: 16px;
+        background: #f8fafb;
+        border: 1px solid #dce5ec;
+        padding: 12px;
+      }
+
+      .two-col-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .textarea {
+        min-height: 92px;
+        border-radius: 16px;
+        background: #f7fafc;
+        border: 1px solid #d5dee7;
+        margin-top: 12px;
+      }
+
+      .footer-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .annotation {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: #f6f9fb;
+        border: 1px solid #dde5ec;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 1220px) {
+        .hero,
+        .wireframes,
+        .grid-4,
+        .grid-2,
+        .detail-layout,
+        .two-col-form,
+        .summary-grid,
+        .mini-grid,
+        .head-meta {
+          grid-template-columns: 1fr;
+        }
+
+        .shell {
+          min-height: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <div class="hero-card">
+          <div class="eyebrow">Low-fidelity page set</div>
+          <h1>lending_rails wireframes</h1>
+          <p>
+            Full-page wireframes derived from the completed UX specification,
+            the chosen <strong>Direction 1: Ops Console</strong>, and the MVP
+            lending workflows. These are intentionally low-fidelity so layout,
+            hierarchy, and page relationships stay easy to review.
+          </p>
+          <div class="summary-grid">
+            <div class="summary-box">
+              <strong>Shell</strong>
+              <p>Left navigation, top-page heading, metric-first overview, calm operations layout.</p>
+            </div>
+            <div class="summary-box">
+              <strong>Priority</strong>
+              <p>Repayment triage, clear lifecycle state, linked records, guarded money actions.</p>
+            </div>
+            <div class="summary-box">
+              <strong>Coverage</strong>
+              <p>Login, dashboard, borrower/application/loan/payment/invoice pages and key forms.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="legend">
+          <h2 style="margin:0 0 10px;">How to review</h2>
+          <p>
+            These wireframes are meant to answer three things:
+            what information each page carries, what the main action is, and how
+            the admin moves from overview to detail without losing context.
+          </p>
+          <ul>
+            <li>Check whether each page has one obvious primary action.</li>
+            <li>Check whether status, lineage, and next-step cues are visible early.</li>
+            <li>Check whether dashboard, list, and detail pages feel like one system.</li>
+            <li>Use this set as a base for higher-fidelity screen design or implementation.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="wireframes">
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>1. Login</h2>
+              <p>Simple entry with product name, email, password, and clear recovery path.</p>
+            </div>
+            <div class="page-tag">auth</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Log in</p></div>
+            <div class="meta"><strong>Outcome</strong><p>Land directly on dashboard</p></div>
+          </div>
+          <div class="mockup">
+            <div class="login-shell">
+              <div class="login-card">
+                <div class="login-title"></div>
+                <div class="sub-line" style="width:220px;margin:0 auto 14px;"></div>
+                <div class="input"></div>
+                <div class="input"></div>
+                <div class="button" style="width:100%;margin-top:16px;"></div>
+                <div class="callout" style="margin-top:14px;min-height:64px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Polished but restrained entry screen. No marketing clutter, just product identity, form, and calm error handling.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>2. Dashboard</h2>
+              <p>Action-first operations overview with urgent repayment work and summary context.</p>
+            </div>
+            <div class="page-tag">home</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Review overdue payments</p></div>
+            <div class="meta"><strong>Key content</strong><p>Triage widgets + top lists</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item active"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line"></div>
+                    <div class="sub-line"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="grid-4">
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="small-line"></div></div>
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="small-line"></div></div>
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="small-line"></div></div>
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="small-line"></div></div>
+                </div>
+                <div class="grid-2">
+                  <div class="table-card">
+                    <div class="panel-title"></div>
+                    <div class="table">
+                      <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                      <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                      <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    </div>
+                  </div>
+                  <div class="side-stack stack">
+                    <div class="callout"><div class="line-1"></div><div class="line-2"></div><div class="line-3"></div></div>
+                    <div class="callout"><div class="line-1"></div><div class="line-2"></div><div class="line-3"></div></div>
+                    <div class="callout"><div class="line-1"></div><div class="line-2"></div><div class="line-3"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Dashboard follows the chosen Ops Console shell and should feel like the daily starting point for repayment work.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>3. Borrowers List</h2>
+              <p>Search-first table view for lookup, intake checks, and quick entry into borrower history.</p>
+            </div>
+            <div class="page-tag">list</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Create borrower</p></div>
+            <div class="meta"><strong>Key content</strong><p>Search + filtered table</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:210px;"></div>
+                    <div class="sub-line" style="width:280px;"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="panel" style="margin-bottom:14px;">
+                  <div class="two-col-form">
+                    <div class="input"></div>
+                    <div class="input"></div>
+                  </div>
+                </div>
+                <div class="table-card">
+                  <div class="table">
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="status-pill"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="status-pill"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="status-pill"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="status-pill"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Phone-number search should be visually and functionally dominant, since borrower lookup is a core starting action.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>4. Borrower Detail</h2>
+              <p>Single borrower anchor page with summary, linked history, and next actions.</p>
+            </div>
+            <div class="page-tag">detail</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Create application</p></div>
+            <div class="meta"><strong>Key content</strong><p>Identity + history + related records</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:260px;"></div>
+                    <div class="sub-line" style="width:300px;"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="mini-grid">
+                  <div class="mini-box"></div>
+                  <div class="mini-box"></div>
+                  <div class="mini-box"></div>
+                </div>
+                <div class="detail-layout" style="margin-top:14px;">
+                  <div class="panel">
+                    <div class="panel-title" style="width:190px;"></div>
+                    <div class="section"></div>
+                    <div class="section"></div>
+                  </div>
+                  <div class="stack">
+                    <div class="panel">
+                      <div class="panel-title" style="width:150px;"></div>
+                      <div class="timeline">
+                        <div class="timeline-item"></div>
+                        <div class="timeline-item"></div>
+                        <div class="timeline-item"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">This page should answer: who is this borrower, what has happened before, and can I safely create a new application?</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>5. Create / Edit Borrower</h2>
+              <p>Simple, explicit data-entry form with duplicate-awareness and clear save path.</p>
+            </div>
+            <div class="page-tag">form</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Save borrower</p></div>
+            <div class="meta"><strong>Key content</strong><p>Identity fields + guidance</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:230px;"></div>
+                    <div class="sub-line" style="width:270px;"></div>
+                  </div>
+                </div>
+                <div class="form-card">
+                  <div class="two-col-form">
+                    <div class="input"></div>
+                    <div class="input"></div>
+                    <div class="input"></div>
+                    <div class="input"></div>
+                  </div>
+                  <div class="textarea"></div>
+                  <div class="callout" style="margin-top:12px;min-height:72px;"></div>
+                  <div class="footer-actions">
+                    <div class="button" style="min-width:100px;"></div>
+                    <div class="button" style="min-width:140px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Form should be straightforward, with special emphasis on phone uniqueness and actionable validation messages.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>6. Applications List</h2>
+              <p>Workflow-oriented application queue with clear state filtering and review readiness.</p>
+            </div>
+            <div class="page-tag">list</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Review next application</p></div>
+            <div class="meta"><strong>Key content</strong><p>Status-driven queue</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:220px;"></div>
+                    <div class="sub-line" style="width:310px;"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="panel" style="margin-bottom:14px;">
+                  <div class="two-col-form">
+                    <div class="input"></div>
+                    <div class="input"></div>
+                  </div>
+                </div>
+                <div class="table-card">
+                  <div class="table">
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Unlike payments, this queue leans on review status and required next step, but still follows the same list grammar as other entities.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>7. Application Review Detail</h2>
+              <p>Stage-aware detail page with review steps, borrower history, and decision actions.</p>
+            </div>
+            <div class="page-tag">detail</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Approve or reject</p></div>
+            <div class="meta"><strong>Key content</strong><p>Review steps + borrower context</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:300px;"></div>
+                    <div class="sub-line" style="width:340px;"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="detail-layout">
+                  <div class="panel">
+                    <div class="panel-title" style="width:170px;"></div>
+                    <div class="section"></div>
+                    <div class="section"></div>
+                  </div>
+                  <div class="stack">
+                    <div class="panel">
+                      <div class="panel-title" style="width:140px;"></div>
+                      <div class="timeline">
+                        <div class="timeline-item"></div>
+                        <div class="timeline-item"></div>
+                        <div class="timeline-item"></div>
+                      </div>
+                    </div>
+                    <div class="callout"></div>
+                  </div>
+                </div>
+                <div class="footer-actions">
+                  <div class="button" style="min-width:120px;"></div>
+                  <div class="button" style="min-width:120px;"></div>
+                  <div class="button" style="min-width:160px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">The page should preserve orientation: current application state, completed steps, remaining steps, and visible borrower history before a final decision.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>8. Loans List</h2>
+              <p>Lifecycle-driven overview of created, active, overdue, and closed loans.</p>
+            </div>
+            <div class="page-tag">list</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Open loan record</p></div>
+            <div class="meta"><strong>Key content</strong><p>Status-heavy table</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:170px;"></div>
+                    <div class="sub-line" style="width:320px;"></div>
+                  </div>
+                </div>
+                <div class="panel" style="margin-bottom:14px;">
+                  <div class="two-col-form">
+                    <div class="input"></div>
+                    <div class="input"></div>
+                  </div>
+                </div>
+                <div class="table-card">
+                  <div class="table">
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Loan list emphasizes lifecycle state and relationship to repayment status, not just raw loan metadata.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>9. Loan Detail</h2>
+              <p>Core record page for state, repayment schedule, documents, and linked records.</p>
+            </div>
+            <div class="page-tag">detail</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Next valid lifecycle action</p></div>
+            <div class="meta"><strong>Key content</strong><p>Summary + schedule + linked context</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:290px;"></div>
+                    <div class="sub-line" style="width:360px;"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="mini-grid">
+                  <div class="mini-box"></div>
+                  <div class="mini-box"></div>
+                  <div class="mini-box"></div>
+                </div>
+                <div class="grid-2">
+                  <div class="panel">
+                    <div class="panel-title" style="width:160px;"></div>
+                    <div class="table">
+                      <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                      <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                      <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    </div>
+                  </div>
+                  <div class="stack">
+                    <div class="panel"><div class="panel-title" style="width:140px;"></div><div class="callout"></div></div>
+                    <div class="panel"><div class="panel-title" style="width:120px;"></div><div class="timeline-item"></div><div class="timeline-item" style="margin-top:10px;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">This page must make loan state, payment schedule, and immutability rules visible without forcing the user to hunt through tabs.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>10. Documentation & Disbursement</h2>
+              <p>Focused progression page for pre-money readiness and guarded transition into disbursement.</p>
+            </div>
+            <div class="page-tag">action</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Confirm disbursement readiness</p></div>
+            <div class="meta"><strong>Key content</strong><p>Prerequisites + risk cues</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:320px;"></div>
+                    <div class="sub-line" style="width:350px;"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="detail-layout">
+                  <div class="form-card">
+                    <div class="panel-title" style="width:180px;"></div>
+                    <div class="two-col-form">
+                      <div class="input"></div>
+                      <div class="input"></div>
+                    </div>
+                    <div class="textarea"></div>
+                    <div class="callout" style="margin-top:12px;"></div>
+                  </div>
+                  <div class="stack">
+                    <div class="panel"><div class="panel-title" style="width:130px;"></div><div class="timeline-item"></div><div class="timeline-item" style="margin-top:10px;"></div></div>
+                    <div class="callout"></div>
+                  </div>
+                </div>
+                <div class="footer-actions">
+                  <div class="button" style="min-width:120px;"></div>
+                  <div class="button" style="min-width:180px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Treat this as the last pre-money checkpoint: checklist-driven, explicit, and calm before the guarded confirmation step.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>11. Payments List</h2>
+              <p>High-frequency repayment workspace with overdue, upcoming, and recently completed filters.</p>
+            </div>
+            <div class="page-tag">list</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Open payment detail</p></div>
+            <div class="meta"><strong>Key content</strong><p>Fast repayment triage</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:180px;"></div>
+                    <div class="sub-line" style="width:340px;"></div>
+                  </div>
+                  <div class="button"></div>
+                </div>
+                <div class="grid-4" style="margin-bottom:14px;">
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="tiny-line"></div></div>
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="tiny-line"></div></div>
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="tiny-line"></div></div>
+                  <div class="metric"><div class="metric-label"></div><div class="metric-value"></div><div class="tiny-line"></div></div>
+                </div>
+                <div class="panel" style="margin-bottom:14px;">
+                  <div class="two-col-form">
+                    <div class="input"></div>
+                    <div class="input"></div>
+                  </div>
+                </div>
+                <div class="table-card">
+                  <div class="table">
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="status-pill"></div><div class="cell"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">This is the highest-frequency list in the product; speed, scanability, and filter clarity matter more here than richness of decoration.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>12. Payment Detail & Completion</h2>
+              <p>Verification-first payment page with guarded completion and clear post-action consequence.</p>
+            </div>
+            <div class="page-tag">action</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Mark payment complete</p></div>
+            <div class="meta"><strong>Key content</strong><p>Verification + consequence summary</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:320px;"></div>
+                    <div class="sub-line" style="width:360px;"></div>
+                  </div>
+                  <div class="status-pill"></div>
+                </div>
+                <div class="detail-layout">
+                  <div class="form-card">
+                    <div class="panel-title" style="width:160px;"></div>
+                    <div class="two-col-form">
+                      <div class="input"></div>
+                      <div class="input"></div>
+                    </div>
+                    <div class="textarea"></div>
+                    <div class="callout" style="margin-top:12px;"></div>
+                  </div>
+                  <div class="stack">
+                    <div class="panel"><div class="panel-title" style="width:150px;"></div><div class="timeline-item"></div><div class="timeline-item" style="margin-top:10px;"></div></div>
+                    <div class="callout"></div>
+                  </div>
+                </div>
+                <div class="footer-actions">
+                  <div class="button" style="min-width:120px;"></div>
+                  <div class="button" style="min-width:200px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">The page should make it impossible to casually commit a payment without seeing what data is being recorded and what becomes locked.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>13. Invoices List</h2>
+              <p>Reference list for generated disbursement and payment invoices with linked context.</p>
+            </div>
+            <div class="page-tag">list</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Open invoice</p></div>
+            <div class="meta"><strong>Key content</strong><p>Reference and verification</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:160px;"></div>
+                    <div class="sub-line" style="width:300px;"></div>
+                  </div>
+                </div>
+                <div class="panel" style="margin-bottom:14px;">
+                  <div class="two-col-form">
+                    <div class="input"></div>
+                    <div class="input"></div>
+                  </div>
+                </div>
+                <div class="table-card">
+                  <div class="table">
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="status-pill"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="status-pill"></div></div>
+                    <div class="row"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="status-pill"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Invoices are supporting records, but they still use the same search-and-table grammar as the rest of the product.</div>
+        </article>
+
+        <article class="wireframe-card">
+          <div class="wireframe-head">
+            <div>
+              <h2>14. Invoice Detail</h2>
+              <p>Read-oriented page showing invoice facts, linked records, and source event context.</p>
+            </div>
+            <div class="page-tag">detail</div>
+          </div>
+          <div class="head-meta">
+            <div class="meta"><strong>Primary action</strong><p>Cross-check linked record</p></div>
+            <div class="meta"><strong>Key content</strong><p>Invoice facts + linkage</p></div>
+          </div>
+          <div class="mockup">
+            <div class="shell" style="grid-template-columns:240px 1fr;">
+              <aside class="sidebar">
+                <div class="brand"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item"></div>
+                <div class="nav-item active"></div>
+              </aside>
+              <div class="content">
+                <div class="topbar">
+                  <div>
+                    <div class="title-line" style="width:250px;"></div>
+                    <div class="sub-line" style="width:320px;"></div>
+                  </div>
+                </div>
+                <div class="detail-layout">
+                  <div class="panel">
+                    <div class="panel-title" style="width:170px;"></div>
+                    <div class="section"></div>
+                    <div class="section"></div>
+                  </div>
+                  <div class="stack">
+                    <div class="panel"><div class="panel-title" style="width:140px;"></div><div class="timeline-item"></div><div class="timeline-item" style="margin-top:10px;"></div></div>
+                    <div class="callout"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">Invoice detail is primarily for verification and traceability, so linked-loan/payment context should be immediately visible.</div>
+        </article>
+      </section>
+    </div>
+  </body>
+</html>

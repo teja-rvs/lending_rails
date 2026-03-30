@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lending_rails Design Directions</title>
+    <style>
+      :root {
+        --bg: #edf2f7;
+        --panel: rgba(255, 255, 255, 0.9);
+        --panel-strong: #ffffff;
+        --border: #d7dee8;
+        --text: #102033;
+        --muted: #5d6b7f;
+        --shadow: 0 20px 45px rgba(18, 35, 59, 0.12);
+        --radius: 24px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background:
+          radial-gradient(circle at top, #ffffff 0%, #edf2f7 38%, #e2e8f0 100%);
+        color: var(--text);
+      }
+
+      .page {
+        width: min(1440px, calc(100vw - 48px));
+        margin: 0 auto;
+        padding: 36px 0 80px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.3fr 0.9fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .hero-panel,
+      .legend,
+      .direction-card {
+        background: var(--panel);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius);
+      }
+
+      .hero-panel {
+        padding: 28px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #dbe7ff;
+        color: #214fbd;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 16px 0 12px;
+        font-size: clamp(32px, 4vw, 56px);
+        line-height: 1;
+        letter-spacing: -0.03em;
+      }
+
+      .hero p,
+      .legend p,
+      .meta-item p,
+      .direction-notes p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .hero-grid {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .meta-item {
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(240, 245, 252, 0.88);
+        border: 1px solid #dbe4f0;
+      }
+
+      .meta-item strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #19325a;
+      }
+
+      .legend {
+        padding: 24px;
+      }
+
+      .legend h2 {
+        margin: 0 0 10px;
+        font-size: 22px;
+      }
+
+      .legend ul {
+        margin: 18px 0 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .directions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 26px;
+        margin-top: 30px;
+      }
+
+      .direction-card {
+        padding: 22px;
+      }
+
+      .direction-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .direction-head h3 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 80px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .direction-notes {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .note {
+        padding: 12px;
+        border-radius: 16px;
+        background: #f5f8fc;
+        border: 1px solid #e2e8f0;
+      }
+
+      .note strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #42536d;
+      }
+
+      .mockup {
+        min-height: 620px;
+        border-radius: 26px;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .shell {
+        display: grid;
+        height: 620px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .table th,
+      .table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        text-align: left;
+      }
+
+      .table th {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .metric {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .metric small {
+        display: block;
+        margin-bottom: 8px;
+        color: #617084;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 28px;
+        letter-spacing: -0.03em;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 8px;
+        color: #5a6a7f;
+        font-size: 13px;
+      }
+
+      .callout {
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid;
+      }
+
+      .footer-note {
+        margin-top: 26px;
+        padding: 18px 22px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        color: #5d6b7f;
+        line-height: 1.6;
+      }
+
+      .d1 .mockup {
+        background: linear-gradient(180deg, #f7fafc 0%, #eef3f9 100%);
+      }
+
+      .d1 .shell {
+        grid-template-columns: 250px 1fr;
+      }
+
+      .d1 .sidebar {
+        background: linear-gradient(180deg, #0f172a 0%, #172337 100%);
+        color: #dfe9f6;
+        padding: 28px 20px;
+      }
+
+      .brand {
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+      }
+
+      .nav-list {
+        margin-top: 28px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .nav-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        color: #afbdd2;
+        font-size: 14px;
+      }
+
+      .nav-item.active {
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+      }
+
+      .d1 .content {
+        padding: 26px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+
+      .title-block h4,
+      .header-stack h4,
+      .panel-head h4 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: -0.03em;
+      }
+
+      .title-block p,
+      .header-stack p,
+      .panel-head p {
+        margin: 6px 0 0;
+        color: #607085;
+      }
+
+      .primary-btn,
+      .ghost-btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 16px;
+        font-weight: 700;
+      }
+
+      .primary-btn {
+        background: #1d4ed8;
+        color: white;
+      }
+
+      .ghost-btn {
+        background: rgba(15, 23, 42, 0.06);
+        color: #14233b;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .panel {
+        padding: 20px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(203, 213, 225, 0.7);
+      }
+
+      .stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .detail-card {
+        padding: 16px;
+        border-radius: 18px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+      }
+
+      .d2 .mockup {
+        background: linear-gradient(180deg, #fbfdff 0%, #eff5fb 100%);
+      }
+
+      .d2 .shell {
+        grid-template-rows: 82px 1fr;
+      }
+
+      .d2 .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 26px;
+        background: rgba(255, 255, 255, 0.8);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      }
+
+      .d2 .content {
+        padding: 24px 26px 26px;
+      }
+
+      .strip {
+        display: grid;
+        grid-template-columns: 1.3fr 0.9fr;
+        gap: 14px;
+      }
+
+      .alert-band {
+        padding: 18px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #6b3f00;
+      }
+
+      .task-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .task {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(203, 213, 225, 0.8);
+      }
+
+      .d3 .mockup {
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      }
+
+      .d3 .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .d3 .content {
+        padding: 24px;
+        color: #dbe6f5;
+      }
+
+      .d3 .hero-banner {
+        padding: 22px 24px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #172554 0%, #1d4ed8 50%, #0f766e 100%);
+        box-shadow: 0 18px 35px rgba(0, 0, 0, 0.24);
+      }
+
+      .d3 .hero-banner p,
+      .d3 .panel p,
+      .d3 .header-stack p {
+        color: rgba(219, 230, 245, 0.78);
+      }
+
+      .d3 .panel,
+      .d3 .metric {
+        background: rgba(15, 23, 42, 0.58);
+        border-color: rgba(148, 163, 184, 0.16);
+      }
+
+      .d3 .table th,
+      .d3 .table td {
+        border-bottom-color: rgba(148, 163, 184, 0.14);
+      }
+
+      .d4 .mockup {
+        background: linear-gradient(180deg, #fafafa 0%, #f1f5f9 100%);
+      }
+
+      .d4 .shell {
+        grid-template-columns: 320px 1fr;
+      }
+
+      .d4 .rail {
+        padding: 24px 18px;
+        background: rgba(255, 255, 255, 0.82);
+        border-right: 1px solid rgba(148, 163, 184, 0.18);
+      }
+
+      .timeline {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .timeline-item {
+        padding: 14px;
+        border-radius: 18px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+      }
+
+      .d4 .content {
+        padding: 24px;
+      }
+
+      .dual {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 16px;
+      }
+
+      .d5 .mockup {
+        background: linear-gradient(180deg, #f6f8fb 0%, #eef3f7 100%);
+      }
+
+      .d5 .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .d5 .content {
+        padding: 24px;
+      }
+
+      .strip-cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .kpi {
+        padding: 16px;
+        border-radius: 20px;
+        background: white;
+        border: 1px solid #e2e8f0;
+      }
+
+      .kpi strong {
+        display: block;
+        font-size: 26px;
+      }
+
+      .kanban {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .lane {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(203, 213, 225, 0.8);
+      }
+
+      .ticket {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+      }
+
+      .d6 .mockup {
+        background: linear-gradient(180deg, #f9fbfd 0%, #eef4fa 100%);
+      }
+
+      .d6 .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .d6 .content {
+        padding: 26px;
+      }
+
+      .focus-layout {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 16px;
+      }
+
+      .focus-card {
+        padding: 22px;
+        border-radius: 24px;
+        background: white;
+        border: 1px solid #dbe4ef;
+      }
+
+      .stepper {
+        display: flex;
+        gap: 10px;
+        margin: 16px 0 18px;
+        flex-wrap: wrap;
+      }
+
+      .step {
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #eff6ff;
+        color: #214fbd;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .decision-box {
+        margin-top: 14px;
+        padding: 16px;
+        border-radius: 18px;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+      }
+
+      .blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .amber {
+        background: #fef3c7;
+        color: #a16207;
+      }
+
+      .green {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .red {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .slate {
+        background: #e2e8f0;
+        color: #334155;
+      }
+
+      @media (max-width: 1180px) {
+        .hero,
+        .directions,
+        .direction-notes,
+        .grid-two,
+        .dual,
+        .focus-layout,
+        .strip,
+        .metrics-grid,
+        .strip-cards,
+        .kanban,
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .shell,
+        .d1 .shell,
+        .d4 .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .mockup,
+        .shell {
+          min-height: auto;
+          height: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <div class="hero-panel">
+          <div class="eyebrow">lending_rails UX exploration</div>
+          <h1>Design direction showcase</h1>
+          <p>
+            Six visual directions built from the same UX strategy: action-first
+            repayment triage, safe money workflows, calm operational clarity, and
+            a modern admin foundation using lightweight product primitives.
+          </p>
+
+          <div class="hero-grid">
+            <div class="meta-item">
+              <strong>Primary job</strong>
+              <p>See what needs attention and act without second-guessing.</p>
+            </div>
+            <div class="meta-item">
+              <strong>Emotional target</strong>
+              <p>Trust, safety, calm, predictability, and closed-loop relief.</p>
+            </div>
+            <div class="meta-item">
+              <strong>Visual base</strong>
+              <p>Light-first, semantically disciplined, readable, modern admin UI.</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="legend">
+          <h2>How to evaluate</h2>
+          <p>
+            Pick the direction that best supports the admin's mental model,
+            not just the one that looks nicest.
+          </p>
+          <ul>
+            <li>Which layout makes urgent repayment work easiest to spot?</li>
+            <li>Which structure makes lifecycle state clearest?</li>
+            <li>Which detail view feels safest for money-sensitive actions?</li>
+            <li>Which direction feels calm and credible rather than generic?</li>
+            <li>Which components feel repeatable across borrowers, loans, and payments?</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="directions">
+        <article class="direction-card d1">
+          <div class="direction-head">
+            <div>
+              <h3>Direction 1: Ops Console</h3>
+              <p>Left navigation, clear metrics, dependable admin rhythm.</p>
+            </div>
+            <div class="tag blue">Balanced</div>
+          </div>
+          <div class="direction-notes">
+            <div class="note">
+              <strong>Best for</strong>
+              <p>General operational clarity and repeatable entity pages.</p>
+            </div>
+            <div class="note">
+              <strong>Weight</strong>
+              <p>Moderate hierarchy, structured but not heavy.</p>
+            </div>
+            <div class="note">
+              <strong>Risk</strong>
+              <p>Could feel familiar rather than distinctive if under-tuned.</p>
+            </div>
+          </div>
+          <div class="mockup">
+            <div class="shell">
+              <aside class="sidebar">
+                <div class="brand">lending_rails</div>
+                <div class="nav-list">
+                  <div class="nav-item active">Dashboard</div>
+                  <div class="nav-item">Borrowers</div>
+                  <div class="nav-item">Applications</div>
+                  <div class="nav-item">Loans</div>
+                  <div class="nav-item">Payments</div>
+                  <div class="nav-item">Invoices</div>
+                </div>
+              </aside>
+              <div class="content">
+                <div class="toolbar">
+                  <div class="title-block">
+                    <h4>Repayment Control</h4>
+                    <p>Action-first dashboard for upcoming and overdue work.</p>
+                  </div>
+                  <button class="primary-btn">Review overdue payments</button>
+                </div>
+                <div class="metrics-grid">
+                  <div class="metric">
+                    <small>Overdue</small>
+                    <strong>12</strong>
+                    <span>3 need same-day action</span>
+                  </div>
+                  <div class="metric">
+                    <small>Upcoming</small>
+                    <strong>31</strong>
+                    <span>Due in next 7 days</span>
+                  </div>
+                  <div class="metric">
+                    <small>Open applications</small>
+                    <strong>8</strong>
+                    <span>2 waiting for review</span>
+                  </div>
+                  <div class="metric">
+                    <small>Active loans</small>
+                    <strong>74</strong>
+                    <span>Total disbursed 3.4M</span>
+                  </div>
+                </div>
+                <div class="grid-two">
+                  <div class="panel">
+                    <div class="panel-head">
+                      <h4>Overdue payments</h4>
+                      <p>Sorted by risk and time overdue.</p>
+                    </div>
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Borrower</th>
+                          <th>Loan</th>
+                          <th>Due</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Amina K</td>
+                          <td>LN-0241</td>
+                          <td>3 days ago</td>
+                          <td><span class="status red">Overdue</span></td>
+                        </tr>
+                        <tr>
+                          <td>Rahul S</td>
+                          <td>LN-0183</td>
+                          <td>Yesterday</td>
+                          <td><span class="status amber">Attention</span></td>
+                        </tr>
+                        <tr>
+                          <td>Priya M</td>
+                          <td>LN-0220</td>
+                          <td>Today</td>
+                          <td><span class="status blue">Follow-up</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="stack">
+                    <div class="detail-card">
+                      <strong>Safe next action</strong>
+                      <p>Open payment detail, verify receipt evidence, mark complete, lock state.</p>
+                    </div>
+                    <div class="callout" style="background:#fff7ed;border-color:#fdba74;color:#9a3412;">
+                      Financial actions stay deliberate. Confirmation explains what becomes immutable.
+                    </div>
+                    <div class="detail-card">
+                      <strong>Linked context</strong>
+                      <p>Borrower history, application notes, and prior overdue events visible inline.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction-card d2">
+          <div class="direction-head">
+            <div>
+              <h3>Direction 2: Triage First</h3>
+              <p>Urgency-led dashboard with strong alerts and work queues.</p>
+            </div>
+            <div class="tag amber">Action-led</div>
+          </div>
+          <div class="direction-notes">
+            <div class="note">
+              <strong>Best for</strong>
+              <p>Immediate daily repayment focus and queue management.</p>
+            </div>
+            <div class="note">
+              <strong>Weight</strong>
+              <p>Slightly more prominent warning and task framing.</p>
+            </div>
+            <div class="note">
+              <strong>Risk</strong>
+              <p>Can over-emphasize urgent work if summaries get sidelined.</p>
+            </div>
+          </div>
+          <div class="mockup">
+            <div class="shell">
+              <div class="topbar">
+                <div class="brand">lending_rails</div>
+                <div class="chip blue">Dashboard focus: overdue + upcoming</div>
+              </div>
+              <div class="content">
+                <div class="strip">
+                  <div class="alert-band">
+                    <strong>12 overdue payments require action today</strong>
+                    <p>Most severe: LN-0241, LN-0220, LN-0183</p>
+                  </div>
+                  <div class="panel">
+                    <strong>Today at a glance</strong>
+                    <p>31 upcoming, 8 open applications, 74 active loans</p>
+                  </div>
+                </div>
+                <div class="task-list">
+                  <div class="task">
+                    <span class="status red">High</span>
+                    <div>
+                      <strong>Amina K missed weekly payment</strong>
+                      <div style="color:#607085;font-size:13px;">Loan LN-0241 · 3 days overdue · prior late history</div>
+                    </div>
+                    <button class="primary-btn">Open case</button>
+                  </div>
+                  <div class="task">
+                    <span class="status amber">Due</span>
+                    <div>
+                      <strong>Priya M payment due today</strong>
+                      <div style="color:#607085;font-size:13px;">Monthly plan · 1 invoice pending</div>
+                    </div>
+                    <button class="ghost-btn">Prepare follow-up</button>
+                  </div>
+                  <div class="task">
+                    <span class="status blue">Review</span>
+                    <div>
+                      <strong>Loan documentation ready for disbursement</strong>
+                      <div style="color:#607085;font-size:13px;">Rohan P · all checks approved</div>
+                    </div>
+                    <button class="ghost-btn">Review lock rules</button>
+                  </div>
+                </div>
+                <div class="grid-two">
+                  <div class="panel">
+                    <div class="panel-head">
+                      <h4>Upcoming schedule</h4>
+                      <p>Grouped by day to reduce missed follow-ups.</p>
+                    </div>
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Borrower</th>
+                          <th>Amount</th>
+                          <th>Stage</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Today</td><td>Priya M</td><td>24,500</td><td><span class="status amber">Due</span></td></tr>
+                        <tr><td>Tomorrow</td><td>Karan J</td><td>18,000</td><td><span class="status slate">Upcoming</span></td></tr>
+                        <tr><td>Thu</td><td>Neha R</td><td>11,500</td><td><span class="status slate">Upcoming</span></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="stack">
+                    <div class="detail-card">
+                      <strong>Why it works</strong>
+                      <p>Immediate queueing replaces memory with visible daily work.</p>
+                    </div>
+                    <div class="detail-card">
+                      <strong>Where to use</strong>
+                      <p>Best if the dashboard is the unquestioned start of every workday.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction-card d3">
+          <div class="direction-head">
+            <div>
+              <h3>Direction 3: Fintech Confidence</h3>
+              <p>Darker, premium-trust interface with strong state contrast.</p>
+            </div>
+            <div class="tag green">High contrast</div>
+          </div>
+          <div class="direction-notes">
+            <div class="note">
+              <strong>Best for</strong>
+              <p>A more premium finance feel with stronger visual drama.</p>
+            </div>
+            <div class="note">
+              <strong>Weight</strong>
+              <p>Heavier contrast, more visual authority.</p>
+            </div>
+            <div class="note">
+              <strong>Risk</strong>
+              <p>May feel more styled than necessary for a utilitarian MVP.</p>
+            </div>
+          </div>
+          <div class="mockup">
+            <div class="shell">
+              <div class="content">
+                <div class="hero-banner">
+                  <div class="header-stack">
+                    <h4>Portfolio health and repayment confidence</h4>
+                    <p>Every critical state visible. Every risky action intentionally staged.</p>
+                  </div>
+                  <div class="metrics-grid" style="margin-top:18px;">
+                    <div class="metric"><small>At-risk loans</small><strong>09</strong><span>Escalate today</span></div>
+                    <div class="metric"><small>Overdue total</small><strong>412K</strong><span>Across 12 payments</span></div>
+                    <div class="metric"><small>Cash-in this week</small><strong>684K</strong><span>Expected collections</span></div>
+                    <div class="metric"><small>Ready to disburse</small><strong>03</strong><span>Documentation complete</span></div>
+                  </div>
+                </div>
+                <div class="grid-two" style="margin-top:16px;">
+                  <div class="panel">
+                    <div class="panel-head">
+                      <h4>Overdue watchlist</h4>
+                      <p>High signal, credit-risk style presentation.</p>
+                    </div>
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Borrower</th>
+                          <th>Days</th>
+                          <th>Exposure</th>
+                          <th>State</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Amina K</td><td>3</td><td>48,000</td><td><span class="status red">High risk</span></td></tr>
+                        <tr><td>Rahul S</td><td>1</td><td>19,500</td><td><span class="status amber">Follow-up</span></td></tr>
+                        <tr><td>Vikram D</td><td>0</td><td>25,200</td><td><span class="status blue">Due today</span></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="stack">
+                    <div class="callout" style="background:rgba(30,41,59,.72);border-color:rgba(253,186,116,.35);color:#f8d28c;">
+                      Mark payment complete only after confirming payment mode, date, and invoice impact.
+                    </div>
+                    <div class="detail-card" style="background:rgba(30,41,59,.72);border-color:rgba(148,163,184,.22);color:#e2e8f0;">
+                      <strong>Chosen emotional effect</strong>
+                      <p>Serious, controlled, and trustworthy.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction-card d4">
+          <div class="direction-head">
+            <div>
+              <h3>Direction 4: Record Trail</h3>
+              <p>Entity-centered detail layout with visible lineage and timeline.</p>
+            </div>
+            <div class="tag slate">Detail-led</div>
+          </div>
+          <div class="direction-notes">
+            <div class="note">
+              <strong>Best for</strong>
+              <p>Deep investigations and multi-step record understanding.</p>
+            </div>
+            <div class="note">
+              <strong>Weight</strong>
+              <p>Context-rich, documentary style.</p>
+            </div>
+            <div class="note">
+              <strong>Risk</strong>
+              <p>Can feel slower if used as the main dashboard pattern.</p>
+            </div>
+          </div>
+          <div class="mockup">
+            <div class="shell">
+              <aside class="rail">
+                <div class="brand">LN-0241</div>
+                <p style="color:#64748b;">Borrower, application, loan, payment, and invoice chain.</p>
+                <div class="timeline">
+                  <div class="timeline-item"><strong>Borrower created</strong><div style="color:#64748b;">Phone verified</div></div>
+                  <div class="timeline-item"><strong>Application approved</strong><div style="color:#64748b;">Review steps complete</div></div>
+                  <div class="timeline-item"><strong>Loan disbursed</strong><div style="color:#64748b;">Invoice INV-440 issued</div></div>
+                  <div class="timeline-item"><strong>Payment overdue</strong><div style="color:#64748b;">3 days overdue</div></div>
+                </div>
+              </aside>
+              <div class="content">
+                <div class="toolbar">
+                  <div class="title-block">
+                    <h4>Amina K · Loan detail</h4>
+                    <p>Understand full lifecycle, then take the next safe action.</p>
+                  </div>
+                  <div class="chip amber">Overdue payment</div>
+                </div>
+                <div class="dual">
+                  <div class="panel">
+                    <div class="panel-head">
+                      <h4>Current state</h4>
+                      <p>All essential lifecycle signals in one place.</p>
+                    </div>
+                    <div class="stack">
+                      <div class="detail-card"><strong>Loan state</strong><p>Active loan, overdue due to unpaid installment dated Mar 27.</p></div>
+                      <div class="detail-card"><strong>Next valid action</strong><p>Review payment evidence or record follow-up attempt.</p></div>
+                      <div class="detail-card"><strong>Locked records</strong><p>Loan terms immutable after disbursement. Payment immutable once completed.</p></div>
+                    </div>
+                  </div>
+                  <div class="stack">
+                    <div class="callout" style="background:#fff7ed;border-color:#fdba74;color:#9a3412;">
+                      Safe action guardrail: financial completion requires explicit confirmation.
+                    </div>
+                    <div class="panel">
+                      <div class="panel-head">
+                        <h4>Linked records</h4>
+                        <p>Borrower B-109 · Application AP-401 · Invoice INV-440</p>
+                      </div>
+                    </div>
+                    <button class="primary-btn">Mark payment complete</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction-card d5">
+          <div class="direction-head">
+            <div>
+              <h3>Direction 5: Workflow Grid</h3>
+              <p>Status-driven lanes and visible work-in-progress by stage.</p>
+            </div>
+            <div class="tag blue">Workflow</div>
+          </div>
+          <div class="direction-notes">
+            <div class="note">
+              <strong>Best for</strong>
+              <p>Application review and documentation stages.</p>
+            </div>
+            <div class="note">
+              <strong>Weight</strong>
+              <p>Visual workflow emphasis with lightweight cards.</p>
+            </div>
+            <div class="note">
+              <strong>Risk</strong>
+              <p>Less natural for dense payment operations than table views.</p>
+            </div>
+          </div>
+          <div class="mockup">
+            <div class="shell">
+              <div class="content">
+                <div class="toolbar">
+                  <div class="title-block">
+                    <h4>Application operations</h4>
+                    <p>Stage visibility for open, in-progress, and ready workflows.</p>
+                  </div>
+                  <button class="ghost-btn">Filter by borrower history</button>
+                </div>
+                <div class="strip-cards">
+                  <div class="kpi"><small>Open</small><strong>8</strong></div>
+                  <div class="kpi"><small>In review</small><strong>5</strong></div>
+                  <div class="kpi"><small>Ready to document</small><strong>2</strong></div>
+                  <div class="kpi"><small>Ready to disburse</small><strong>3</strong></div>
+                </div>
+                <div class="kanban">
+                  <div class="lane">
+                    <strong>Open</strong>
+                    <div class="ticket">AP-402 · New borrower intake</div>
+                    <div class="ticket">AP-403 · Repeat borrower</div>
+                  </div>
+                  <div class="lane">
+                    <strong>Review steps</strong>
+                    <div class="ticket">AP-390 · History check pending</div>
+                    <div class="ticket">AP-391 · Verification in progress</div>
+                  </div>
+                  <div class="lane">
+                    <strong>Ready next action</strong>
+                    <div class="ticket">AP-377 · Documentation complete</div>
+                    <div class="ticket">AP-378 · Awaiting disbursement confirmation</div>
+                  </div>
+                </div>
+                <div class="footer-note">
+                  Strong companion pattern for applications, but probably secondary to
+                  table-first repayment operations.
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction-card d6">
+          <div class="direction-head">
+            <div>
+              <h3>Direction 6: Guided Decision</h3>
+              <p>Detail page optimized for confidence during sensitive actions.</p>
+            </div>
+            <div class="tag green">Safety-led</div>
+          </div>
+          <div class="direction-notes">
+            <div class="note">
+              <strong>Best for</strong>
+              <p>Disbursement, payment completion, and blocked-state guidance.</p>
+            </div>
+            <div class="note">
+              <strong>Weight</strong>
+              <p>More guidance and confirmation around irreversible steps.</p>
+            </div>
+            <div class="note">
+              <strong>Risk</strong>
+              <p>Too much of this everywhere could slow basic navigation.</p>
+            </div>
+          </div>
+          <div class="mockup">
+            <div class="shell">
+              <div class="content">
+                <div class="focus-layout">
+                  <div class="focus-card">
+                    <div class="header-stack">
+                      <h4>Complete payment safely</h4>
+                      <p>The system explains consequence before allowing final commit.</p>
+                    </div>
+                    <div class="stepper">
+                      <div class="step">1. Verify borrower</div>
+                      <div class="step">2. Confirm payment mode</div>
+                      <div class="step">3. Lock payment state</div>
+                    </div>
+                    <table class="table">
+                      <tbody>
+                        <tr><th>Borrower</th><td>Amina K</td></tr>
+                        <tr><th>Loan</th><td>LN-0241</td></tr>
+                        <tr><th>Amount due</th><td>24,500</td></tr>
+                        <tr><th>Invoice</th><td>INV-440</td></tr>
+                      </tbody>
+                    </table>
+                    <div class="decision-box">
+                      <strong>After confirmation:</strong>
+                      This payment becomes non-editable. Loan status will recalculate immediately.
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:16px;">
+                      <button class="ghost-btn">Cancel</button>
+                      <button class="primary-btn">Confirm and lock payment</button>
+                    </div>
+                  </div>
+                  <div class="stack">
+                    <div class="panel">
+                      <div class="panel-head">
+                        <h4>Why blocked?</h4>
+                        <p>Clear explanations for incomplete or invalid actions.</p>
+                      </div>
+                      <div class="callout" style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">
+                        Payment cannot be completed without payment date and payment mode.
+                      </div>
+                    </div>
+                    <div class="panel">
+                      <div class="panel-head">
+                        <h4>Confidence cues</h4>
+                        <p>State summary, linked invoice, and post-action impact visible together.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <div class="footer-note">
+        Suggested combination if you want a starting point: use
+        <strong>Direction 1</strong> as the overall shell,
+        borrow the urgent dashboard emphasis from <strong>Direction 2</strong>,
+        the record lineage treatment from <strong>Direction 4</strong>,
+        and the guarded money-action pattern from <strong>Direction 6</strong>.
+      </div>
+    </div>
+  </body>
+</html>

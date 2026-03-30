@@ -1,0 +1,466 @@
+  [1m[36mActiveRecord::InternalMetadata Load (2.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", ""], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email_address" IS NULL LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Create (0.6ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 17:54:41.076256"], ["email_address", "user2@example.com"], ["password_digest", "$2a$04$5zgpozvqSy06dR88AylUwu4ROF5Yjwe3sqzcqMqxfN3FD5hBql4cy"], ["updated_at", "2026-03-30 17:54:41.076256"]]
+  [1m[36mPaperTrail::Version Create (0.3ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 17:54:41.076256"], ["event", "create"], ["item_id", "fec4aeaf-253d-40f7-af9c-72d5c56d841f"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user2@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user2@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "admin@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mBEGIN[0m
+[b8e9f6e1-16b8-4a27-b0a9-3e901aa67fe2] Started GET "/up" for 127.0.0.1 at 2026-03-30 23:24:41 +0530
+[b8e9f6e1-16b8-4a27-b0a9-3e901aa67fe2] Processing by Rails::HealthController#show as HTML
+[b8e9f6e1-16b8-4a27-b0a9-3e901aa67fe2]   Rendering html template
+[b8e9f6e1-16b8-4a27-b0a9-3e901aa67fe2]   Rendered html template (Duration: 0.0ms | GC: 0.0ms)
+[b8e9f6e1-16b8-4a27-b0a9-3e901aa67fe2] Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[35mBEGIN[0m
+[7491bae8-65f0-4db4-b7d4-ae1194b6cb8d] Started GET "/" for 127.0.0.1 at 2026-03-30 23:24:41 +0530
+[7491bae8-65f0-4db4-b7d4-ae1194b6cb8d] Processing by HomeController#index as HTML
+[7491bae8-65f0-4db4-b7d4-ae1194b6cb8d]   Rendering layout layouts/application.html.erb
+[7491bae8-65f0-4db4-b7d4-ae1194b6cb8d]   Rendering home/index.html.erb within layouts/application
+[7491bae8-65f0-4db4-b7d4-ae1194b6cb8d]   Rendered home/index.html.erb within layouts/application (Duration: 0.3ms | GC: 0.0ms)
+[7491bae8-65f0-4db4-b7d4-ae1194b6cb8d]   Rendered layout layouts/application.html.erb (Duration: 30.4ms | GC: 0.0ms)
+[7491bae8-65f0-4db4-b7d4-ae1194b6cb8d] Completed 200 OK in 58ms (Views: 31.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (3.3ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user1@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.5ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:14:56.281297"], ["email_address", "user1@example.com"], ["password_digest", "$2a$04$gpFuRVyOqZ70u.kzpn.Fhu3yubph9JgOV3TVq7V2PD7/oSif14VhC"], ["updated_at", "2026-03-30 18:14:56.281297"]]
+  [1m[36mPaperTrail::Version Create (0.5ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:14:56.281297"], ["event", "create"], ["item_id", "d2b04b3a-10ba-4d25-a706-764e2f8b336a"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] Started POST "/passwords" for 127.0.0.1 at 2026-03-30 23:44:56 +0530
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] Processing by PasswordsController#create as HTML
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7]   Parameters: {"email_address" => "[FILTERED]"}
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7]   [1m[36mUser Load (1.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email_address" = $1 LIMIT $2[0m  [["email_address", "user1@example.com"], ["LIMIT", 1]]
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   [1m[36mUser Load (3.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "d2b04b3a-10ba-4d25-a706-764e2f8b336a"], ["LIMIT", 1]]
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda] Performing ActionMailer::MailDeliveryJob (Job ID: dc15ca67-1ecc-4431-b15b-165ca8fc7cda) from Test(default) enqueued at 2026-03-30T18:14:56.318295000Z with arguments: "PasswordsMailer", "reset", "deliver_now", {args: [#<GlobalID:0x00000001288a1528 @uri=#<URI::GID gid://lending-rails/User/d2b04b3a-10ba-4d25-a706-764e2f8b336a>>]}
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendering layout layouts/mailer.html.erb
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendering passwords_mailer/reset.html.erb within layouts/mailer
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendered passwords_mailer/reset.html.erb within layouts/mailer (Duration: 0.8ms | GC: 0.0ms)
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendered layout layouts/mailer.html.erb (Duration: 1.1ms | GC: 0.0ms)
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendering layout layouts/mailer.text.erb
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendering passwords_mailer/reset.text.erb within layouts/mailer
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendered passwords_mailer/reset.text.erb within layouts/mailer (Duration: 0.3ms | GC: 0.0ms)
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda]   Rendered layout layouts/mailer.text.erb (Duration: 0.5ms | GC: 0.0ms)
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda] PasswordsMailer#reset: processed outbound mail in 4.8ms
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda] Delivered mail 69cabda050104_bf54d98-35@RTeja-INMAC26.mail (1.5ms)
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda] Date: Mon, 30 Mar 2026 23:44:56 +0530
+From: from@example.com
+To: user1@example.com
+Message-ID: <69cabda050104_bf54d98-35@RTeja-INMAC26.mail>
+Subject: Reset your password
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_69cabda04fdac_bf54d98-412";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+
+----==_mimepart_69cabda04fdac_bf54d98-412
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+You can reset your password on
+http://example.com/passwords/eyJfcmFpbHMiOnsiZGF0YSI6WyJkMmIwNGIzYS0xMGJhLTRkMjUtYTcwNi03NjRlMmY4YjMzNmEiLCJ1Lmt6cG4uRmh1Il0sImV4cCI6IjIwMjYtMDMtMzBUMTg6Mjk6NTYuMzI2WiIsInB1ciI6IlVzZXJcbnBhc3N3b3JkX3Jlc2V0XG45MDAifX0=--a4bdfeae8a1d75c7b186d4e3a7b4b51a3e868560/edit
+
+This link will expire in 15 minutes.
+
+
+----==_mimepart_69cabda04fdac_bf54d98-412
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      /* Email styles need to be inline */
+    </style>
+  </head>
+
+  <body>
+    <p>
+  You can reset your password on
+  <a href="http://example.com/passwords/eyJfcmFpbHMiOnsiZGF0YSI6WyJkMmIwNGIzYS0xMGJhLTRkMjUtYTcwNi03NjRlMmY4YjMzNmEiLCJ1Lmt6cG4uRmh1Il0sImV4cCI6IjIwMjYtMDMtMzBUMTg6Mjk6NTYuMzI1WiIsInB1ciI6IlVzZXJcbnBhc3N3b3JkX3Jlc2V0XG45MDAifX0=--be07e5c28c9dc9f99e98aac29f37c9a0802e2947/edit">this password reset page</a>.
+
+  This link will expire in 15 minutes.
+</p>
+
+  </body>
+</html>
+
+----==_mimepart_69cabda04fdac_bf54d98-412--
+
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] [ActionMailer::MailDeliveryJob] [dc15ca67-1ecc-4431-b15b-165ca8fc7cda] Performed ActionMailer::MailDeliveryJob (Job ID: dc15ca67-1ecc-4431-b15b-165ca8fc7cda) from Test(default) in 10.63ms
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] [ActiveJob] Enqueued ActionMailer::MailDeliveryJob (Job ID: dc15ca67-1ecc-4431-b15b-165ca8fc7cda) to Test(default) with arguments: "PasswordsMailer", "reset", "deliver_now", {args: [#<GlobalID:0x0000000127e69bc8 @uri=#<URI::GID gid://lending-rails/User/d2b04b3a-10ba-4d25-a706-764e2f8b336a>>]}
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] Redirected to http://www.example.com/session/new
+[bf49ba25-d1f2-4ab8-a0c5-6bf5dc7c40a7] Completed 302 Found in 24ms (ActiveRecord: 5.0ms (2 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.9ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:14:56.373445"], ["email_address", "operator@example.com"], ["password_digest", "$2a$04$m0/H166MNIyRq68FmUlc6eZDR5uOvGP0VGhKyfPGrnzwZfgMzzMra"], ["updated_at", "2026-03-30 18:14:56.373445"]]
+  [1m[36mPaperTrail::Version Create (3.3ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:14:56.373445"], ["event", "create"], ["item_id", "8b08e457-cce6-4e12-9f2d-a27ea0c923bb"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[92b5f3b7-a073-4a57-afa2-992972c3c034] Started POST "/session" for 127.0.0.1 at 2026-03-30 23:44:56 +0530
+[92b5f3b7-a073-4a57-afa2-992972c3c034] Processing by SessionsController#create as HTML
+[92b5f3b7-a073-4a57-afa2-992972c3c034]   Parameters: {"email_address" => "[FILTERED]", "password" => "[FILTERED]"}
+[92b5f3b7-a073-4a57-afa2-992972c3c034]   [1m[36mUser Load (1.9ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email_address" = $1 LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+[92b5f3b7-a073-4a57-afa2-992972c3c034]   [1m[36mTRANSACTION (0.8ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+[92b5f3b7-a073-4a57-afa2-992972c3c034]   [1m[36mSession Create (3.4ms)[0m  [1m[32mINSERT INTO "sessions" ("created_at", "ip_address", "updated_at", "user_agent", "user_id") VALUES ($1, $2, $3, $4, $5) RETURNING "id"[0m  [["created_at", "2026-03-30 18:14:56.390052"], ["ip_address", "127.0.0.1"], ["updated_at", "2026-03-30 18:14:56.390052"], ["user_agent", nil], ["user_id", "8b08e457-cce6-4e12-9f2d-a27ea0c923bb"]]
+[92b5f3b7-a073-4a57-afa2-992972c3c034]   [1m[36mTRANSACTION (0.7ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[92b5f3b7-a073-4a57-afa2-992972c3c034] Redirected to http://www.example.com/
+[92b5f3b7-a073-4a57-afa2-992972c3c034] Completed 302 Found in 15ms (ActiveRecord: 11.4ms (2 queries, 0 cached) | GC: 0.0ms)
+[6553276c-ee7f-4ddf-bcdf-1e1977877846] Started GET "/jobs" for 127.0.0.1 at 2026-03-30 23:44:56 +0530
+[6553276c-ee7f-4ddf-bcdf-1e1977877846] Processing by MissionControl::Jobs::QueuesController#index as HTML
+[6553276c-ee7f-4ddf-bcdf-1e1977877846]   [1m[36mSession Load (2.1ms)[0m  [1m[34mSELECT "sessions".* FROM "sessions" WHERE "sessions"."id" = $1 LIMIT $2[0m  [["id", "8cda27b2-4763-40bd-87d1-74a64681cb35"], ["LIMIT", 1]]
+[6553276c-ee7f-4ddf-bcdf-1e1977877846]   [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "8b08e457-cce6-4e12-9f2d-a27ea0c923bb"], ["LIMIT", 1]]
+[6553276c-ee7f-4ddf-bcdf-1e1977877846] Filter chain halted as :authenticate_by_http_basic rendered or redirected
+[6553276c-ee7f-4ddf-bcdf-1e1977877846] Completed 401 Unauthorized in 16ms (ActiveRecord: 2.6ms (2 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+[c2dec7de-2664-4f3f-b964-497c3d6496c3] Started GET "/" for 127.0.0.1 at 2026-03-30 23:44:56 +0530
+[c2dec7de-2664-4f3f-b964-497c3d6496c3] Processing by HomeController#index as HTML
+[c2dec7de-2664-4f3f-b964-497c3d6496c3]   Rendering layout layouts/application.html.erb
+[c2dec7de-2664-4f3f-b964-497c3d6496c3]   Rendering home/index.html.erb within layouts/application
+[c2dec7de-2664-4f3f-b964-497c3d6496c3]   Rendered home/index.html.erb within layouts/application (Duration: 0.3ms | GC: 0.0ms)
+[c2dec7de-2664-4f3f-b964-497c3d6496c3]   Rendered layout layouts/application.html.erb (Duration: 31.9ms | GC: 0.0ms)
+[c2dec7de-2664-4f3f-b964-497c3d6496c3] Completed 200 OK in 34ms (Views: 33.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mBEGIN[0m
+[fd385b15-1c2f-4387-aa48-a638d50e1cb2] Started GET "/up" for 127.0.0.1 at 2026-03-30 23:44:56 +0530
+[fd385b15-1c2f-4387-aa48-a638d50e1cb2] Processing by Rails::HealthController#show as HTML
+[fd385b15-1c2f-4387-aa48-a638d50e1cb2]   Rendering html template
+[fd385b15-1c2f-4387-aa48-a638d50e1cb2]   Rendered html template (Duration: 0.0ms | GC: 0.0ms)
+[fd385b15-1c2f-4387-aa48-a638d50e1cb2] Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (1.2ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", ""], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.7ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email_address" IS NULL LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Load (1.7ms)[0m  [1m[34mSELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Create (1.3ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:14:56.472676"], ["email_address", "user3@example.com"], ["password_digest", "$2a$04$.5Na4xUUBiAoAOAfKJcUde4mPDB/YTkFpu7jSw9Qcwk0JTyWaF2lm"], ["updated_at", "2026-03-30 18:14:56.472676"]]
+  [1m[36mPaperTrail::Version Create (1.2ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:14:56.472676"], ["event", "create"], ["item_id", "01bb5e08-2486-4920-a179-5f02edf3bd35"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.5ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user3@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.9ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user3@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (1.2ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "admin@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.8ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.8ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.4ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:15:20.766700"], ["email_address", "operator@example.com"], ["password_digest", "$2a$04$arfxAoFCtS1uLdb.tciKV.oUa9BvdgJd0yyxstFnWCkC0r.Fack.K"], ["updated_at", "2026-03-30 18:15:20.766700"]]
+  [1m[36mPaperTrail::Version Create (0.5ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:15:20.766700"], ["event", "create"], ["item_id", "f0777075-bcf6-4b1b-bff3-970dd45cdc7b"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71] Started POST "/session" for 127.0.0.1 at 2026-03-30 23:45:20 +0530
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71] Processing by SessionsController#create as HTML
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71]   Parameters: {"email_address" => "[FILTERED]", "password" => "[FILTERED]"}
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71]   [1m[36mUser Load (1.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email_address" = $1 LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71]   [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71]   [1m[36mSession Create (1.9ms)[0m  [1m[32mINSERT INTO "sessions" ("created_at", "ip_address", "updated_at", "user_agent", "user_id") VALUES ($1, $2, $3, $4, $5) RETURNING "id"[0m  [["created_at", "2026-03-30 18:15:20.791929"], ["ip_address", "127.0.0.1"], ["updated_at", "2026-03-30 18:15:20.791929"], ["user_agent", nil], ["user_id", "f0777075-bcf6-4b1b-bff3-970dd45cdc7b"]]
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71]   [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71] Redirected to http://www.example.com/
+[bfb3e2e0-53b7-42b4-b1b9-1a7c3e1eed71] Completed 302 Found in 19ms (ActiveRecord: 7.3ms (2 queries, 0 cached) | GC: 0.0ms)
+[0d3f700e-276e-495e-96ff-42a6b1aae8ac] Started GET "/jobs" for 127.0.0.1 at 2026-03-30 23:45:20 +0530
+[0d3f700e-276e-495e-96ff-42a6b1aae8ac] Processing by MissionControl::Jobs::QueuesController#index as HTML
+[0d3f700e-276e-495e-96ff-42a6b1aae8ac]   [1m[36mSession Load (1.1ms)[0m  [1m[34mSELECT "sessions".* FROM "sessions" WHERE "sessions"."id" = $1 LIMIT $2[0m  [["id", "0fc4df8d-2f87-4062-a15b-3e0a72aab08a"], ["LIMIT", 1]]
+[0d3f700e-276e-495e-96ff-42a6b1aae8ac]   [1m[36mUser Load (0.9ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "f0777075-bcf6-4b1b-bff3-970dd45cdc7b"], ["LIMIT", 1]]
+[0d3f700e-276e-495e-96ff-42a6b1aae8ac] Filter chain halted as :authenticate_by_http_basic rendered or redirected
+[0d3f700e-276e-495e-96ff-42a6b1aae8ac] Completed 401 Unauthorized in 8ms (ActiveRecord: 2.0ms (2 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.9ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.9ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.8ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user1@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.4ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:01.482371"], ["email_address", "user1@example.com"], ["password_digest", "$2a$04$7hbhgPiQa11jZUXKaJPUXOe7384Di2Zt5nqmDH.jwR4xin8pPYBcu"], ["updated_at", "2026-03-30 18:16:01.482371"]]
+  [1m[36mPaperTrail::Version Create (1.1ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:01.482371"], ["event", "create"], ["item_id", "adb76146-8feb-4282-9445-d10d0f79e316"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] Started POST "/passwords" for 127.0.0.1 at 2026-03-30 23:46:01 +0530
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] Processing by PasswordsController#create as HTML
+[a726005a-8986-4b7a-9adc-dbe4568d60ae]   Parameters: {"email_address" => "[FILTERED]"}
+[a726005a-8986-4b7a-9adc-dbe4568d60ae]   [1m[36mUser Load (1.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email_address" = $1 LIMIT $2[0m  [["email_address", "user1@example.com"], ["LIMIT", 1]]
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   [1m[36mUser Load (1.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "adb76146-8feb-4282-9445-d10d0f79e316"], ["LIMIT", 1]]
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9] Performing ActionMailer::MailDeliveryJob (Job ID: d55b8723-6a23-4af7-a092-568ad9baa9a9) from Test(default) enqueued at 2026-03-30T18:16:01.505127000Z with arguments: "PasswordsMailer", "reset", "deliver_now", {args: [#<GlobalID:0x0000000126af02b8 @uri=#<URI::GID gid://lending-rails/User/adb76146-8feb-4282-9445-d10d0f79e316>>]}
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendering layout layouts/mailer.html.erb
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendering passwords_mailer/reset.html.erb within layouts/mailer
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendered passwords_mailer/reset.html.erb within layouts/mailer (Duration: 0.7ms | GC: 0.0ms)
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendered layout layouts/mailer.html.erb (Duration: 1.1ms | GC: 0.0ms)
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendering layout layouts/mailer.text.erb
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendering passwords_mailer/reset.text.erb within layouts/mailer
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendered passwords_mailer/reset.text.erb within layouts/mailer (Duration: 0.2ms | GC: 0.0ms)
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9]   Rendered layout layouts/mailer.text.erb (Duration: 0.4ms | GC: 0.0ms)
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9] PasswordsMailer#reset: processed outbound mail in 4.9ms
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9] Delivered mail 69cabde17d07f_c02dd984658b@RTeja-INMAC26.mail (0.9ms)
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9] Date: Mon, 30 Mar 2026 23:46:01 +0530
+From: from@example.com
+To: user1@example.com
+Message-ID: <69cabde17d07f_c02dd984658b@RTeja-INMAC26.mail>
+Subject: Reset your password
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_69cabde17cdc4_c02dd98464f9";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+
+----==_mimepart_69cabde17cdc4_c02dd98464f9
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+You can reset your password on
+http://example.com/passwords/eyJfcmFpbHMiOnsiZGF0YSI6WyJhZGI3NjE0Ni04ZmViLTQyODItOTQ0NS1kMTBkMGY3OWUzMTYiLCJaVVhLYUpQVVhPIl0sImV4cCI6IjIwMjYtMDMtMzBUMTg6MzE6MDEuNTEwWiIsInB1ciI6IlVzZXJcbnBhc3N3b3JkX3Jlc2V0XG45MDAifX0=--b987a0ca491589c0496504d1dadff16c29347870/edit
+
+This link will expire in 15 minutes.
+
+
+----==_mimepart_69cabde17cdc4_c02dd98464f9
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      /* Email styles need to be inline */
+    </style>
+  </head>
+
+  <body>
+    <p>
+  You can reset your password on
+  <a href="http://example.com/passwords/eyJfcmFpbHMiOnsiZGF0YSI6WyJhZGI3NjE0Ni04ZmViLTQyODItOTQ0NS1kMTBkMGY3OWUzMTYiLCJaVVhLYUpQVVhPIl0sImV4cCI6IjIwMjYtMDMtMzBUMTg6MzE6MDEuNTA5WiIsInB1ciI6IlVzZXJcbnBhc3N3b3JkX3Jlc2V0XG45MDAifX0=--26def44e550f8ea07b9bf9de3e1a08e6f11d252a/edit">this password reset page</a>.
+
+  This link will expire in 15 minutes.
+</p>
+
+  </body>
+</html>
+
+----==_mimepart_69cabde17cdc4_c02dd98464f9--
+
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] [ActionMailer::MailDeliveryJob] [d55b8723-6a23-4af7-a092-568ad9baa9a9] Performed ActionMailer::MailDeliveryJob (Job ID: d55b8723-6a23-4af7-a092-568ad9baa9a9) from Test(default) in 7.63ms
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] [ActiveJob] Enqueued ActionMailer::MailDeliveryJob (Job ID: d55b8723-6a23-4af7-a092-568ad9baa9a9) to Test(default) with arguments: "PasswordsMailer", "reset", "deliver_now", {args: [#<GlobalID:0x0000000126272eb0 @uri=#<URI::GID gid://lending-rails/User/adb76146-8feb-4282-9445-d10d0f79e316>>]}
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] Redirected to http://www.example.com/session/new
+[a726005a-8986-4b7a-9adc-dbe4568d60ae] Completed 302 Found in 20ms (ActiveRecord: 2.6ms (2 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.2ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.6ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:01.527883"], ["email_address", "operator@example.com"], ["password_digest", "$2a$04$KandeqJq5LkLeORlMB594ef.OpZkkg1kDm9LKGvV6.0kGzkDmBs7a"], ["updated_at", "2026-03-30 18:16:01.527883"]]
+  [1m[36mPaperTrail::Version Create (1.2ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:01.527883"], ["event", "create"], ["item_id", "78da3ebb-77c5-4601-a8a0-1969509991a1"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[27ac094e-0490-45cb-a208-88eaab563a72] Started POST "/session" for 127.0.0.1 at 2026-03-30 23:46:01 +0530
+[27ac094e-0490-45cb-a208-88eaab563a72] Processing by SessionsController#create as HTML
+[27ac094e-0490-45cb-a208-88eaab563a72]   Parameters: {"email_address" => "[FILTERED]", "password" => "[FILTERED]"}
+[27ac094e-0490-45cb-a208-88eaab563a72]   [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email_address" = $1 LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+[27ac094e-0490-45cb-a208-88eaab563a72]   [1m[36mTRANSACTION (1.0ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+[27ac094e-0490-45cb-a208-88eaab563a72]   [1m[36mSession Create (2.4ms)[0m  [1m[32mINSERT INTO "sessions" ("created_at", "ip_address", "updated_at", "user_agent", "user_id") VALUES ($1, $2, $3, $4, $5) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:01.537593"], ["ip_address", "127.0.0.1"], ["updated_at", "2026-03-30 18:16:01.537593"], ["user_agent", nil], ["user_id", "78da3ebb-77c5-4601-a8a0-1969509991a1"]]
+[27ac094e-0490-45cb-a208-88eaab563a72]   [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[27ac094e-0490-45cb-a208-88eaab563a72] Redirected to http://www.example.com/
+[27ac094e-0490-45cb-a208-88eaab563a72] Completed 302 Found in 10ms (ActiveRecord: 6.5ms (2 queries, 0 cached) | GC: 0.0ms)
+[4910d08a-024c-4863-9899-3261c49830ef] Started GET "/jobs" for 127.0.0.1 at 2026-03-30 23:46:01 +0530
+[4910d08a-024c-4863-9899-3261c49830ef] Processing by MissionControl::Jobs::QueuesController#index as HTML
+[4910d08a-024c-4863-9899-3261c49830ef]   [1m[36mSession Load (1.0ms)[0m  [1m[34mSELECT "sessions".* FROM "sessions" WHERE "sessions"."id" = $1 LIMIT $2[0m  [["id", "5325dc36-985c-4052-8d3d-caaa328675ab"], ["LIMIT", 1]]
+[4910d08a-024c-4863-9899-3261c49830ef]   [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "78da3ebb-77c5-4601-a8a0-1969509991a1"], ["LIMIT", 1]]
+[4910d08a-024c-4863-9899-3261c49830ef] Redirected to http://www.example.com/jobs/
+[4910d08a-024c-4863-9899-3261c49830ef] Filter chain halted as :require_admin_user! rendered or redirected
+[4910d08a-024c-4863-9899-3261c49830ef] Completed 302 Found in 8ms (ActiveRecord: 1.4ms (2 queries, 0 cached) | GC: 0.0ms)
+[6a549f49-36a0-433e-b414-d465706b42f6] Started GET "/jobs/" for 127.0.0.1 at 2026-03-30 23:46:01 +0530
+[6a549f49-36a0-433e-b414-d465706b42f6] Processing by MissionControl::Jobs::QueuesController#index as HTML
+[6a549f49-36a0-433e-b414-d465706b42f6]   [1m[36mSession Load (0.6ms)[0m  [1m[34mSELECT "sessions".* FROM "sessions" WHERE "sessions"."id" = $1 LIMIT $2[0m  [["id", "5325dc36-985c-4052-8d3d-caaa328675ab"], ["LIMIT", 1]]
+[6a549f49-36a0-433e-b414-d465706b42f6]   [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "78da3ebb-77c5-4601-a8a0-1969509991a1"], ["LIMIT", 1]]
+[6a549f49-36a0-433e-b414-d465706b42f6] Redirected to http://www.example.com/jobs/
+[6a549f49-36a0-433e-b414-d465706b42f6] Filter chain halted as :require_admin_user! rendered or redirected
+[6a549f49-36a0-433e-b414-d465706b42f6] Completed 302 Found in 4ms (ActiveRecord: 1.1ms (2 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+[73af7ed7-a69e-4ba1-afc5-4a8f9922156a] Started GET "/" for 127.0.0.1 at 2026-03-30 23:46:01 +0530
+[73af7ed7-a69e-4ba1-afc5-4a8f9922156a] Processing by HomeController#index as HTML
+[73af7ed7-a69e-4ba1-afc5-4a8f9922156a]   Rendering layout layouts/application.html.erb
+[73af7ed7-a69e-4ba1-afc5-4a8f9922156a]   Rendering home/index.html.erb within layouts/application
+[73af7ed7-a69e-4ba1-afc5-4a8f9922156a]   Rendered home/index.html.erb within layouts/application (Duration: 0.4ms | GC: 0.0ms)
+[73af7ed7-a69e-4ba1-afc5-4a8f9922156a]   Rendered layout layouts/application.html.erb (Duration: 28.7ms | GC: 0.0ms)
+[73af7ed7-a69e-4ba1-afc5-4a8f9922156a] Completed 200 OK in 31ms (Views: 30.3ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (1.0ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+[8e6bcc7c-2412-4f25-bc06-fbe1e76fa013] Started GET "/up" for 127.0.0.1 at 2026-03-30 23:46:01 +0530
+[8e6bcc7c-2412-4f25-bc06-fbe1e76fa013] Processing by Rails::HealthController#show as HTML
+[8e6bcc7c-2412-4f25-bc06-fbe1e76fa013]   Rendering html template
+[8e6bcc7c-2412-4f25-bc06-fbe1e76fa013]   Rendered html template (Duration: 0.0ms | GC: 0.0ms)
+[8e6bcc7c-2412-4f25-bc06-fbe1e76fa013] Completed 200 OK in 0ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (0.5ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", ""], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email_address" IS NULL LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Load (1.9ms)[0m  [1m[34mSELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Create (1.7ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:01.603935"], ["email_address", "user3@example.com"], ["password_digest", "$2a$04$QZ4pIBtjDd3B127/fRobkOSgy..MdYyJW5tmDUt3ZHkl9S.Hwqxz."], ["updated_at", "2026-03-30 18:16:01.603935"]]
+  [1m[36mPaperTrail::Version Create (0.7ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:01.603935"], ["event", "create"], ["item_id", "975027c1-d770-439e-8089-6434718ea384"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.7ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user3@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user3@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (0.8ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "admin@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.9ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.1ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user1@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.4ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:23.608520"], ["email_address", "user1@example.com"], ["password_digest", "$2a$04$0.MKg.4N9yR4eh3XNMYt6eNQhNxJsJJEsiZ16j91FVv7KUf4D08/G"], ["updated_at", "2026-03-30 18:16:23.608520"]]
+  [1m[36mPaperTrail::Version Create (0.5ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:23.608520"], ["event", "create"], ["item_id", "8e1a7e36-a3c0-4e8a-970a-c4d4ad69a5af"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[18acd909-9a91-470a-ac97-9bf173aa56cf] Started POST "/passwords" for 127.0.0.1 at 2026-03-30 23:46:23 +0530
+[18acd909-9a91-470a-ac97-9bf173aa56cf] Processing by PasswordsController#create as HTML
+[18acd909-9a91-470a-ac97-9bf173aa56cf]   Parameters: {"email_address" => "[FILTERED]"}
+[18acd909-9a91-470a-ac97-9bf173aa56cf]   [1m[36mUser Load (0.9ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email_address" = $1 LIMIT $2[0m  [["email_address", "user1@example.com"], ["LIMIT", 1]]
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "8e1a7e36-a3c0-4e8a-970a-c4d4ad69a5af"], ["LIMIT", 1]]
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4] Performing ActionMailer::MailDeliveryJob (Job ID: 4e8e80d1-3da4-4227-b361-f7820fab47f4) from Test(default) enqueued at 2026-03-30T18:16:23.630378000Z with arguments: "PasswordsMailer", "reset", "deliver_now", {args: [#<GlobalID:0x0000000127087c30 @uri=#<URI::GID gid://lending-rails/User/8e1a7e36-a3c0-4e8a-970a-c4d4ad69a5af>>]}
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendering layout layouts/mailer.html.erb
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendering passwords_mailer/reset.html.erb within layouts/mailer
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendered passwords_mailer/reset.html.erb within layouts/mailer (Duration: 0.8ms | GC: 0.0ms)
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendered layout layouts/mailer.html.erb (Duration: 1.1ms | GC: 0.0ms)
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendering layout layouts/mailer.text.erb
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendering passwords_mailer/reset.text.erb within layouts/mailer
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendered passwords_mailer/reset.text.erb within layouts/mailer (Duration: 0.3ms | GC: 0.0ms)
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4]   Rendered layout layouts/mailer.text.erb (Duration: 0.5ms | GC: 0.0ms)
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4] PasswordsMailer#reset: processed outbound mail in 4.2ms
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4] Delivered mail 69cabdf79b4cd_c08cd985811@RTeja-INMAC26.mail (0.9ms)
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4] Date: Mon, 30 Mar 2026 23:46:23 +0530
+From: from@example.com
+To: user1@example.com
+Message-ID: <69cabdf79b4cd_c08cd985811@RTeja-INMAC26.mail>
+Subject: Reset your password
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_69cabdf79b2d3_c08cd9858098";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+
+----==_mimepart_69cabdf79b2d3_c08cd9858098
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+You can reset your password on
+http://example.com/passwords/eyJfcmFpbHMiOnsiZGF0YSI6WyI4ZTFhN2UzNi1hM2MwLTRlOGEtOTcwYS1jNGQ0YWQ2OWE1YWYiLCJlaDNYTk1ZdDZlIl0sImV4cCI6IjIwMjYtMDMtMzBUMTg6MzE6MjMuNjM1WiIsInB1ciI6IlVzZXJcbnBhc3N3b3JkX3Jlc2V0XG45MDAifX0=--98e53f9afa23a788f9d8d045107a15e7ef42010c/edit
+
+This link will expire in 15 minutes.
+
+
+----==_mimepart_69cabdf79b2d3_c08cd9858098
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      /* Email styles need to be inline */
+    </style>
+  </head>
+
+  <body>
+    <p>
+  You can reset your password on
+  <a href="http://example.com/passwords/eyJfcmFpbHMiOnsiZGF0YSI6WyI4ZTFhN2UzNi1hM2MwLTRlOGEtOTcwYS1jNGQ0YWQ2OWE1YWYiLCJlaDNYTk1ZdDZlIl0sImV4cCI6IjIwMjYtMDMtMzBUMTg6MzE6MjMuNjMzWiIsInB1ciI6IlVzZXJcbnBhc3N3b3JkX3Jlc2V0XG45MDAifX0=--8380cbccfdffbd19598cd0fe4ec3d91a4ce503b9/edit">this password reset page</a>.
+
+  This link will expire in 15 minutes.
+</p>
+
+  </body>
+</html>
+
+----==_mimepart_69cabdf79b2d3_c08cd9858098--
+
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] [ActionMailer::MailDeliveryJob] [4e8e80d1-3da4-4227-b361-f7820fab47f4] Performed ActionMailer::MailDeliveryJob (Job ID: 4e8e80d1-3da4-4227-b361-f7820fab47f4) from Test(default) in 6.39ms
+[18acd909-9a91-470a-ac97-9bf173aa56cf] [ActiveJob] Enqueued ActionMailer::MailDeliveryJob (Job ID: 4e8e80d1-3da4-4227-b361-f7820fab47f4) to Test(default) with arguments: "PasswordsMailer", "reset", "deliver_now", {args: [#<GlobalID:0x0000000126aede28 @uri=#<URI::GID gid://lending-rails/User/8e1a7e36-a3c0-4e8a-970a-c4d4ad69a5af>>]}
+[18acd909-9a91-470a-ac97-9bf173aa56cf] Redirected to http://www.example.com/session/new
+[18acd909-9a91-470a-ac97-9bf173aa56cf] Completed 302 Found in 18ms (ActiveRecord: 1.4ms (2 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (1.0ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.9ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.4ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:23.648553"], ["email_address", "operator@example.com"], ["password_digest", "$2a$04$l0IiUJ8GHnTJ4p48FuNBR.AUIYAqbp6XJLe.zXeWsqcYpDYGQOEpS"], ["updated_at", "2026-03-30 18:16:23.648553"]]
+  [1m[36mPaperTrail::Version Create (0.4ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:23.648553"], ["event", "create"], ["item_id", "5f190bb4-919a-4642-ae55-7b0aa6b92e43"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[392eeb73-be6b-40dd-89be-50211c203d39] Started POST "/session" for 127.0.0.1 at 2026-03-30 23:46:23 +0530
+[392eeb73-be6b-40dd-89be-50211c203d39] Processing by SessionsController#create as HTML
+[392eeb73-be6b-40dd-89be-50211c203d39]   Parameters: {"email_address" => "[FILTERED]", "password" => "[FILTERED]"}
+[392eeb73-be6b-40dd-89be-50211c203d39]   [1m[36mUser Load (0.7ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email_address" = $1 LIMIT $2[0m  [["email_address", "operator@example.com"], ["LIMIT", 1]]
+[392eeb73-be6b-40dd-89be-50211c203d39]   [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+[392eeb73-be6b-40dd-89be-50211c203d39]   [1m[36mSession Create (1.6ms)[0m  [1m[32mINSERT INTO "sessions" ("created_at", "ip_address", "updated_at", "user_agent", "user_id") VALUES ($1, $2, $3, $4, $5) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:23.659401"], ["ip_address", "127.0.0.1"], ["updated_at", "2026-03-30 18:16:23.659401"], ["user_agent", nil], ["user_id", "5f190bb4-919a-4642-ae55-7b0aa6b92e43"]]
+[392eeb73-be6b-40dd-89be-50211c203d39]   [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+[392eeb73-be6b-40dd-89be-50211c203d39] Redirected to http://www.example.com/
+[392eeb73-be6b-40dd-89be-50211c203d39] Completed 302 Found in 11ms (ActiveRecord: 6.8ms (2 queries, 0 cached) | GC: 0.0ms)
+[3e025339-656e-4937-874c-cd4c8954fd4c] Started GET "/jobs" for 127.0.0.1 at 2026-03-30 23:46:23 +0530
+[3e025339-656e-4937-874c-cd4c8954fd4c] Processing by MissionControl::Jobs::QueuesController#index as HTML
+[3e025339-656e-4937-874c-cd4c8954fd4c]   [1m[36mSession Load (1.2ms)[0m  [1m[34mSELECT "sessions".* FROM "sessions" WHERE "sessions"."id" = $1 LIMIT $2[0m  [["id", "21fc6547-90cf-4e86-9fb5-4ff7c4f87c09"], ["LIMIT", 1]]
+[3e025339-656e-4937-874c-cd4c8954fd4c]   [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", "5f190bb4-919a-4642-ae55-7b0aa6b92e43"], ["LIMIT", 1]]
+[3e025339-656e-4937-874c-cd4c8954fd4c] Redirected to http://www.example.com/jobs/
+[3e025339-656e-4937-874c-cd4c8954fd4c] Filter chain halted as :require_admin_user! rendered or redirected
+[3e025339-656e-4937-874c-cd4c8954fd4c] Completed 302 Found in 8ms (ActiveRecord: 1.7ms (2 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+[705b3bd8-74a0-46c5-98c5-605bb5956777] Started GET "/" for 127.0.0.1 at 2026-03-30 23:46:23 +0530
+[705b3bd8-74a0-46c5-98c5-605bb5956777] Processing by HomeController#index as HTML
+[705b3bd8-74a0-46c5-98c5-605bb5956777]   Rendering layout layouts/application.html.erb
+[705b3bd8-74a0-46c5-98c5-605bb5956777]   Rendering home/index.html.erb within layouts/application
+[705b3bd8-74a0-46c5-98c5-605bb5956777]   Rendered home/index.html.erb within layouts/application (Duration: 0.4ms | GC: 0.0ms)
+[705b3bd8-74a0-46c5-98c5-605bb5956777]   Rendered layout layouts/application.html.erb (Duration: 25.4ms | GC: 0.0ms)
+[705b3bd8-74a0-46c5-98c5-605bb5956777] Completed 200 OK in 28ms (Views: 27.0ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+[e0ee6e78-e56d-469b-b443-f493322d695d] Started GET "/up" for 127.0.0.1 at 2026-03-30 23:46:23 +0530
+[e0ee6e78-e56d-469b-b443-f493322d695d] Processing by Rails::HealthController#show as HTML
+[e0ee6e78-e56d-469b-b443-f493322d695d]   Rendering html template
+[e0ee6e78-e56d-469b-b443-f493322d695d]   Rendered html template (Duration: 0.0ms | GC: 0.0ms)
+[e0ee6e78-e56d-469b-b443-f493322d695d] Completed 200 OK in 0ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", ""], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.7ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email_address" IS NULL LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Load (1.0ms)[0m  [1m[34mSELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT $1[0m  [["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Create (0.8ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "email_address", "password_digest", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:23.717287"], ["email_address", "user3@example.com"], ["password_digest", "$2a$04$DuKEVew65RY1yAVMOp33A.T0EoVQdDjjMA.nAYYCxbxlbhXR6FFFO"], ["updated_at", "2026-03-30 18:16:23.717287"]]
+  [1m[36mPaperTrail::Version Create (0.5ms)[0m  [1m[32mINSERT INTO "versions" ("created_at", "event", "item_id", "item_type", "object", "whodunnit") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-03-30 18:16:23.717287"], ["event", "create"], ["item_id", "932f034b-8361-459d-ae52-ea3cba4d591d"], ["item_type", "User"], ["object", nil], ["whodunnit", nil]]
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.5ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user3@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "user3@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mUser Exists? (1.0ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email_address") = LOWER($1) LIMIT $2[0m  [["email_address", "admin@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[31mROLLBACK[0m

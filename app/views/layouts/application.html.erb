@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) || "Lending Rails" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Lending Rails">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
+    <div class="min-h-screen">
+      <% if alert = flash[:alert] %>
+        <div class="border-b border-rose-200 bg-rose-50">
+          <p class="mx-auto max-w-7xl px-6 py-3 text-sm font-medium text-rose-700"><%= alert %></p>
+        </div>
+      <% end %>
+
+      <% if notice = flash[:notice] %>
+        <div class="border-b border-emerald-200 bg-emerald-50">
+          <p class="mx-auto max-w-7xl px-6 py-3 text-sm font-medium text-emerald-700"><%= notice %></p>
+        </div>
+      <% end %>
+
+      <main class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-10 lg:px-8">
+        <%= yield %>
+      </main>
+    </div>
+  </body>
+</html>

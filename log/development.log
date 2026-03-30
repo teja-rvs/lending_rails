@@ -1,0 +1,10 @@
+[5fe8e657-134f-462c-8c7f-726c72a089f0] Started HEAD "/" for 127.0.0.1 at 2026-03-30 23:26:02 +0530
+[5fe8e657-134f-462c-8c7f-726c72a089f0]   [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='LendingRails'*/[0m
+[5fe8e657-134f-462c-8c7f-726c72a089f0] Processing by HomeController#index as */*
+[5fe8e657-134f-462c-8c7f-726c72a089f0]   Rendering layout layouts/application.html.erb
+[5fe8e657-134f-462c-8c7f-726c72a089f0]   Rendering home/index.html.erb within layouts/application
+[5fe8e657-134f-462c-8c7f-726c72a089f0]   Rendered home/index.html.erb within layouts/application (Duration: 0.3ms | GC: 0.0ms)
+[5fe8e657-134f-462c-8c7f-726c72a089f0]   Rendered layout layouts/application.html.erb (Duration: 37.7ms | GC: 10.5ms)
+[5fe8e657-134f-462c-8c7f-726c72a089f0] Completed 200 OK in 58ms (Views: 40.5ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 10.5ms)
+
+

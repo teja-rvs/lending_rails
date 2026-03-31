@@ -16,7 +16,9 @@ RSpec.describe 'Root shell', type: :request do
     get root_path
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include('lending_rails')
-    expect(response.body).to include('Lending operations workspace')
+    assert_select "title", text: "Workspace | lending_rails"
+    assert_select "h1", text: "Lending operations workspace"
+    assert_select "p", text: /Signed in as #{Regexp.escape(user.email_address)}/
+    assert_select "form[action='#{session_path}'] button", text: "Sign out"
   end
 end

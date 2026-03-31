@@ -48,6 +48,24 @@ RSpec.describe "Sessions", type: :request do
     expect(Session.where(user: user).count).to eq(1)
   end
 
+  it "signs an admin out and requires authentication again for the workspace" do
+    user = create(:user, email_address: "admin@example.com")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    session_record = Session.find_by!(user: user)
+
+    expect {
+      delete session_path
+    }.to change(Session, :count).by(-1)
+
+    expect(response).to redirect_to(new_session_path)
+    expect(Session.exists?(session_record.id)).to be(false)
+
+    get root_path
+
+    expect(response).to redirect_to(new_session_path)
+  end
+
   it "returns invalid credentials to the login screen with one clear error message" do
     user = create(:user, email_address: "admin@example.com")
 

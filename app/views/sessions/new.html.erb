@@ -8,8 +8,9 @@
       Use your admin account to continue into the internal lending operations system.
     </p>
 
-    <%= form_with url: session_url, class: "mt-8 space-y-6" do |form| %>
-      <div>
+    <%= form_with url: session_url, class: "mt-8" do |form| %>
+      <div class="space-y-6">
+        <div class="space-y-2">
         <%= form.label :email_address, "Email address", class: "block text-sm font-medium text-slate-700" %>
         <%= form.email_field :email_address,
             required: true,
@@ -17,27 +18,28 @@
             autocomplete: "username",
             placeholder: "admin@example.com",
             value: params[:email_address],
-            class: "mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
-      </div>
-
-      <div>
-        <div class="flex items-center justify-between gap-4">
-          <%= form.label :password, "Password", class: "block text-sm font-medium text-slate-700" %>
-          <%= link_to "Forgot password?", new_password_path, class: "text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900 hover:decoration-slate-500" %>
+            class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
         </div>
-        <%= form.password_field :password,
-            required: true,
-            autocomplete: "current-password",
-            placeholder: "Enter your password",
-            maxlength: 72,
-            class: "mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
-      </div>
 
-      <div class="space-y-4">
-        <%= form.submit "Sign in", class: "inline-flex w-full items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
-        <p class="text-xs leading-5 text-slate-500">
-          Access is limited to authorized admin operators. Contact the platform owner if you need help restoring access.
-        </p>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-4">
+            <%= form.label :password, "Password", class: "block text-sm font-medium text-slate-700" %>
+            <%= link_to "Forgot password?", new_password_path, class: "text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900 hover:decoration-slate-500" %>
+          </div>
+          <%= form.password_field :password,
+              required: true,
+              autocomplete: "current-password",
+              placeholder: "Enter your password",
+              maxlength: 72,
+              class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
+        </div>
+
+        <div class="pt-2">
+          <%= form.submit "Sign in", class: "inline-flex w-full items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+          <p class="mt-4 text-xs leading-5 text-slate-500">
+            Access is limited to authorized admin operators. Contact the platform owner if you need help restoring access.
+          </p>
+        </div>
       </div>
     <% end %>
   </div>

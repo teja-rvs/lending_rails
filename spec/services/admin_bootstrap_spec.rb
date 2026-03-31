@@ -38,4 +38,26 @@ RSpec.describe AdminBootstrap, type: :service do
     expect(user.authenticate("new-password123!")).to be_truthy
     expect(user.authenticate("different-bootstrap-password!")).to be(false)
   end
+
+  it "raises a clear error when no admin email address is configured" do
+    ENV["ADMIN_EMAIL_ADDRESSES"] = nil
+
+    expect { described_class.call }
+      .to raise_error(
+        AdminBootstrap::MissingConfigurationError,
+        "Set ADMIN_EMAIL_ADDRESSES to seed the MVP admin account."
+      )
+  end
+
+  it "raises a clear error when no bootstrap password is configured" do
+    ENV["ADMIN_PASSWORD"] = nil
+
+    allow(Rails.application.credentials).to receive(:dig).with(:admin, :password).and_return(nil)
+
+    expect { described_class.call }
+      .to raise_error(
+        AdminBootstrap::MissingConfigurationError,
+        "Set ADMIN_PASSWORD or Rails credentials admin.password before running db:seed."
+      )
+  end
 end

@@ -52,6 +52,24 @@ RSpec.describe "Passwords", type: :request do
     expect(Session.exists?(session_record.id)).to be(false)
   end
 
+  it "redirects back to the reset form when the password confirmation does not match" do
+    user = create(:user, email_address: "admin@example.com")
+
+    patch password_path(user.password_reset_token), params: {
+      password: "new-password123!",
+      password_confirmation: "different-password123!"
+    }
+
+    expect(response).to have_http_status(:redirect)
+    expect(response.location).to match(%r{\Ahttp://www\.example\.com/passwords/.+/edit\z})
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h1", text: "Update your password"
+    assert_select "p", text: "Passwords did not match."
+  end
+
   it "redirects invalid reset tokens back to the request form" do
     get edit_password_path("invalid-token")
 

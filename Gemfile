@@ -82,3 +82,5 @@ gem "shoulda-matchers", "~> 7.0", groups: [ :development, :test ]
 gem "strong_migrations", "~> 2.5", groups: [ :development, :test ]
 
 gem "dotenv-rails", "~> 3.2", groups: [:development, :test]
+
+gem "simplecov", "~> 0.22.0", group: :test

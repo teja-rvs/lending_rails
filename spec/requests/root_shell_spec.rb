@@ -9,7 +9,7 @@ RSpec.describe 'Root shell', type: :request do
     ENV["ADMIN_EMAIL_ADDRESSES"] = original_admin_addresses
   end
 
-  it 'renders the internal application frame for an authenticated admin' do
+  it 'renders the authenticated workspace shell content for an admin' do
     user = create(:user, email_address: "admin@example.com")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
@@ -17,8 +17,10 @@ RSpec.describe 'Root shell', type: :request do
 
     expect(response).to have_http_status(:ok)
     assert_select "title", text: "Workspace | lending_rails"
-    assert_select "h1", text: "Lending operations workspace"
-    assert_select "p", text: /Signed in as #{Regexp.escape(user.email_address)}/
-    assert_select "form[action='#{session_path}'] button", text: "Sign out"
+    assert_select "p", text: "Authenticated workspace"
+    assert_select "a[href='#{mission_control_jobs_path}']", text: "Background jobs"
+    assert_select "a[href='#{rails_health_check_path}']", text: "Health check"
+    assert_select "h2", text: "What this workspace is for today"
+    assert_select "h2", text: "Session safety"
   end
 end

@@ -1,6 +1,9 @@
 require "rails_helper"
 
 RSpec.describe "Sessions", type: :request do
+  let(:app_routes) { Rails.application.routes.url_helpers }
+  let(:default_host) { "www.example.com" }
+
   around do |example|
     original_admin_addresses = ENV["ADMIN_EMAIL_ADDRESSES"]
     ENV["ADMIN_EMAIL_ADDRESSES"] = "admin@example.com"
@@ -38,17 +41,17 @@ RSpec.describe "Sessions", type: :request do
   it "redirects an admin back to the protected page that prompted sign in" do
     user = create(:user, email_address: "admin@example.com")
 
-    get "/jobs"
+    get mission_control_jobs_path
 
-    expect(response).to redirect_to("http://www.example.com/session/new")
+    expect(response).to redirect_to(app_routes.new_session_url(host: default_host))
 
-    post "/session", params: { email_address: user.email_address, password: "password123!" }
+    post app_routes.session_path, params: { email_address: user.email_address, password: "password123!" }
 
-    expect(response).to redirect_to("http://www.example.com/jobs/")
+    expect(URI.parse(response.location).path).to match(%r{\A#{Regexp.escape(app_routes.mission_control_jobs_path)}/?\z})
     expect(Session.where(user: user).count).to eq(1)
   end
 
-  it "signs an admin out and requires authentication again for the workspace" do
+  it "signs an admin out and requires authentication again for protected routes" do
     user = create(:user, email_address: "admin@example.com")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
@@ -59,11 +62,16 @@ RSpec.describe "Sessions", type: :request do
     }.to change(Session, :count).by(-1)
 
     expect(response).to redirect_to(new_session_path)
+    expect(response).to have_http_status(:see_other)
     expect(Session.exists?(session_record.id)).to be(false)
 
     get root_path
 
     expect(response).to redirect_to(new_session_path)
+
+    get mission_control_jobs_path
+
+    expect(response).to redirect_to(app_routes.new_session_url(host: default_host))
   end
 
   it "returns invalid credentials to the login screen with one clear error message" do

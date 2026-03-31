@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-30T22:54:36+05:30
-last_updated: 2026-03-31T14:30:00+0530
+last_updated: 2026-03-31T23:34:48+0530
 project: lending_rails
 project_key: NOKEY
 tracking_system: file-system
@@ -48,8 +48,8 @@ development_status:
   1-3-admin-login-with-clear-feedback: done
   1-4-authenticated-workspace-entry-and-logout: done
   epic-1-retrospective: done
-  epic-2: backlog
-  2-1-establish-borrower-identity-and-searchable-records: backlog
+  epic-2: in-progress
+  2-1-establish-borrower-identity-and-searchable-records: done
   2-2-create-borrower-intake-flow: backlog
   2-3-search-and-browse-borrowers: backlog
   2-4-view-borrower-details-and-lending-history: backlog

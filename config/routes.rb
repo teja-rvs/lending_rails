@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
+  resources :borrowers, only: %i[new create show], constraints: {
+    id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+  }
   mount MissionControl::Jobs::Engine, at: "/jobs"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

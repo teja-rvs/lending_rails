@@ -85,6 +85,35 @@ RSpec.describe LoanApplication, type: :model do
     end
   end
 
+  describe "#active_review_step" do
+    it "returns the first ordered review step that is still in progress" do
+      loan_application = create(:loan_application)
+      create(
+        :review_step,
+        loan_application:,
+        step_key: "history_check",
+        position: 1,
+        status: "approved"
+      )
+      active_step = create(
+        :review_step,
+        loan_application:,
+        step_key: "phone_screening",
+        position: 2,
+        status: "initialized"
+      )
+      create(
+        :review_step,
+        loan_application:,
+        step_key: "verification",
+        position: 3,
+        status: "initialized"
+      )
+
+      expect(loan_application.active_review_step).to eq(active_step)
+    end
+  end
+
   describe "audit history" do
     it "tracks create and update events with paper trail" do
       loan_application = create(:loan_application)

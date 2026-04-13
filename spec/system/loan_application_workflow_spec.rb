@@ -13,7 +13,7 @@ RSpec.describe "Loan application workflow", type: :system do
     ENV["ADMIN_EMAIL_ADDRESSES"] = original_admin_addresses
   end
 
-  it "lets an admin move from an eligible borrower into the application workspace and save pre-decision details" do
+  it "lets an admin move from an eligible borrower into the application workspace and see the fixed review workflow" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
 
@@ -32,6 +32,13 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_current_path(loan_application_path(loan_application))
     expect(page).to have_selector("h1", text: loan_application.application_number)
     expect(page).to have_link(borrower.full_name, href: borrower_path(borrower))
+    expect(page).to have_content("Review workflow")
+    expect(page).to have_content("Current application status")
+    expect(page).to have_content("Active review step")
+    expect(page).to have_content("History check")
+    expect(page).to have_content("Phone screening")
+    expect(page).to have_content("Verification")
+    expect(page).to have_content("Initialized", count: 3)
 
     fill_in "Requested amount", with: "45000"
     fill_in "Requested tenure (months)", with: "10"

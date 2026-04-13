@@ -23,6 +23,7 @@ class LoanApplication < ApplicationRecord
 
   belongs_to :borrower
   has_many :loans, dependent: :restrict_with_exception
+  has_many :review_steps, -> { order(:position) }, dependent: :destroy
   has_paper_trail
 
   monetize :requested_amount_cents, allow_nil: true
@@ -81,6 +82,10 @@ class LoanApplication < ApplicationRecord
 
   def editable_pre_decision_details?
     !FINAL_DECISION_STATUSES.include?(status)
+  end
+
+  def active_review_step
+    ReviewStep.active_for(review_steps)
   end
 
   def requested_repayment_frequency_label

@@ -13,6 +13,8 @@ class LoanApplicationsController < ApplicationController
   end
 
   def show
+    LoanApplications::InitializeReviewWorkflow.call(loan_application: @loan_application)
+    @loan_application = LoanApplication.includes(:borrower, :review_steps).find(@loan_application.id)
   end
 
   def update

@@ -41,12 +41,17 @@ module LoanApplications
         begin
           attempts += 1
 
-          LoanApplication.create!(
-            borrower:,
-            status: "open",
-            borrower_full_name_snapshot: borrower.full_name,
-            borrower_phone_number_snapshot: borrower.phone_number_normalized
-          )
+          LoanApplication.transaction do
+            loan_application = LoanApplication.create!(
+              borrower:,
+              status: "open",
+              borrower_full_name_snapshot: borrower.full_name,
+              borrower_phone_number_snapshot: borrower.phone_number_normalized
+            )
+
+            LoanApplications::InitializeReviewWorkflow.call(loan_application:)
+            loan_application
+          end
         rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => error
           raise unless duplicate_application_number_error?(error) && attempts < MAX_APPLICATION_NUMBER_RETRIES
 

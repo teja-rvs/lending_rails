@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_13_170600) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_13_173000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -97,6 +97,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_13_170600) do
     t.index ["status"], name: "index_loans_on_status"
   end
 
+  create_table "review_steps", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "loan_application_id", null: false
+    t.integer "position", null: false
+    t.string "status", null: false
+    t.string "step_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["loan_application_id", "position"], name: "index_review_steps_on_loan_application_id_and_position", unique: true
+    t.index ["loan_application_id", "step_key"], name: "index_review_steps_on_loan_application_id_and_step_key", unique: true
+    t.index ["loan_application_id"], name: "index_review_steps_on_loan_application_id"
+    t.index ["status"], name: "index_review_steps_on_status"
+  end
+
   create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -127,5 +140,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_13_170600) do
   add_foreign_key "loan_applications", "borrowers"
   add_foreign_key "loans", "borrowers"
   add_foreign_key "loans", "loan_applications"
+  add_foreign_key "review_steps", "loan_applications"
   add_foreign_key "sessions", "users"
 end

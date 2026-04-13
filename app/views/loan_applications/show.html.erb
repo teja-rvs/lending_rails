@@ -1,6 +1,8 @@
 <% content_for :title, "#{@loan_application.application_number} | lending_rails" %>
 
 <% editable = @loan_application.editable_pre_decision_details? %>
+<% active_review_step = @loan_application.active_review_step %>
+<% workflow_complete = active_review_step.nil? && @loan_application.review_steps.any? %>
 
 <section class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8">
   <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
@@ -46,6 +48,70 @@
         <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan_application.borrower_phone_number_snapshot || @loan_application.borrower.phone_number_normalized %></dd>
       </div>
     </dl>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="space-y-3">
+      <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Review workflow</h2>
+      <p class="text-sm leading-6 text-slate-600">
+        Every application follows the same fixed review path. The active step comes from the ordered review records shown below.
+      </p>
+    </div>
+
+    <dl class="mt-8 grid gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:grid-cols-2">
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Current application status</dt>
+        <dd class="mt-2 flex items-center gap-3 text-lg font-semibold text-slate-950">
+          <span><%= @loan_application.status_label %></span>
+          <%= render Shared::StatusBadgeComponent.new(label: @loan_application.status_label, tone: @loan_application.status_tone) %>
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Active review step</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950">
+          <%= if active_review_step.present?
+                active_review_step.label
+              elsif workflow_complete
+                "No active step"
+              else
+                "Not initialized yet"
+              end %>
+        </dd>
+      </div>
+    </dl>
+
+    <ol class="mt-8 space-y-4">
+      <% @loan_application.review_steps.each do |review_step| %>
+        <% is_active = review_step == active_review_step %>
+        <% step_summary = if is_active
+                            "Active now in the current workflow."
+                          elsif review_step.final?
+                            "Completed in the review workflow."
+                          else
+                            "Queued by workflow order until the earlier steps are resolved."
+                          end %>
+        <% step_state_label = if is_active
+                                "Current stage"
+                              elsif review_step.final?
+                                "Completed"
+                              else
+                                "Awaiting turn"
+                              end %>
+        <li class="flex flex-col gap-4 rounded-2xl border border-slate-200 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-2">
+            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Step <%= review_step.position %></p>
+            <p class="text-lg font-semibold text-slate-950"><%= review_step.label %></p>
+            <p class="text-sm leading-6 text-slate-600"><%= step_summary %></p>
+          </div>
+
+          <div class="flex flex-col items-start gap-3 sm:items-end">
+            <%= render Shared::StatusBadgeComponent.new(label: review_step.status_label, tone: review_step.status_tone) %>
+            <p class="text-sm font-medium text-slate-600"><%= step_state_label %></p>
+          </div>
+        </li>
+      <% end %>
+    </ol>
   </section>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">

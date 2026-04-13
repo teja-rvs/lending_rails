@@ -15,6 +15,7 @@
       </div>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:max-w-md xl:justify-end">
+        <%= link_to "Applications", loan_applications_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
         <%= link_to "Browse borrowers", borrowers_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
         <%= link_to "Create borrower", new_borrower_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
         <%= link_to "Background jobs", mission_control_jobs_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>

@@ -56,6 +56,62 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_content("Prefers a shorter repayment cycle.")
   end
 
+  it "lets an admin reach the applications list from the workspace and keeps that context in the detail breadcrumb" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    click_link "Applications"
+
+    expect(page).to have_current_path(loan_applications_path)
+    expect(page).to have_selector("h1", text: "Applications")
+
+    click_link application.application_number
+
+    expect(page).to have_current_path(loan_application_path(application, from: "applications"))
+    within("nav[aria-label='Breadcrumb']") do
+      expect(page).to have_link("Applications", href: loan_applications_path)
+      expect(page).to have_link(borrower.full_name, href: borrower_path(borrower))
+    end
+  end
+
+  it "lets an admin filter the applications list by status and search by borrower name" do
+    user = create(:user, email_address: "admin@example.com")
+    matching_borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    matching = create(:loan_application, borrower: matching_borrower, application_number: "APP-0101", status: "approved")
+    create(:loan_application, application_number: "APP-0102", status: "open")
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_applications_path
+    click_link "Approved"
+
+    expect(page).to have_current_path(loan_applications_path(status: "approved"))
+    expect(page).to have_link(matching.application_number, href: loan_application_path(matching, from: "applications"))
+    expect(page).not_to have_content("APP-0102")
+
+    fill_in "Search by application number or borrower name", with: "Asha"
+    click_button "Search applications"
+
+    expect(page).to have_current_path(loan_applications_path, ignore_query: true)
+    expect(URI.decode_www_form(URI.parse(page.current_url).query).to_h).to include(
+      "q" => "Asha",
+      "status" => "approved"
+    )
+    expect(page).to have_link(matching.application_number, href: loan_application_path(matching, from: "applications"))
+    expect(page).not_to have_content("APP-0102")
+  end
+
   it "shows locked-state guidance when the application is no longer editable" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, :with_details, status: "approved")
@@ -72,6 +128,53 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_field("Requested amount", with: "25000.00", disabled: true)
     expect(page).not_to have_button("Save application details")
     expect(page).to have_link(application.borrower.full_name, href: borrower_path(application.borrower))
+  end
+
+  it "shows borrower lending context within the application workspace" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
+    prior_application = create(:loan_application, borrower:, application_number: "APP-0009", status: "approved")
+    loan = create(:loan, borrower:, loan_application: prior_application, loan_number: "LOAN-0003", status: "active")
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_application_path(application)
+
+    within("#borrower-lending-context") do
+      expect(page).to have_content("Borrower lending context")
+      expect(page).to have_content("Borrower has active lending work")
+      expect(page).to have_link(prior_application.application_number, href: loan_application_path(prior_application))
+      expect(page).to have_link(loan.loan_number, href: loan_path(loan))
+      expect(page).to have_link("View full borrower profile", href: borrower_path(borrower))
+      expect(page).not_to have_link(application.application_number, href: loan_application_path(application))
+    end
+  end
+
+  it "shows a borrower-history empty state and lets the admin navigate to the borrower profile" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "open")
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_application_path(application)
+
+    within("#borrower-lending-context") do
+      expect(page).to have_content("No prior lending history for this borrower beyond the current application")
+      click_link "View full borrower profile"
+    end
+
+    expect(page).to have_current_path(borrower_path(borrower))
+    expect(page).to have_selector("h1", text: borrower.full_name)
   end
 
   it "lets an admin progress the current active review step from the application workspace" do

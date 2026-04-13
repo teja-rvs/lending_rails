@@ -4,11 +4,19 @@
 <% active_review_step = @loan_application.active_review_step %>
 <% workflow_complete = active_review_step.nil? && @loan_application.review_steps.any? %>
 <% waiting_for_details = active_review_step&.status == "waiting for details" %>
+<% borrower_context = @borrower_history.current_context %>
+<% borrower_eligibility = @borrower_history.eligibility %>
+<% detail_source = params[:from].presence %>
+<% detail_from_applications = detail_source == "applications" %>
 
 <section class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8">
   <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
     <%= link_to "Workspace", root_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
     <span aria-hidden="true" class="text-slate-300">/</span>
+    <% if detail_from_applications %>
+      <%= link_to "Applications", loan_applications_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+      <span aria-hidden="true" class="text-slate-300">/</span>
+    <% end %>
     <%= link_to "Borrowers", borrowers_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
     <span aria-hidden="true" class="text-slate-300">/</span>
     <%= link_to @loan_application.borrower.full_name, borrower_path(@loan_application.borrower), class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
@@ -94,9 +102,9 @@
             <% end %>
           </p>
           <div class="flex flex-wrap gap-3">
-            <%= button_to "Approve step", approve_loan_application_review_step_path(@loan_application, active_review_step), method: :patch, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+            <%= button_to "Approve step", approve_loan_application_review_step_path(@loan_application, active_review_step, from: detail_source), method: :patch, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
             <% unless waiting_for_details %>
-              <%= button_to "Request details", request_details_loan_application_review_step_path(@loan_application, active_review_step), method: :patch, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+              <%= button_to "Request details", request_details_loan_application_review_step_path(@loan_application, active_review_step, from: detail_source), method: :patch, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
             <% end %>
           </div>
         </div>
@@ -152,6 +160,81 @@
     </ol>
   </section>
 
+  <section id="borrower-lending-context" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-start lg:justify-between">
+      <div class="max-w-3xl space-y-3">
+        <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Borrower lending context</h2>
+        <p class="text-sm leading-6 text-slate-600">
+          Review the borrower&apos;s linked lending history here without leaving the application workspace, then open the full borrower profile when you need deeper record context.
+        </p>
+      </div>
+
+      <%= link_to "View full borrower profile", borrower_path(@loan_application.borrower), class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+    </div>
+
+    <div class="mt-8 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <article class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current lending context</p>
+        <h3 class="mt-3 text-xl font-semibold text-slate-950"><%= borrower_context.headline %></h3>
+        <p class="mt-2 text-sm leading-6 text-slate-600"><%= borrower_context.summary %></p>
+        <dl class="mt-5 grid gap-4 sm:grid-cols-2">
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Applications linked</dt>
+            <dd class="mt-2 text-2xl font-semibold text-slate-950"><%= borrower_context.application_count %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Loans linked</dt>
+            <dd class="mt-2 text-2xl font-semibold text-slate-950"><%= borrower_context.loan_count %></dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="space-y-2">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Application readiness</p>
+            <p class="text-lg font-semibold text-slate-950"><%= borrower_eligibility.headline %></p>
+          </div>
+          <%= render Shared::StatusBadgeComponent.new(
+            label: borrower_eligibility.eligible? ? "Eligible" : "Blocked",
+            tone: borrower_eligibility.eligible? ? :success : :warning
+          ) %>
+        </div>
+        <p class="mt-3 text-sm leading-6 text-slate-600"><%= borrower_eligibility.message %></p>
+      </article>
+    </div>
+
+    <% if @borrower_history_records.any? %>
+      <div class="mt-8 space-y-4">
+        <% @borrower_history_records.each do |record| %>
+          <article class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><%= record.label %></p>
+                <%= render Shared::StatusBadgeComponent.new(label: record.status_label, tone: record.status_tone) %>
+              </div>
+              <p class="text-lg font-semibold text-slate-950">
+                <%= link_to record.identifier, record.path, class: "underline decoration-slate-300 underline-offset-4 transition hover:text-slate-700 hover:decoration-slate-500" %>
+              </p>
+              <p class="text-sm text-slate-600"><%= record.relevant_label %></p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <%= link_to "Open #{record.label.downcase}", record.path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6">
+        <p class="text-base font-semibold text-slate-950">No prior lending history for this borrower beyond the current application</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          Keep reviewing this application here, or open the full borrower profile if you need to confirm identity and record ownership before making a decision.
+        </p>
+      </div>
+    <% end %>
+  </section>
+
   <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
     <div class="space-y-3">
       <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Pre-decision application details</h2>
@@ -180,7 +263,7 @@
       </div>
     <% end %>
 
-    <%= render "form", loan_application: @loan_application, editable: editable %>
+    <%= render "form", loan_application: @loan_application, editable: editable, detail_source: detail_source %>
   </section>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">

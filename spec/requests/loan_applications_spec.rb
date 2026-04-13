@@ -17,6 +17,12 @@ RSpec.describe "LoanApplications", type: :request do
     expect(response).to redirect_to(new_session_path)
   end
 
+  it "redirects unauthenticated visitors away from the applications list" do
+    get loan_applications_path
+
+    expect(response).to redirect_to(new_session_path)
+  end
+
   it "redirects unauthenticated visitors away from loan application updates" do
     application = create(:loan_application)
 
@@ -89,6 +95,80 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "input[type='submit'][value='Save application details']"
   end
 
+  it "renders an empty applications list state for signed-in admins" do
+    user = create(:user, email_address: "admin@example.com")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path
+
+    expect(response).to have_http_status(:ok)
+    assert_select "title", text: "Applications | lending_rails"
+    assert_select "h1", text: "Applications"
+    assert_select "h2", text: "No applications found"
+  end
+
+  it "filters the applications list by status" do
+    user = create(:user, email_address: "admin@example.com")
+    matching = create(:loan_application, application_number: "APP-0101", status: "approved")
+    create(:loan_application, application_number: "APP-0102", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path, params: { status: "approved" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_application_path(matching, from: "applications")}']", text: matching.application_number
+    assert_select "a", text: "APP-0102", count: 0
+  end
+
+  it "searches the applications list by borrower name" do
+    user = create(:user, email_address: "admin@example.com")
+    matching_borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    matching = create(:loan_application, borrower: matching_borrower, application_number: "APP-0101", status: "open")
+    other_borrower = create(:borrower, full_name: "Rahul Singh", phone_number: "91234 56789")
+    create(:loan_application, borrower: other_borrower, application_number: "APP-0102", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path, params: { q: "Asha" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_application_path(matching, from: "applications")}']", text: matching.application_number
+    assert_select "td", text: "Rahul Singh", count: 0
+  end
+
+  it "renders borrower lending context within the application workspace" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
+    prior_application = create(:loan_application, borrower:, application_number: "APP-0009", status: "approved")
+    loan = create(:loan, borrower:, loan_application: prior_application, loan_number: "LOAN-0003", status: "active")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_application_path(application)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section#borrower-lending-context h2", text: "Borrower lending context"
+    assert_select "section#borrower-lending-context h3", text: "Borrower has active lending work"
+    assert_select "section#borrower-lending-context p", text: /1 blocking loan and 2 blocking applications linked to this borrower today\./
+    assert_select "section#borrower-lending-context a[href='#{borrower_path(borrower)}']", text: "View full borrower profile"
+    assert_select "section#borrower-lending-context a[href='#{loan_application_path(prior_application)}']", text: prior_application.application_number
+    assert_select "section#borrower-lending-context a[href='#{loan_path(loan)}']", text: loan.loan_number
+    assert_select "section#borrower-lending-context a[href='#{loan_application_path(application)}']", count: 0
+  end
+
+  it "shows an empty borrower lending context state when there is no prior history beyond the current application" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_application_path(application)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section#borrower-lending-context h2", text: "Borrower lending context"
+    assert_select "section#borrower-lending-context p", text: "No prior lending history for this borrower beyond the current application"
+    assert_select "section#borrower-lending-context a[href='#{borrower_path(borrower)}']", text: "View full borrower profile"
+  end
+
   it "backfills missing review steps on the application show page without duplicating them" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, application_number: "APP-0101", status: "open")
@@ -146,6 +226,25 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "span", text: "In Progress"
   end
 
+  it "preserves the applications-list context after saving application details" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch loan_application_path(application), params: {
+      from: "applications",
+      loan_application: {
+        requested_amount: "45000",
+        requested_tenure_in_months: "10",
+        requested_repayment_frequency: "bi-weekly",
+        proposed_interest_mode: "rate",
+        request_notes: "Prefers a shorter repayment cycle."
+      }
+    }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+  end
+
   it "lets a signed-in admin mark the current active review step as waiting for details" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, application_number: "APP-0101", status: "open")
@@ -164,6 +263,19 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "p", text: "Review step marked as waiting for details."
     assert_select "p", text: /waiting for details before review can continue/i
     assert_select "dd", text: "History check"
+  end
+
+  it "preserves the applications-list context after review-step progression" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "open")
+    current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch approve_loan_application_review_step_path(application, current_step), params: { from: "applications" }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
   end
 
   it "blocks signed-in admins from mutating a non-current review step" do

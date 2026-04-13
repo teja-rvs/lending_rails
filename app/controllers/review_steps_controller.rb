@@ -16,9 +16,17 @@ class ReviewStepsController < ApplicationController
 
     def handle_result(result)
       if result.success?
-        redirect_to loan_application_path(@loan_application), notice: result.message
+        redirect_to loan_application_redirect_path, notice: result.message
       else
-        redirect_to loan_application_path(@loan_application), alert: result.error
+        redirect_to loan_application_redirect_path, alert: result.error
+      end
+    end
+
+    def loan_application_redirect_path
+      if params[:from].present?
+        loan_application_path(@loan_application, from: params[:from])
+      else
+        loan_application_path(@loan_application)
       end
     end
 end

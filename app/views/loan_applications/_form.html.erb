@@ -1,4 +1,8 @@
 <%= form_with model: loan_application, class: "mt-8 space-y-8" do |form| %>
+  <% if detail_source.present? %>
+    <%= hidden_field_tag :from, detail_source %>
+  <% end %>
+
   <div class="grid gap-6 lg:grid-cols-2">
     <div class="space-y-2">
       <%= form.label :requested_amount, "Requested amount", class: "block text-sm font-medium text-slate-700" %>

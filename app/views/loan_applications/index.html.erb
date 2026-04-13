@@ -1,0 +1,143 @@
+<% content_for :title, "Applications | lending_rails" %>
+<% filtered_results = @search_query.present? || @status_filter.present? %>
+<% status_tones = {
+  "open" => :warning,
+  "in progress" => :warning,
+  "approved" => :success,
+  "rejected" => :danger,
+  "cancelled" => :danger
+} %>
+
+<section class="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8">
+  <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+    <%= link_to "Workspace", root_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+    <span aria-hidden="true" class="text-slate-300">/</span>
+    <span class="font-medium text-slate-950">Applications</span>
+  </nav>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div class="max-w-3xl space-y-3">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Application operations</p>
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Applications</h1>
+        <p class="text-sm leading-6 text-slate-600">
+          Browse application work by status, search for a borrower or application number, and open the review workspace with the right operational context.
+        </p>
+      </div>
+
+      <%= link_to "Return to workspace", root_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+    </div>
+
+    <%= form_with url: loan_applications_path, method: :get, class: "mt-8 space-y-4" do %>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <% if @status_filter.present? %>
+          <%= hidden_field_tag :status, @status_filter %>
+        <% end %>
+
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div class="space-y-2">
+            <%= label_tag :q, "Search by application number or borrower name", class: "block text-sm font-medium text-slate-700" %>
+            <%= search_field_tag :q,
+                @search_query,
+                placeholder: "APP-0101 or Asha Patel",
+                autocomplete: "off",
+                class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <%= submit_tag "Search applications", name: nil, class: "inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2" %>
+            <% if filtered_results %>
+              <%= link_to "Clear filters", loan_applications_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-3">
+          <% LoanApplication::STATUSES.each do |status| %>
+            <% selected = @status_filter == status %>
+            <%= link_to loan_applications_path(q: @search_query.presence, status: status),
+                class: [
+                  "inline-flex rounded-full transition focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2",
+                  (selected ? "ring-2 ring-slate-300 ring-offset-1" : "")
+                ].join(" ") do %>
+              <%= render Shared::StatusBadgeComponent.new(
+                label: status.split.map(&:capitalize).join(" "),
+                tone: status_tones.fetch(status)
+              ) %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @loan_applications.any? %>
+      <div class="mt-8 flex items-center justify-between gap-4">
+        <p class="text-sm text-slate-600">
+          <span class="font-semibold text-slate-950"><%= pluralize(@loan_applications.size, "application") %></span>
+          <%= filtered_results ? "match the current search and status filters." : "are available in the review workspace." %>
+        </p>
+        <% if filtered_results %>
+          <p class="text-sm text-slate-500">
+            <%= @search_query.present? ? "Search: #{@search_query}" : "Showing all matching statuses" %>
+          </p>
+        <% end %>
+      </div>
+
+      <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-slate-50">
+            <tr class="text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <th scope="col" class="px-5 py-4">Application</th>
+              <th scope="col" class="px-5 py-4">Borrower</th>
+              <th scope="col" class="px-5 py-4">Status</th>
+              <th scope="col" class="px-5 py-4">Created</th>
+              <th scope="col" class="px-5 py-4">Open</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 bg-white text-sm text-slate-700">
+            <% @loan_applications.each do |loan_application| %>
+              <tr>
+                <td class="px-5 py-4">
+                  <div class="flex flex-col gap-1">
+                    <%= link_to loan_application.application_number, loan_application_path(loan_application, from: "applications"), class: "font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-700 hover:decoration-slate-500" %>
+                    <span class="text-xs text-slate-500">Open the application review workspace.</span>
+                  </div>
+                </td>
+                <td class="px-5 py-4 font-medium text-slate-900"><%= loan_application.borrower.full_name %></td>
+                <td class="px-5 py-4">
+                  <%= render Shared::StatusBadgeComponent.new(label: loan_application.status_label, tone: loan_application.status_tone) %>
+                </td>
+                <td class="px-5 py-4 text-slate-600"><%= loan_application.created_at.strftime("%b %-d, %Y") %></td>
+                <td class="px-5 py-4">
+                  <%= link_to "Open application", loan_application_path(loan_application, from: "applications"), class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% elsif @has_applications && filtered_results %>
+      <section class="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-8">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-amber-700">Filtered results</p>
+        <h2 class="mt-4 text-2xl font-semibold text-slate-950">No applications match the current filters</h2>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-700">
+          Clear the current search or status filter to return to the broader list of operational application work.
+        </p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <%= link_to "Clear filters", loan_applications_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+        </div>
+      </section>
+    <% else %>
+      <section class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Empty workspace</p>
+        <h2 class="mt-4 text-2xl font-semibold text-slate-950">No applications found</h2>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+          Applications appear here after a borrower enters the protected application workflow and reaches the review workspace.
+        </p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <%= link_to "Browse borrowers", borrowers_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
+        </div>
+      </section>
+    <% end %>
+  </section>
+</section>

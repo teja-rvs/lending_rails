@@ -1,6 +1,16 @@
 class LoanApplicationsController < ApplicationController
   before_action :set_loan_application, only: %i[show update]
 
+  def index
+    @search_query = params[:q].to_s.squish
+    @status_filter = normalized_status_filter
+    @loan_applications = LoanApplications::FilteredListQuery.call(
+      status: @status_filter,
+      search: @search_query
+    )
+    @has_applications = LoanApplication.exists?
+  end
+
   def create
     borrower = Borrower.find(params[:borrower_id])
     result = LoanApplications::Create.call(borrower:)
@@ -15,6 +25,7 @@ class LoanApplicationsController < ApplicationController
   def show
     LoanApplications::InitializeReviewWorkflow.call(loan_application: @loan_application)
     @loan_application = LoanApplication.includes(:borrower, :review_steps).find(@loan_application.id)
+    load_borrower_history
   end
 
   def update
@@ -24,10 +35,11 @@ class LoanApplicationsController < ApplicationController
     )
 
     if result.success?
-      redirect_to loan_application_path(@loan_application), notice: "Application details saved successfully."
+      redirect_to loan_application_redirect_path, notice: "Application details saved successfully."
     elsif result.locked?
-      redirect_to loan_application_path(@loan_application), alert: @loan_application.errors.full_messages.to_sentence
+      redirect_to loan_application_redirect_path, alert: @loan_application.errors.full_messages.to_sentence
     else
+      load_borrower_history
       render :show, status: :unprocessable_content
     end
   end
@@ -45,5 +57,25 @@ class LoanApplicationsController < ApplicationController
         :proposed_interest_mode,
         :request_notes
       )
+    end
+
+    def load_borrower_history
+      @borrower_history = Borrowers::HistoryQuery.call(id: @loan_application.borrower_id)
+      @borrower_history_records = @borrower_history.linked_records.reject do |record|
+        record.type == "application" && record.identifier == @loan_application.application_number
+      end
+    end
+
+    def normalized_status_filter
+      candidate = params[:status].to_s.squish.downcase.presence
+      candidate if LoanApplication::STATUSES.include?(candidate)
+    end
+
+    def loan_application_redirect_path
+      if params[:from].present?
+        loan_application_path(@loan_application, from: params[:from])
+      else
+        loan_application_path(@loan_application)
+      end
     end
 end

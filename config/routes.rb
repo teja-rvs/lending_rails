@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   } do
     resources :loan_applications, only: :create
   end
-  resources :loan_applications, only: %i[show update], constraints: {
+  resources :loan_applications, only: %i[index show update], constraints: {
     id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
   } do
     resources :review_steps, only: [] do

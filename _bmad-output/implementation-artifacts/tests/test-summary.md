@@ -3,24 +3,23 @@
 ## Generated Tests
 
 ### API Tests
-- [ ] No API-specific tests generated for this pass. Auto-discovery selected the password recovery UI flow, so coverage was added at the request and browser levels instead.
+- [ ] No new API-specific tests were generated in this pass because the selected gap was browser coverage for an existing protected UI surface that already has request specs.
 
 ### E2E Tests
-- [x] `spec/system/password_reset_flow_spec.rb` - Covers the end-to-end admin password recovery journey from sign-in screen to reset request, reset completion, and sign-in with the new password.
-- [x] `spec/system/session_flow_spec.rb` - Covers admin sign-in, workspace visibility, sign-out, invalid-credential feedback, and the protected `/jobs` return-to flow through the browser.
+- [x] `spec/system/loan_detail_flow_spec.rb` - Covers the protected deep-link journey to a loan detail page, verifies post-login return to the requested loan, and exercises the standalone-loan branch where no linked application is shown.
 
 ### Supporting Request Coverage
-- [x] `spec/requests/passwords_spec.rb` - Added the password confirmation mismatch redirect/error-path check to keep the browser flow backed by a focused server-side assertion.
+- [x] Existing request coverage reused: `spec/requests/loans_spec.rb` already validates unauthenticated redirect and signed-in rendering for the loan detail surface.
 
 ## Coverage
-- Password recovery request specs: 4/4 critical paths covered in `spec/requests/passwords_spec.rb`
-- Password recovery browser flows: 2/2 key user journeys covered in `spec/system/password_reset_flow_spec.rb`
-- Session browser flows: 3/3 key user journeys covered in `spec/system/session_flow_spec.rb`
-- Project-wide system spec coverage: 2 UI workflow areas now covered
+- Loan detail browser flows: 2/2 targeted paths covered in `spec/system/loan_detail_flow_spec.rb`
+- Loan detail request coverage: 2/2 critical server-side paths already covered in `spec/requests/loans_spec.rb`
+- Full RSpec suite line coverage after this pass: 94.41%
+- Full RSpec suite branch coverage after this pass: 86.32%
 
 ## Validation
-- [x] Ran `bundle exec rspec spec/system spec/requests/passwords_spec.rb`
-- [x] Result: 10 examples, 0 failures
+- [x] Ran `bundle exec rspec`
+- [x] Result: 86 examples, 0 failures
 
 ## Next Steps
-- Add browser coverage for non-admin rejection if an operator-facing sign-in path is introduced later.
+- Add a dedicated `spec/system/loan_application_detail_flow_spec.rb` if you want matching direct-access browser coverage for application detail pages.

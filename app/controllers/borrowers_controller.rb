@@ -1,4 +1,10 @@
 class BorrowersController < ApplicationController
+  def index
+    @search_query = params[:q].to_s.squish
+    @borrowers = Borrowers::LookupQuery.call(search: @search_query)
+    @has_borrowers = Borrower.exists?
+  end
+
   def new
     @borrower = Borrower.new
   end

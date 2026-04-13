@@ -15,6 +15,7 @@
       </div>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:max-w-md xl:justify-end">
+        <%= link_to "Browse borrowers", borrowers_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
         <%= link_to "Create borrower", new_borrower_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
         <%= link_to "Background jobs", mission_control_jobs_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
         <%= link_to "Health check", rails_health_check_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
@@ -34,10 +35,10 @@
 
     <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <p class="text-sm font-medium text-slate-500">Available surfaces</p>
-      <p class="mt-3 text-lg font-semibold text-slate-950">Workspace shell and borrower intake</p>
+      <p class="mt-3 text-lg font-semibold text-slate-950">Workspace shell, borrower lookup, and borrower intake</p>
       <p class="mt-2 text-sm leading-6 text-slate-600">
-        Today&apos;s workspace is intentionally focused: a clear authenticated landing, borrower intake entry, access to background job operations,
-        and platform health visibility.
+        Today&apos;s workspace is intentionally focused: a clear authenticated landing, borrower search before duplicate intake, protected borrower
+        creation, access to background job operations, and platform health visibility.
       </p>
     </article>
 
@@ -56,7 +57,7 @@
       <h2 class="text-xl font-semibold text-slate-950">What this workspace is for today</h2>
       <ul class="mt-5 space-y-3 text-sm leading-6 text-slate-600">
         <li>Confirm you are operating inside the protected lending administration environment.</li>
-        <li>Create new borrowers through the protected intake flow before later stories add search, detail history, and application workflows.</li>
+        <li>Search existing borrowers first, then create new borrowers through the protected intake flow when no matching record exists.</li>
         <li>End the session explicitly with the standard Rails sign-out flow when work is complete.</li>
       </ul>
     </article>

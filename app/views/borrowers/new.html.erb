@@ -8,6 +8,8 @@
   <div class="flex items-center gap-3 text-sm text-slate-600">
     <%= link_to "Workspace", root_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
     <span aria-hidden="true" class="text-slate-300">/</span>
+    <%= link_to "Borrowers", borrowers_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+    <span aria-hidden="true" class="text-slate-300">/</span>
     <span>Create borrower</span>
   </div>
 
@@ -79,9 +81,11 @@
 
         <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p class="text-sm leading-6 text-slate-500">
-            This flow creates the borrower record only. Lending history, applications, and eligibility checks come in later stories.
+            Search for an existing borrower first when possible. This flow creates the borrower record only; lending history, applications, and
+            eligibility checks come in later stories.
           </p>
           <div class="flex flex-col gap-3 sm:flex-row">
+            <%= link_to "Browse borrowers first", borrowers_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
             <%= link_to "Back to workspace", root_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
             <%= form.submit "Create borrower", class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
           </div>

@@ -1,0 +1,122 @@
+<% content_for :title, "Borrowers | lending_rails" %>
+
+<section class="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8">
+  <div class="flex items-center gap-3 text-sm text-slate-600">
+    <%= link_to "Workspace", root_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+    <span aria-hidden="true" class="text-slate-300">/</span>
+    <span>Borrowers</span>
+  </div>
+
+  <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
+    <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div class="max-w-3xl space-y-3">
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Borrower lookup</p>
+          <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Borrowers</h1>
+          <p class="text-sm leading-6 text-slate-600">
+            Search borrowers by phone number first, with name search available as a secondary lookup path before you create a duplicate record.
+          </p>
+        </div>
+
+        <%= link_to "Create borrower", new_borrower_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
+      </div>
+
+      <%= form_with url: borrowers_path, method: :get, class: "mt-8 space-y-4" do %>
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div class="space-y-2">
+              <%= label_tag :q, "Search by phone number or name", class: "block text-sm font-medium text-slate-700" %>
+              <%= search_field_tag :q,
+                  @search_query,
+                  placeholder: "+91 98765 43210 or Asha Patel",
+                  autocomplete: "off",
+                  class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
+              <p class="text-xs leading-5 text-slate-500">Phone search is the primary lookup path and uses the borrower model&apos;s canonical server-side normalization.</p>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <%= submit_tag "Search borrowers", name: nil, class: "inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2" %>
+              <% if @search_query.present? %>
+                <%= link_to "Clear search", borrowers_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @borrowers.any? %>
+        <div class="mt-8 flex items-center justify-between gap-4">
+          <p class="text-sm text-slate-600">
+            <span class="font-semibold text-slate-950"><%= pluralize(@borrowers.size, "borrower") %></span>
+            <%= @search_query.present? ? "matched your current search." : "available in the protected workspace." %>
+          </p>
+          <% if @search_query.present? %>
+            <p class="text-sm text-slate-500">Showing results for <span class="font-medium text-slate-800"><%= @search_query %></span></p>
+          <% end %>
+        </div>
+
+        <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr class="text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <th scope="col" class="px-5 py-4">Borrower</th>
+                <th scope="col" class="px-5 py-4">Phone number</th>
+                <th scope="col" class="px-5 py-4">Created</th>
+                <th scope="col" class="px-5 py-4">Open</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white text-sm text-slate-700">
+              <% @borrowers.each do |borrower| %>
+                <tr>
+                  <td class="px-5 py-4">
+                    <div class="flex flex-col gap-1">
+                      <%= link_to borrower.full_name, borrower_path(borrower), class: "font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-700 hover:decoration-slate-500" %>
+                      <span class="text-xs text-slate-500">Thin borrower record. Detail history lands in the next story.</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4 font-medium text-slate-900"><%= borrower.phone_number_normalized %></td>
+                  <td class="px-5 py-4 text-slate-600"><%= borrower.created_at.strftime("%b %-d, %Y") %></td>
+                  <td class="px-5 py-4">
+                    <%= link_to "View record", borrower_path(borrower), class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% elsif @has_borrowers && @search_query.present? %>
+        <section class="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-8">
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-amber-700">Filtered results</p>
+          <h2 class="mt-4 text-2xl font-semibold text-slate-950">No borrowers match this search</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-700">
+            Try a phone number first, adjust the name search, or create a new borrower if this person has not been added yet.
+          </p>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <%= link_to "Clear search", borrowers_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+            <%= link_to "Create borrower", new_borrower_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
+          </div>
+        </section>
+      <% else %>
+        <section class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8">
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Empty workspace</p>
+          <h2 class="mt-4 text-2xl font-semibold text-slate-950">No borrowers yet</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+            Start the protected borrower intake flow to create the first record, then come back here to search and browse operationally.
+          </p>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <%= link_to "Create borrower", new_borrower_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
+          </div>
+        </section>
+      <% end %>
+    </section>
+
+    <aside class="rounded-3xl border border-slate-200 bg-slate-950 p-8 text-slate-100 shadow-sm">
+      <h2 class="text-xl font-semibold">Operator guidance</h2>
+      <ul class="mt-5 space-y-3 text-sm leading-6 text-slate-300">
+        <li>Search by phone number first when you know it, because that is the most reliable borrower identity path.</li>
+        <li>Name search stays available for recovery when the phone number is not immediately at hand.</li>
+        <li>This page intentionally stops at lookup and orientation. Borrower history and eligibility arrive in later stories.</li>
+      </ul>
+    </aside>
+  </div>
+</section>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_31_181000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_13_170600) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -64,6 +64,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_31_181000) do
     t.index ["scope", "account", "id"], name: "lines_scope_account_id_idx"
   end
 
+  create_table "loan_applications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "application_number", null: false
+    t.uuid "borrower_id", null: false
+    t.datetime "created_at", null: false
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["application_number"], name: "index_loan_applications_on_application_number", unique: true
+    t.index ["borrower_id"], name: "index_loan_applications_on_borrower_id"
+    t.index ["status"], name: "index_loan_applications_on_status"
+  end
+
+  create_table "loans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "borrower_id", null: false
+    t.datetime "created_at", null: false
+    t.uuid "loan_application_id"
+    t.string "loan_number", null: false
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["borrower_id"], name: "index_loans_on_borrower_id"
+    t.index ["loan_application_id"], name: "index_loans_on_loan_application_id"
+    t.index ["loan_number"], name: "index_loans_on_loan_number", unique: true
+    t.index ["status"], name: "index_loans_on_status"
+  end
+
   create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -91,5 +115,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_31_181000) do
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
 
+  add_foreign_key "loan_applications", "borrowers"
+  add_foreign_key "loans", "borrowers"
+  add_foreign_key "loans", "loan_applications"
   add_foreign_key "sessions", "users"
 end

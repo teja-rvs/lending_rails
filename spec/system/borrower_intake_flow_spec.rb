@@ -31,10 +31,10 @@ RSpec.describe "Borrower intake flow", type: :system do
     fill_in "Phone number", with: "98765 43210"
     click_button "Create borrower"
 
-    expect(page).to have_selector("h1", text: "Borrower record")
+    expect(page).to have_selector("h1", text: "Asha Patel")
     expect(page).to have_content("Asha Patel")
     expect(page).to have_content("+919876543210")
-    expect(page).to have_link("Create another borrower")
+    expect(page).to have_link("Back to borrower list")
   end
 
   it "shows a clear duplicate-phone error without losing the entered values" do

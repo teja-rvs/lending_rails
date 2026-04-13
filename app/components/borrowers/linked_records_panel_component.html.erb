@@ -1,0 +1,42 @@
+<section id="linked-records" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+  <div class="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+      <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Linked lending records</h2>
+      <p class="max-w-3xl text-sm leading-6 text-slate-600"><%= history_state.message %></p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+      <span class="font-semibold text-slate-900">Next step:</span>
+      <%= next_step_message %>
+    </div>
+  </div>
+
+  <% if linked_records.any? %>
+    <div class="mt-6 space-y-4">
+      <% linked_records.each do |record| %>
+        <article class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="space-y-2">
+            <div class="flex flex-wrap items-center gap-3">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><%= record.label %></p>
+              <%= render Shared::StatusBadgeComponent.new(label: record.status_label, tone: record.status_tone) %>
+            </div>
+            <p class="text-lg font-semibold text-slate-950">
+              <%= link_to record.identifier, record.path, class: "underline decoration-slate-300 underline-offset-4 transition hover:text-slate-700 hover:decoration-slate-500" %>
+            </p>
+            <p class="text-sm text-slate-600"><%= record.relevant_label %></p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <%= link_to "Open #{record.label.downcase}", record.path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6">
+      <p class="text-base font-semibold text-slate-950">No lending history yet</p>
+      <p class="mt-2 text-sm leading-6 text-slate-600">
+        This borrower does not yet have any linked applications or loans. The next lending step is borrower eligibility review, which lands in the next workflow slice.
+      </p>
+    </div>
+  <% end %>
+</section>

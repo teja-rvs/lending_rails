@@ -1,4 +1,7 @@
 class Borrower < ApplicationRecord
+  has_many :loan_applications, dependent: :restrict_with_exception
+  has_many :loans, dependent: :restrict_with_exception
+
   normalizes :full_name, with: ->(value) { value.to_s.squish.presence }
   normalizes :phone_number, with: ->(value) { value.to_s.squish.presence }
 
@@ -23,7 +26,7 @@ class Borrower < ApplicationRecord
     return if digits_only.blank?
 
     parsed_phone = Phonelib.parse(digits_only, Phonelib.default_country)
-    return parsed_phone if parsed_phone.valid?
+    parsed_phone if parsed_phone.valid?
   end
 
   def mark_phone_number_taken!

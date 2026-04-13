@@ -20,7 +20,8 @@ class BorrowersController < ApplicationController
   end
 
   def show
-    @borrower = Borrower.find(params[:id])
+    @borrower_detail = Borrowers::HistoryQuery.call(id: params[:id])
+    @borrower = @borrower_detail.borrower
   end
 
   private

@@ -21,6 +21,14 @@ RSpec.describe "Borrowers", type: :request do
     expect(response).to redirect_to(new_session_path)
   end
 
+  it "redirects unauthenticated visitors away from the borrower detail page" do
+    borrower = create(:borrower)
+
+    get borrower_path(borrower)
+
+    expect(response).to redirect_to(new_session_path)
+  end
+
   it "renders the borrower list for signed-in admins" do
     user = create(:user, email_address: "admin@example.com")
     older_borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
@@ -81,7 +89,7 @@ RSpec.describe "Borrowers", type: :request do
     follow_redirect!
 
     expect(response).to have_http_status(:ok)
-    assert_select "h1", text: "Borrower record"
+    assert_select "h1", text: "Asha Patel"
     assert_select "dd", text: "Asha Patel"
     assert_select "dd", text: "+919876543210"
   end
@@ -197,5 +205,62 @@ RSpec.describe "Borrowers", type: :request do
     assert_select "a", text: "Clear search", count: 0
     assert_select "p", text: /available in the protected workspace/
     assert_select "p", text: /Showing results for/, count: 0
+  end
+
+  it "renders a borrower detail page with calm no-history guidance" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "title", text: "Borrower details | lending_rails"
+    assert_select "h1", text: "Asha Patel"
+    assert_select "p", text: /No lending history yet/
+    assert_select "section h2", text: "Linked lending records"
+    assert_select "p", text: /The next lending step is borrower eligibility review/
+    assert_select "a[href='#{borrowers_path}']", text: "Back to borrower list"
+    assert_select "a[href='#{root_path}']", text: "Return to workspace"
+  end
+
+  it "explains when borrower history exists but linked context is still limited" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0001", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: /History exists for this borrower, but some linked context is still limited/
+    assert_select "section#linked-records article", text: /APP-0001/ do
+      assert_select "a[href='#{loan_application_path(application)}']", text: "APP-0001"
+      assert_select "span.border-amber-200.bg-amber-50.text-amber-700", text: "Open"
+    end
+  end
+
+  it "shows linked applications and loans together with visible identifiers and state cues" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
+    loan = create(:loan, borrower:, loan_application: application, loan_number: "LOAN-2001", status: "active")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section h2", text: "Linked lending records"
+    assert_select "p", text: /1 active loan and 1 open application/
+
+    assert_select "section#linked-records article", text: /APP-0101/ do
+      assert_select "a[href='#{loan_application_path(application)}']", text: "APP-0101"
+      assert_select "span.border-amber-200.bg-amber-50.text-amber-700", text: "In Progress"
+    end
+
+    assert_select "section#linked-records article", text: /LOAN-2001/ do
+      assert_select "a[href='#{loan_path(loan)}']", text: "LOAN-2001"
+      assert_select "span.border-emerald-200.bg-emerald-50.text-emerald-700", text: "Active"
+    end
   end
 end

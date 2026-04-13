@@ -1,0 +1,38 @@
+<% content_for :title, "#{@loan_application.application_number} | lending_rails" %>
+
+<section class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8">
+  <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+    <%= link_to "Workspace", root_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+    <span aria-hidden="true" class="text-slate-300">/</span>
+    <%= link_to "Borrowers", borrowers_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+    <span aria-hidden="true" class="text-slate-300">/</span>
+    <%= link_to @loan_application.borrower.full_name, borrower_path(@loan_application.borrower), class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+    <span aria-hidden="true" class="text-slate-300">/</span>
+    <span class="font-medium text-slate-950"><%= @loan_application.application_number %></span>
+  </nav>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div class="space-y-3">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Loan application</p>
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950"><%= @loan_application.application_number %></h1>
+        <p class="text-sm leading-6 text-slate-600">
+          This is the minimal read surface introduced for borrower-linked navigation. It keeps the admin inside the protected workspace without pulling the full application workflow forward.
+        </p>
+      </div>
+      <%= render Shared::StatusBadgeComponent.new(label: @loan_application.status_label, tone: @loan_application.status_tone) %>
+    </div>
+
+    <dl class="mt-8 grid gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:grid-cols-2">
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Borrower</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= link_to @loan_application.borrower.full_name, borrower_path(@loan_application.borrower), class: "underline decoration-slate-300 underline-offset-4 transition hover:decoration-slate-500" %></dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Current status</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan_application.status_label %></dd>
+      </div>
+    </dl>
+  </section>
+</section>

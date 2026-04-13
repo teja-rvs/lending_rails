@@ -32,6 +32,15 @@ RSpec.describe "LoanApplications", type: :request do
     expect(response).to redirect_to(new_session_path)
   end
 
+  it "redirects unauthenticated visitors away from review-step progression" do
+    application = create(:loan_application)
+    review_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
+
+    patch approve_loan_application_review_step_path(application, review_step)
+
+    expect(response).to redirect_to(new_session_path)
+  end
+
   it "renders the canonical application workspace and review workflow for signed-in admins" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
@@ -115,6 +124,86 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "dd", text: "No active step"
     assert_select "p", text: "Completed", count: 3
     assert_select "p", text: "Current stage", count: 0
+  end
+
+  it "lets a signed-in admin approve the current active review step" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "open")
+    current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch approve_loan_application_review_step_path(application, current_step)
+
+    expect(response).to redirect_to(loan_application_path(application))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Review step approved successfully."
+    assert_select "dd", text: "Phone screening"
+    assert_select "span", text: "In Progress"
+  end
+
+  it "lets a signed-in admin mark the current active review step as waiting for details" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "open")
+    current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch request_details_loan_application_review_step_path(application, current_step)
+
+    expect(response).to redirect_to(loan_application_path(application))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Review step marked as waiting for details."
+    assert_select "p", text: /waiting for details before review can continue/i
+    assert_select "dd", text: "History check"
+  end
+
+  it "blocks signed-in admins from mutating a non-current review step" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "in progress")
+    create(:review_step, :history_check, loan_application: application, status: "initialized")
+    non_current_step = create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch approve_loan_application_review_step_path(application, non_current_step)
+
+    expect(response).to redirect_to(loan_application_path(application))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Only the current active review step can be updated."
+    expect(non_current_step.reload.status).to eq("initialized")
+  end
+
+  it "blocks review-step mutations after a final application decision and hides progression controls" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "approved")
+    current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch approve_loan_application_review_step_path(application, current_step)
+
+    expect(response).to redirect_to(loan_application_path(application))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Review steps can no longer be updated after a final decision."
+    assert_select "p", text: "Review steps are locked because this application has already crossed a final decision boundary."
+    assert_select "form.button_to", count: 0
+    expect(current_step.reload.status).to eq("initialized")
   end
 
   it "saves editable pre-decision details for signed-in admins" do

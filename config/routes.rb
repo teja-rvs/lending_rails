@@ -8,7 +8,12 @@ Rails.application.routes.draw do
   end
   resources :loan_applications, only: %i[show update], constraints: {
     id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
-  }
+  } do
+    resources :review_steps, only: [] do
+      patch :approve, on: :member
+      patch :request_details, on: :member
+    end
+  end
   resources :loans, only: :show, constraints: {
     id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
   }

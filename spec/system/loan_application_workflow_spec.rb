@@ -73,4 +73,48 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).not_to have_button("Save application details")
     expect(page).to have_link(application.borrower.full_name, href: borrower_path(application.borrower))
   end
+
+  it "lets an admin progress the current active review step from the application workspace" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, status: "open")
+    create(:review_step, :history_check, loan_application: application, status: "initialized")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_application_path(application)
+    click_button "Approve step"
+
+    expect(page).to have_current_path(loan_application_path(application))
+    expect(page).to have_content("Review step approved successfully.")
+    expect(page).to have_content("Phone screening")
+    expect(page).to have_content("In Progress")
+  end
+
+  it "shows blocked-state guidance when the current step is waiting for details" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, status: "open")
+    create(:review_step, :history_check, loan_application: application, status: "initialized")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_application_path(application)
+    click_button "Request details"
+
+    expect(page).to have_current_path(loan_application_path(application))
+    expect(page).to have_content("Review step marked as waiting for details.")
+    expect(page).to have_content("waiting for details before review can continue")
+    expect(page).to have_content("History check")
+  end
 end

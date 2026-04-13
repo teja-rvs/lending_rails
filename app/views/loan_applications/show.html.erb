@@ -3,6 +3,7 @@
 <% editable = @loan_application.editable_pre_decision_details? %>
 <% active_review_step = @loan_application.active_review_step %>
 <% workflow_complete = active_review_step.nil? && @loan_application.review_steps.any? %>
+<% waiting_for_details = active_review_step&.status == "waiting for details" %>
 
 <section class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8">
   <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
@@ -81,17 +82,54 @@
       </div>
     </dl>
 
+    <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+      <% if active_review_step.present? && editable %>
+        <div class="space-y-3">
+          <h3 class="text-lg font-semibold text-slate-950">Current step actions</h3>
+          <p class="text-sm leading-6 text-slate-600">
+            <% if waiting_for_details %>
+              This application is waiting for details before review can continue. Once the needed information arrives, approve the same active step to move the workflow forward.
+            <% else %>
+              Only the current active review step can be updated. Earlier and later steps stay read-only until the workflow reaches them in order.
+            <% end %>
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <%= button_to "Approve step", approve_loan_application_review_step_path(@loan_application, active_review_step), method: :patch, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+            <% unless waiting_for_details %>
+              <%= button_to "Request details", request_details_loan_application_review_step_path(@loan_application, active_review_step), method: :patch, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+            <% end %>
+          </div>
+        </div>
+      <% elsif active_review_step.present? %>
+        <p class="text-sm leading-6 text-slate-600">
+          Review steps are locked because this application has already crossed a final decision boundary.
+        </p>
+      <% elsif workflow_complete %>
+        <p class="text-sm leading-6 text-slate-600">
+          Every review step is already complete. Final application outcome handling is reserved for the later decision story.
+        </p>
+      <% else %>
+        <p class="text-sm leading-6 text-slate-600">
+          Review steps will become actionable here once the workflow is initialized for this application.
+        </p>
+      <% end %>
+    </div>
+
     <ol class="mt-8 space-y-4">
       <% @loan_application.review_steps.each do |review_step| %>
         <% is_active = review_step == active_review_step %>
-        <% step_summary = if is_active
+        <% step_summary = if is_active && review_step.status == "waiting for details"
+                            "Waiting for details before review can continue."
+                          elsif is_active
                             "Active now in the current workflow."
                           elsif review_step.final?
                             "Completed in the review workflow."
                           else
                             "Queued by workflow order until the earlier steps are resolved."
                           end %>
-        <% step_state_label = if is_active
+        <% step_state_label = if is_active && review_step.status == "waiting for details"
+                                "Waiting for details"
+                              elsif is_active
                                 "Current stage"
                               elsif review_step.final?
                                 "Completed"

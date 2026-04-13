@@ -1,12 +1,13 @@
 module Borrowers
   class DetailHeaderComponent < ApplicationComponent
-    def initialize(borrower:, current_context:, eligibility:)
+    def initialize(borrower:, current_context:, eligibility:, start_application_path: nil)
       @borrower = borrower
       @current_context = current_context
       @eligibility = eligibility
+      @start_application_path = start_application_path
     end
 
-    attr_reader :borrower, :current_context, :eligibility
+    attr_reader :borrower, :current_context, :eligibility, :start_application_path
 
     def eligibility_panel_classes
       if eligibility.eligible?
@@ -26,6 +27,10 @@ module Borrowers
 
     def eligibility_badge_label
       eligibility.eligible? ? "Eligible" : "Blocked"
+    end
+
+    def show_start_application?
+      eligibility.eligible? && start_application_path.present?
     end
   end
 end

@@ -17,7 +17,22 @@ RSpec.describe "LoanApplications", type: :request do
     expect(response).to redirect_to(new_session_path)
   end
 
-  it "renders the linked loan application read surface for signed-in admins" do
+  it "redirects unauthenticated visitors away from loan application updates" do
+    application = create(:loan_application)
+
+    patch loan_application_path(application), params: {
+      loan_application: {
+        requested_amount: "25000",
+        requested_tenure_in_months: "12",
+        requested_repayment_frequency: "monthly",
+        proposed_interest_mode: "rate"
+      }
+    }
+
+    expect(response).to redirect_to(new_session_path)
+  end
+
+  it "renders the canonical application workspace for signed-in admins" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
     application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
@@ -30,6 +45,86 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "h1", text: "APP-0101"
     assert_select "span.border-amber-200.bg-amber-50.text-amber-700", text: "In Progress"
     assert_select "a[href='#{borrower_path(borrower)}']", text: borrower.full_name
-    assert_select "p", text: /minimal read surface introduced for borrower-linked navigation/i
+    assert_select "h2", text: "Pre-decision application details"
+    assert_select "label", text: "Requested amount"
+    assert_select "label", text: "Requested tenure (months)"
+    assert_select "label", text: "Requested repayment frequency"
+    assert_select "label", text: "Proposed interest mode"
+    assert_select "input[type='submit'][value='Save application details']"
+  end
+
+  it "saves editable pre-decision details for signed-in admins" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch loan_application_path(application), params: {
+      loan_application: {
+        requested_amount: "45000",
+        requested_tenure_in_months: "10",
+        requested_repayment_frequency: "bi-weekly",
+        proposed_interest_mode: "rate",
+        request_notes: "Prefers a shorter repayment cycle."
+      }
+    }
+
+    expect(response).to redirect_to(loan_application_path(application))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Application details saved successfully."
+    assert_select "dd", text: "45000.00"
+    assert_select "dd", text: "10 months"
+    assert_select "dd", text: "Bi-Weekly"
+    assert_select "dd", text: "Interest rate"
+    assert_select "dd", text: "Prefers a shorter repayment cycle."
+  end
+
+  it "keeps invalid pre-decision updates on the application workspace with actionable feedback" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch loan_application_path(application), params: {
+      loan_application: {
+        requested_amount: "",
+        requested_tenure_in_months: "",
+        requested_repayment_frequency: "daily",
+        proposed_interest_mode: ""
+      }
+    }
+
+    expect(response).to have_http_status(:unprocessable_content)
+    assert_select "h1", text: "APP-0101"
+    assert_select "h2", text: "Please correct the highlighted application details."
+    assert_select "p", text: "Requested amount can't be blank"
+    assert_select "p", text: "Requested tenure in months can't be blank"
+    assert_select "p", text: "Requested repayment frequency is not included in the list"
+    assert_select "p", text: "Proposed interest mode can't be blank"
+  end
+
+  it "blocks updates after a final decision and explains the lifecycle boundary" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, :with_details, application_number: "APP-0101", status: "approved")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    patch loan_application_path(application), params: {
+      loan_application: {
+        requested_amount: "99999",
+        requested_tenure_in_months: "2",
+        requested_repayment_frequency: "weekly",
+        proposed_interest_mode: "total_interest_amount"
+      }
+    }
+
+    expect(response).to redirect_to(loan_application_path(application))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "These request details can no longer be edited after a final decision."
+    assert_select "dd", text: "25000.00"
+    assert_select "input[type='submit'][value='Save application details']", count: 0
   end
 end

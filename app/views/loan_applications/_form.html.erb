@@ -1,0 +1,65 @@
+<%= form_with model: loan_application, class: "mt-8 space-y-8" do |form| %>
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="space-y-2">
+      <%= form.label :requested_amount, "Requested amount", class: "block text-sm font-medium text-slate-700" %>
+      <%= form.number_field :requested_amount,
+          required: editable,
+          disabled: !editable,
+          min: 0,
+          step: "0.01",
+          value: loan_application.requested_amount_form_value,
+          class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100" %>
+    </div>
+
+    <div class="space-y-2">
+      <%= form.label :requested_tenure_in_months, "Requested tenure (months)", class: "block text-sm font-medium text-slate-700" %>
+      <%= form.number_field :requested_tenure_in_months,
+          required: editable,
+          disabled: !editable,
+          min: 1,
+          step: 1,
+          class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100" %>
+    </div>
+
+    <div class="space-y-2">
+      <%= form.label :requested_repayment_frequency, "Requested repayment frequency", class: "block text-sm font-medium text-slate-700" %>
+      <%= form.select :requested_repayment_frequency,
+          LoanApplication::REPAYMENT_FREQUENCIES.map { |value| [ value.split("-").map(&:capitalize).join("-"), value ] },
+          { include_blank: "Select a repayment frequency" },
+          {
+            required: editable,
+            disabled: !editable,
+            class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100"
+          } %>
+    </div>
+
+    <div class="space-y-2">
+      <%= form.label :proposed_interest_mode, "Proposed interest mode", class: "block text-sm font-medium text-slate-700" %>
+      <%= form.select :proposed_interest_mode,
+          [
+            [ "Interest rate", "rate" ],
+            [ "Total interest amount", "total_interest_amount" ]
+          ],
+          { include_blank: "Select an interest mode" },
+          {
+            required: editable,
+            disabled: !editable,
+            class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100"
+          } %>
+    </div>
+
+    <div class="space-y-2 lg:col-span-2">
+      <%= form.label :request_notes, "Review notes", class: "block text-sm font-medium text-slate-700" %>
+      <%= form.text_area :request_notes,
+          rows: 4,
+          disabled: !editable,
+          class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100" %>
+    </div>
+  </div>
+
+  <% if editable %>
+    <div class="flex justify-end border-t border-slate-200 pt-6">
+      <%= form.submit "Save application details", class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+    </div>
+  <% end %>
+<% end %>

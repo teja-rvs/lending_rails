@@ -66,12 +66,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_13_170600) do
 
   create_table "loan_applications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "application_number", null: false
+    t.string "borrower_full_name_snapshot"
     t.uuid "borrower_id", null: false
+    t.string "borrower_phone_number_snapshot"
     t.datetime "created_at", null: false
+    t.string "proposed_interest_mode"
+    t.text "request_notes"
+    t.bigint "requested_amount_cents"
+    t.string "requested_repayment_frequency"
+    t.integer "requested_tenure_in_months"
     t.string "status", null: false
     t.datetime "updated_at", null: false
     t.index ["application_number"], name: "index_loan_applications_on_application_number", unique: true
     t.index ["borrower_id"], name: "index_loan_applications_on_borrower_id"
+    t.index ["proposed_interest_mode"], name: "index_loan_applications_on_proposed_interest_mode"
+    t.index ["requested_repayment_frequency"], name: "index_loan_applications_on_requested_repayment_frequency"
     t.index ["status"], name: "index_loan_applications_on_status"
   end
 

@@ -3,8 +3,10 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
   resources :borrowers, only: %i[index new create show], constraints: {
     id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
-  }
-  resources :loan_applications, only: :show, constraints: {
+  } do
+    resources :loan_applications, only: :create
+  end
+  resources :loan_applications, only: %i[show update], constraints: {
     id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
   }
   resources :loans, only: :show, constraints: {

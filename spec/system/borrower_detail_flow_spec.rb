@@ -31,7 +31,7 @@ RSpec.describe "Borrower detail flow", type: :system do
     expect(page).to have_content("Borrower details")
     expect(page).to have_content("No lending history yet")
     expect(page).to have_content("Eligible for a new application")
-    expect(page).to have_content("ready for a new application once that workflow is available")
+    expect(page).to have_button("Start application")
     expect(page).to have_link("Back to borrower list", href: borrowers_path)
   end
 

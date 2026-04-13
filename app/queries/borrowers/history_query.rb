@@ -219,7 +219,7 @@ module Borrowers
             reason_code: "eligible_with_history",
             headline: "Eligible for a new application",
             message: eligible_with_history_message(applications:, loans:),
-            next_step_message: "This borrower is ready for a new application once that workflow is available. Application creation is introduced in the next story.",
+            next_step_message: "Start a new application from this borrower record to continue the review workflow.",
             blocking_application_count:,
             blocking_loan_count:
           )
@@ -230,7 +230,7 @@ module Borrowers
           reason_code: "eligible_no_history",
           headline: "Eligible for a new application",
           message: "No active applications or blocking loans are linked to this borrower.",
-          next_step_message: "This borrower is ready for a new application once that workflow is available. Application creation is introduced in the next story.",
+          next_step_message: "Start a new application from this borrower record to continue the review workflow.",
           blocking_application_count:,
           blocking_loan_count:
         )

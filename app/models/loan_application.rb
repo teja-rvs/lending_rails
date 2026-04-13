@@ -6,15 +6,61 @@ class LoanApplication < ApplicationRecord
     "rejected",
     "cancelled"
   ].freeze
+  REPAYMENT_FREQUENCIES = [
+    "weekly",
+    "bi-weekly",
+    "monthly"
+  ].freeze
+  PROPOSED_INTEREST_MODES = [
+    "rate",
+    "total_interest_amount"
+  ].freeze
+  FINAL_DECISION_STATUSES = [
+    "approved",
+    "rejected",
+    "cancelled"
+  ].freeze
 
   belongs_to :borrower
   has_many :loans, dependent: :restrict_with_exception
+  has_paper_trail
+
+  monetize :requested_amount_cents, allow_nil: true
+
+  before_validation :assign_application_number, on: :create
 
   normalizes :application_number, with: ->(value) { value.to_s.squish.presence }
+  normalizes :borrower_full_name_snapshot, with: ->(value) { value.to_s.squish.presence }
+  normalizes :borrower_phone_number_snapshot, with: ->(value) { value.to_s.squish.presence }
+  normalizes :request_notes, with: ->(value) { value.to_s.squish.presence }
   normalizes :status, with: ->(value) { value.to_s.squish.presence&.downcase }
+  normalizes :requested_repayment_frequency, with: ->(value) { value.to_s.squish.presence&.downcase }
+  normalizes :proposed_interest_mode, with: ->(value) { value.to_s.squish.presence&.downcase }
 
   validates :application_number, presence: true, uniqueness: true
   validates :status, presence: true, inclusion: { in: STATUSES }
+  validates :requested_amount, presence: true, numericality: {
+    greater_than: 0
+  }, on: :details_update
+  validates :requested_tenure_in_months, presence: true, numericality: {
+    only_integer: true,
+    greater_than: 0
+  }, on: :details_update
+  validates :requested_repayment_frequency, presence: true, inclusion: {
+    in: REPAYMENT_FREQUENCIES
+  }, on: :details_update
+  validates :proposed_interest_mode, presence: true, inclusion: {
+    in: PROPOSED_INTEREST_MODES
+  }, on: :details_update
+
+  def self.next_application_number
+    highest_sequence = where("application_number LIKE ?", "APP-%")
+      .pluck(:application_number)
+      .filter_map { |value| value.to_s.delete_prefix("APP-").to_i if value.to_s.match?(/\AAPP-\d+\z/) }
+      .max
+
+    "APP-#{((highest_sequence || 0) + 1).to_s.rjust(4, "0")}"
+  end
 
   def status_tone
     case status
@@ -32,4 +78,50 @@ class LoanApplication < ApplicationRecord
   def status_label
     status.to_s.split.map(&:capitalize).join(" ")
   end
+
+  def editable_pre_decision_details?
+    !FINAL_DECISION_STATUSES.include?(status)
+  end
+
+  def requested_repayment_frequency_label
+    requested_repayment_frequency.to_s.split("-").map(&:capitalize).join("-")
+  end
+
+  def proposed_interest_mode_label
+    case proposed_interest_mode
+    when "rate"
+      "Interest rate"
+    when "total_interest_amount"
+      "Total interest amount"
+    else
+      proposed_interest_mode.to_s.humanize
+    end
+  end
+
+  def requested_amount_display
+    return "Not provided yet" if requested_amount.blank?
+
+    format("%.2f", requested_amount.to_d)
+  end
+
+  def requested_amount_form_value
+    return if requested_amount.blank?
+
+    requested_amount_display
+  end
+
+  def requested_tenure_display
+    return "Not provided yet" if requested_tenure_in_months.blank?
+
+    "#{requested_tenure_in_months} months"
+  end
+
+  def request_notes_display
+    request_notes.presence || "Not provided yet"
+  end
+
+  private
+    def assign_application_number
+      self.application_number ||= self.class.next_application_number
+    end
 end

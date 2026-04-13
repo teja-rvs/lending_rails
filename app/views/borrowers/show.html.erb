@@ -12,7 +12,8 @@
   <%= render Borrowers::DetailHeaderComponent.new(
     borrower: @borrower_detail.borrower,
     current_context: @borrower_detail.current_context,
-    eligibility: @borrower_detail.eligibility
+    eligibility: @borrower_detail.eligibility,
+    start_application_path: (@borrower_detail.eligibility.eligible? ? borrower_loan_applications_path(@borrower) : nil)
   ) %>
 
   <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
@@ -42,7 +43,7 @@
         <h2 class="text-xl font-semibold">Next-step orientation</h2>
         <p class="mt-4 text-sm leading-6 text-slate-300"><%= @borrower_detail.next_step_message %></p>
         <p class="mt-4 text-sm leading-6 text-slate-300">
-          This page stays read-only in this story. Use it to confirm borrower context, then continue working inside the protected workspace.
+          Use this page to confirm borrower context, review linked lending history, and move into the protected application workspace only when the borrower is truly ready.
         </p>
       </section>
     </aside>

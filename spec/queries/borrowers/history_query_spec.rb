@@ -90,7 +90,7 @@ RSpec.describe Borrowers::HistoryQuery do
       expect(result.current_context.headline).to eq("No lending history yet")
       expect(result.eligibility.state).to eq("eligible")
       expect(result.eligibility.reason_code).to eq("eligible_no_history")
-      expect(result.next_step_message).to include("ready for a new application")
+      expect(result.next_step_message).to include("Start a new application")
     end
   end
 end

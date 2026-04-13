@@ -221,7 +221,9 @@ RSpec.describe "Borrowers", type: :request do
     assert_select "h2", text: "Eligible for a new application"
     assert_select "p", text: /No active applications or blocking loans are linked to this borrower/
     assert_select "section h2", text: "Linked lending records"
-    assert_select "p", text: /ready for a new application once that workflow is available/i
+    assert_select "form[action='#{borrower_loan_applications_path(borrower)}']" do
+      assert_select "button", text: "Start application"
+    end
     assert_select "a[href='#{borrowers_path}']", text: "Back to borrower list"
     assert_select "a[href='#{root_path}']", text: "Return to workspace"
   end
@@ -307,7 +309,7 @@ RSpec.describe "Borrowers", type: :request do
     expect(response).to have_http_status(:ok)
     assert_select "h2", text: "Eligible for a new application"
     assert_select "p", text: /all linked loans are closed/i
-    assert_select "p", text: /Application creation is introduced in the next story/i
+    assert_select "button", text: "Start application"
     assert_select "section#linked-records article", text: /LOAN-2002/ do
       assert_select "a[href='#{loan_path(loan)}']", text: "LOAN-2002"
       assert_select "span.border-slate-200.bg-slate-100.text-slate-700", text: "Closed"

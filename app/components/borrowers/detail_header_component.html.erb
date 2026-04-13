@@ -23,6 +23,11 @@
         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Application readiness</p>
         <h2 class="text-2xl font-semibold tracking-tight text-slate-950"><%= eligibility.headline %></h2>
         <p class="text-sm leading-6 text-slate-700"><%= eligibility.message %></p>
+        <% if show_start_application? %>
+          <div class="pt-2">
+            <%= button_to "Start application", start_application_path, method: :post, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+          </div>
+        <% end %>
       </div>
 
       <span class="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold <%= eligibility_badge_classes %>">

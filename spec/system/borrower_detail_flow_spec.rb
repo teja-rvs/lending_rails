@@ -13,7 +13,7 @@ RSpec.describe "Borrower detail flow", type: :system do
     ENV["ADMIN_EMAIL_ADDRESSES"] = original_admin_addresses
   end
 
-  it "lets an admin open borrower detail from the borrower list and understand the next step when no history exists" do
+  it "lets an admin open borrower detail from the borrower list and understand eligibility when no history exists" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
 
@@ -30,11 +30,12 @@ RSpec.describe "Borrower detail flow", type: :system do
     expect(page).to have_selector("h1", text: "Asha Patel")
     expect(page).to have_content("Borrower details")
     expect(page).to have_content("No lending history yet")
-    expect(page).to have_content("The next lending step is borrower eligibility review")
+    expect(page).to have_content("Eligible for a new application")
+    expect(page).to have_content("ready for a new application once that workflow is available")
     expect(page).to have_link("Back to borrower list", href: borrowers_path)
   end
 
-  it "lets an admin follow linked application and loan records without losing borrower context" do
+  it "lets an admin understand blocked eligibility and follow linked records without losing borrower context" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
     application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
@@ -48,6 +49,11 @@ RSpec.describe "Borrower detail flow", type: :system do
 
     click_link "Browse borrowers"
     click_link borrower.full_name
+
+    expect(page).to have_content("New application blocked")
+    expect(page).to have_content("Resolve the blocking application and close the active or overdue loan before starting a new one")
+    expect(page).to have_content("Linked lending records")
+
     click_link application.application_number
 
     expect(page).to have_current_path(loan_application_path(application))

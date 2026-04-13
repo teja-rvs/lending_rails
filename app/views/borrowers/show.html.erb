@@ -11,7 +11,8 @@
 
   <%= render Borrowers::DetailHeaderComponent.new(
     borrower: @borrower_detail.borrower,
-    current_context: @borrower_detail.current_context
+    current_context: @borrower_detail.current_context,
+    eligibility: @borrower_detail.eligibility
   ) %>
 
   <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">

@@ -207,7 +207,7 @@ RSpec.describe "Borrowers", type: :request do
     assert_select "p", text: /Showing results for/, count: 0
   end
 
-  it "renders a borrower detail page with calm no-history guidance" do
+  it "renders a borrower detail page with an eligible no-history decision" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
 
@@ -218,13 +218,15 @@ RSpec.describe "Borrowers", type: :request do
     assert_select "title", text: "Borrower details | lending_rails"
     assert_select "h1", text: "Asha Patel"
     assert_select "p", text: /No lending history yet/
+    assert_select "h2", text: "Eligible for a new application"
+    assert_select "p", text: /No active applications or blocking loans are linked to this borrower/
     assert_select "section h2", text: "Linked lending records"
-    assert_select "p", text: /The next lending step is borrower eligibility review/
+    assert_select "p", text: /ready for a new application once that workflow is available/i
     assert_select "a[href='#{borrowers_path}']", text: "Back to borrower list"
     assert_select "a[href='#{root_path}']", text: "Return to workspace"
   end
 
-  it "explains when borrower history exists but linked context is still limited" do
+  it "shows that a new application is blocked while an active application exists" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
     application = create(:loan_application, borrower:, application_number: "APP-0001", status: "open")
@@ -233,10 +235,100 @@ RSpec.describe "Borrowers", type: :request do
     get borrower_path(borrower)
 
     expect(response).to have_http_status(:ok)
-    assert_select "p", text: /History exists for this borrower, but some linked context is still limited/
+    assert_select "h2", text: "New application blocked"
+    assert_select "p", text: /open, in progress, or approved for this borrower/i
+    assert_select "p", text: /no longer open, in progress, or approved/i
     assert_select "section#linked-records article", text: /APP-0001/ do
       assert_select "a[href='#{loan_application_path(application)}']", text: "APP-0001"
       assert_select "span.border-amber-200.bg-amber-50.text-amber-700", text: "Open"
+    end
+  end
+
+  it "shows that an approved application still blocks a new application" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0002", status: "approved")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "New application blocked"
+    assert_select "p", text: /open, in progress, or approved/i
+    assert_select "p", text: /no longer open, in progress, or approved/i
+    assert_select "section#linked-records article", text: /APP-0002/ do
+      assert_select "a[href='#{loan_application_path(application)}']", text: "APP-0002"
+      assert_select "span.border-emerald-200.bg-emerald-50.text-emerald-700", text: "Approved"
+    end
+  end
+
+  it "shows that repeat borrowing is blocked while an active loan exists" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    loan = create(:loan, borrower:, loan_number: "LOAN-2001", status: "active")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "New application blocked"
+    assert_select "p", text: /becomes available only after the active or overdue loan is closed/i
+    assert_select "section#linked-records article", text: /LOAN-2001/ do
+      assert_select "a[href='#{loan_path(loan)}']", text: "LOAN-2001"
+      assert_select "span.border-emerald-200.bg-emerald-50.text-emerald-700", text: "Active"
+    end
+  end
+
+  it "shows that an overdue loan blocks repeat borrowing" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    loan = create(:loan, borrower:, loan_number: "LOAN-2003", status: "overdue")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "New application blocked"
+    assert_select "p", text: /active or overdue loan is closed/i
+    assert_select "section#linked-records article", text: /LOAN-2003/ do
+      assert_select "a[href='#{loan_path(loan)}']", text: "LOAN-2003"
+      assert_select "span.border-rose-200.bg-rose-50.text-rose-700", text: "Overdue"
+    end
+  end
+
+  it "shows a borrower with closed-loan history as eligible for a new application" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    loan = create(:loan, borrower:, loan_number: "LOAN-2002", status: "closed")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Eligible for a new application"
+    assert_select "p", text: /all linked loans are closed/i
+    assert_select "p", text: /Application creation is introduced in the next story/i
+    assert_select "section#linked-records article", text: /LOAN-2002/ do
+      assert_select "a[href='#{loan_path(loan)}']", text: "LOAN-2002"
+      assert_select "span.border-slate-200.bg-slate-100.text-slate-700", text: "Closed"
+    end
+  end
+
+  it "shows application-only history as eligible without claiming closed loans exist" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0003", status: "cancelled")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Eligible for a new application"
+    assert_select "p", text: /prior application history/i
+    assert_select "p", text: /all linked loans are closed/i, count: 0
+    assert_select "section#linked-records article", text: /APP-0003/ do
+      assert_select "a[href='#{loan_application_path(application)}']", text: "APP-0003"
+      assert_select "span.border-rose-200.bg-rose-50.text-rose-700", text: "Cancelled"
     end
   end
 
@@ -251,7 +343,8 @@ RSpec.describe "Borrowers", type: :request do
 
     expect(response).to have_http_status(:ok)
     assert_select "section h2", text: "Linked lending records"
-    assert_select "p", text: /1 active loan and 1 open application/
+    assert_select "p", text: /1 blocking loan and 1 blocking application/
+    assert_select "p", text: /Resolve the blocking application and close the active or overdue loan before starting a new one/i
 
     assert_select "section#linked-records article", text: /APP-0101/ do
       assert_select "a[href='#{loan_application_path(application)}']", text: "APP-0101"

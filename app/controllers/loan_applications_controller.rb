@@ -24,7 +24,7 @@ class LoanApplicationsController < ApplicationController
 
   def show
     LoanApplications::InitializeReviewWorkflow.call(loan_application: @loan_application)
-    @loan_application = LoanApplication.includes(:borrower, :review_steps).find(@loan_application.id)
+    @loan_application = LoanApplication.includes(:borrower, :review_steps, :loans).find(@loan_application.id)
     load_borrower_history
   end
 
@@ -45,10 +45,13 @@ class LoanApplicationsController < ApplicationController
   end
 
   def approve
-    handle_decision_result(
-      LoanApplications::Approve.call(loan_application: @loan_application),
-      success_message: "Application approved successfully."
-    )
+    result = LoanApplications::Approve.call(loan_application: @loan_application)
+
+    if result.success?
+      redirect_to loan_application_redirect_path, notice: "Application approved. Loan #{result.loan.loan_number} created."
+    else
+      redirect_to loan_application_redirect_path, alert: result.error
+    end
   end
 
   def reject

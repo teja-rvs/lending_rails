@@ -6,6 +6,7 @@
 <% waiting_for_details = active_review_step&.status == "waiting for details" %>
 <% final_decision = LoanApplication::FINAL_DECISION_STATUSES.include?(@loan_application.status) %>
 <% approvable = workflow_complete && @loan_application.approvable? %>
+<% linked_loan = @loan_application.loan %>
 <% borrower_context = @borrower_history.current_context %>
 <% borrower_eligibility = @borrower_history.eligibility %>
 <% detail_source = params[:from].presence %>
@@ -297,6 +298,40 @@
       </div>
     <% end %>
   </section>
+
+  <% if @loan_application.status == "approved" && linked_loan.present? %>
+    <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-3">
+          <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Linked loan</h2>
+          <p class="text-sm leading-6 text-slate-600">
+            A loan has been created from this approved application.
+          </p>
+        </div>
+
+        <%= render Shared::StatusBadgeComponent.new(label: linked_loan.status_label, tone: linked_loan.status_tone) %>
+      </div>
+
+      <dl class="mt-8 grid gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm font-medium text-slate-500">Loan number</dt>
+          <dd class="mt-2 text-lg font-semibold text-slate-950"><%= linked_loan.loan_number %></dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-medium text-slate-500">Lifecycle state</dt>
+          <dd class="mt-2 text-lg font-semibold text-slate-950"><%= linked_loan.status_label %></dd>
+        </div>
+
+        <div class="sm:col-span-2">
+          <dt class="text-sm font-medium text-slate-500">Open the loan</dt>
+          <dd class="mt-2">
+            <%= link_to "View loan → #{linked_loan.loan_number}", loan_path(linked_loan), class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+          </dd>
+        </div>
+      </dl>
+    </section>
+  <% end %>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
     <div class="space-y-3">

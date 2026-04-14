@@ -1,6 +1,6 @@
 module LoanApplications
   class Approve < ApplicationService
-    Result = Struct.new(:loan_application, :error, keyword_init: true) do
+    Result = Struct.new(:loan_application, :loan, :error, keyword_init: true) do
       def success?
         error.blank?
       end
@@ -17,9 +17,17 @@ module LoanApplications
     def call
       loan_application.with_lock do
         return blocked_result(blocked_error) unless loan_application.approvable?
+        return blocked_result("A loan already exists for this application.") if loan_application.loan.present?
 
         loan_application.update!(status: "approved")
-        Result.new(loan_application:)
+
+        loan_result = Loans::CreateFromApplication.call(
+          loan_application:,
+          lock_application: false
+        )
+        return blocked_result(loan_result.error) if loan_result.blocked?
+
+        Result.new(loan_application:, loan: loan_result.loan)
       end
     end
 
@@ -27,7 +35,7 @@ module LoanApplications
       attr_reader :loan_application
 
       def blocked_result(error)
-        Result.new(loan_application:, error:)
+        Result.new(loan_application:, loan: nil, error:)
       end
 
       def blocked_error

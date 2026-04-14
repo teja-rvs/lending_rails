@@ -141,12 +141,28 @@ RSpec.describe "Loan application workflow", type: :system do
     click_button "Approve application"
 
     expect(page).to have_current_path(loan_application_path(application))
-    expect(page).to have_content("Application approved successfully.")
+    loan = application.reload.loan
+
+    expect(page).to have_content("Application approved. Loan #{loan.loan_number} created.")
     expect(page).to have_content("This application is now locked for further review and detail changes.")
     expect(page).to have_content("Approved")
+    expect(page).to have_content("A loan has been created from this approved application")
+    expect(page).to have_link("View loan → #{loan.loan_number}", href: loan_path(loan))
     expect(page).not_to have_button("Approve application")
     expect(page).not_to have_button("Reject application")
     expect(page).not_to have_button("Cancel application")
+
+    click_link "View loan → #{loan.loan_number}"
+
+    expect(page).to have_current_path(loan_path(loan))
+    expect(page).to have_content("Created")
+    expect(page).to have_content("Documentation In Progress")
+    expect(page).to have_link(application.application_number, href: loan_application_path(application))
+
+    click_link application.application_number
+
+    expect(page).to have_current_path(loan_application_path(application))
+    expect(page).to have_link("View loan → #{loan.loan_number}", href: loan_path(loan))
   end
 
   it "lets an admin reject an application during review" do

@@ -113,6 +113,12 @@ class LoanApplication < ApplicationRecord
     ReviewStep.active_for(review_steps)
   end
 
+  def loan
+    return loans.first if association(:loans).loaded?
+
+    loans.order(:created_at).first
+  end
+
   def requested_repayment_frequency_label
     requested_repayment_frequency.to_s.split("-").map(&:capitalize).join("-")
   end

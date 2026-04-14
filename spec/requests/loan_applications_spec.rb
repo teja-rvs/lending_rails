@@ -257,15 +257,21 @@ RSpec.describe "LoanApplications", type: :request do
     create_completed_review_workflow(application)
 
     sign_in_as(user)
-    patch approve_loan_application_path(application), params: { from: "applications" }
+    expect {
+      patch approve_loan_application_path(application), params: { from: "applications" }
+    }.to change(Loan, :count).by(1)
 
     expect(response).to redirect_to(loan_application_path(application, from: "applications"))
 
     follow_redirect!
 
     expect(response).to have_http_status(:ok)
-    assert_select "p", text: "Application approved successfully."
+    loan = application.reload.loan
+
+    assert_select "p", text: "Application approved. Loan #{loan.loan_number} created."
     assert_select "dd", text: "Approved"
+    assert_select "h2", text: "Linked loan"
+    assert_select "a[href='#{loan_path(loan)}']", text: "View loan → #{loan.loan_number}"
     expect(application.reload.status).to eq("approved")
   end
 

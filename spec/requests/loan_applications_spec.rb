@@ -9,6 +9,16 @@ RSpec.describe "LoanApplications", type: :request do
     ENV["ADMIN_EMAIL_ADDRESSES"] = original_admin_addresses
   end
 
+  def sign_in_as(user)
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+  end
+
+  def create_completed_review_workflow(loan_application)
+    create(:review_step, :history_check, loan_application:, status: "approved")
+    create(:review_step, :phone_screening, loan_application:, status: "approved")
+    create(:review_step, :verification, loan_application:, status: "approved")
+  end
+
   it "redirects unauthenticated visitors away from the loan application detail page" do
     application = create(:loan_application)
 
@@ -44,6 +54,21 @@ RSpec.describe "LoanApplications", type: :request do
 
     patch approve_loan_application_review_step_path(application, review_step)
 
+    expect(response).to redirect_to(new_session_path)
+  end
+
+  it "redirects unauthenticated visitors away from application decision actions" do
+    approvable_application = create(:loan_application, status: "in progress")
+    create_completed_review_workflow(approvable_application)
+    rejectable_application = create(:loan_application, status: "open")
+
+    patch approve_loan_application_path(approvable_application)
+    expect(response).to redirect_to(new_session_path)
+
+    patch reject_loan_application_path(rejectable_application)
+    expect(response).to redirect_to(new_session_path)
+
+    patch cancel_loan_application_path(rejectable_application)
     expect(response).to redirect_to(new_session_path)
   end
 
@@ -224,6 +249,115 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "p", text: "Review step approved successfully."
     assert_select "dd", text: "Phone screening"
     assert_select "span", text: "In Progress"
+  end
+
+  it "lets a signed-in admin approve an application once every review step is approved" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "in progress")
+    create_completed_review_workflow(application)
+
+    sign_in_as(user)
+    patch approve_loan_application_path(application), params: { from: "applications" }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Application approved successfully."
+    assert_select "dd", text: "Approved"
+    expect(application.reload.status).to eq("approved")
+  end
+
+  it "blocks signed-in admins from approving an application before every review step is approved" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "in progress")
+    create(:review_step, :history_check, loan_application: application, status: "approved")
+    create(:review_step, :phone_screening, loan_application: application, status: "rejected")
+    create(:review_step, :verification, loan_application: application, status: "approved")
+
+    sign_in_as(user)
+    patch approve_loan_application_path(application), params: { from: "applications" }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "This application can only be approved after every review step is approved."
+    expect(application.reload.status).to eq("in progress")
+  end
+
+  it "lets a signed-in admin reject an application during review" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "open")
+
+    sign_in_as(user)
+    patch reject_loan_application_path(application), params: {
+      from: "applications",
+      decision_notes: "  Missing   supporting documents. "
+    }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Application rejected successfully."
+    expect(application.reload.status).to eq("rejected")
+    expect(application.decision_notes).to eq("Missing supporting documents.")
+  end
+
+  it "blocks signed-in admins from rejecting an application after a final decision" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "approved")
+
+    sign_in_as(user)
+    patch reject_loan_application_path(application), params: { from: "applications" }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "This application has already reached a final decision."
+    expect(application.reload.status).to eq("approved")
+  end
+
+  it "lets a signed-in admin cancel an application during review" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "in progress")
+
+    sign_in_as(user)
+    patch cancel_loan_application_path(application), params: {
+      from: "applications",
+      decision_notes: "  Borrower   withdrew the request. "
+    }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Application cancelled successfully."
+    expect(application.reload.status).to eq("cancelled")
+    expect(application.decision_notes).to eq("Borrower withdrew the request.")
+  end
+
+  it "blocks signed-in admins from cancelling an application after a final decision" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0101", status: "rejected")
+
+    sign_in_as(user)
+    patch cancel_loan_application_path(application), params: { from: "applications" }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "This application has already reached a final decision."
+    expect(application.reload.status).to eq("rejected")
   end
 
   it "preserves the applications-list context after saving application details" do

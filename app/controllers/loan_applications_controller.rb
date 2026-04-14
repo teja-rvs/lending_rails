@@ -1,5 +1,5 @@
 class LoanApplicationsController < ApplicationController
-  before_action :set_loan_application, only: %i[show update]
+  before_action :set_loan_application, only: %i[show update approve reject cancel]
 
   def index
     @search_query = params[:q].to_s.squish
@@ -44,6 +44,27 @@ class LoanApplicationsController < ApplicationController
     end
   end
 
+  def approve
+    handle_decision_result(
+      LoanApplications::Approve.call(loan_application: @loan_application),
+      success_message: "Application approved successfully."
+    )
+  end
+
+  def reject
+    handle_decision_result(
+      LoanApplications::Reject.call(loan_application: @loan_application, decision_notes: params[:decision_notes]),
+      success_message: "Application rejected successfully."
+    )
+  end
+
+  def cancel
+    handle_decision_result(
+      LoanApplications::Cancel.call(loan_application: @loan_application, decision_notes: params[:decision_notes]),
+      success_message: "Application cancelled successfully."
+    )
+  end
+
   private
     def set_loan_application
       @loan_application = LoanApplication.includes(:borrower).find(params[:id])
@@ -76,6 +97,14 @@ class LoanApplicationsController < ApplicationController
         loan_application_path(@loan_application, from: params[:from])
       else
         loan_application_path(@loan_application)
+      end
+    end
+
+    def handle_decision_result(result, success_message:)
+      if result.success?
+        redirect_to loan_application_redirect_path, notice: success_message
+      else
+        redirect_to loan_application_redirect_path, alert: result.error
       end
     end
 end

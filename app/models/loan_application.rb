@@ -33,6 +33,7 @@ class LoanApplication < ApplicationRecord
   normalizes :application_number, with: ->(value) { value.to_s.squish.presence }
   normalizes :borrower_full_name_snapshot, with: ->(value) { value.to_s.squish.presence }
   normalizes :borrower_phone_number_snapshot, with: ->(value) { value.to_s.squish.presence }
+  normalizes :decision_notes, with: ->(value) { value.to_s.squish.presence }
   normalizes :request_notes, with: ->(value) { value.to_s.squish.presence }
   normalizes :status, with: ->(value) { value.to_s.squish.presence&.downcase }
   normalizes :requested_repayment_frequency, with: ->(value) { value.to_s.squish.presence&.downcase }
@@ -81,6 +82,30 @@ class LoanApplication < ApplicationRecord
   end
 
   def editable_pre_decision_details?
+    !FINAL_DECISION_STATUSES.include?(status)
+  end
+
+  def decision_notes_display
+    decision_notes.presence || "No decision notes recorded"
+  end
+
+  def all_review_steps_approved?
+    if review_steps.loaded?
+      review_steps.any? && review_steps.all? { |review_step| review_step.status == "approved" }
+    else
+      review_steps.exists? && review_steps.where.not(status: "approved").none?
+    end
+  end
+
+  def approvable?
+    status == "in progress" && all_review_steps_approved?
+  end
+
+  def rejectable?
+    !FINAL_DECISION_STATUSES.include?(status)
+  end
+
+  def cancellable?
     !FINAL_DECISION_STATUSES.include?(status)
   end
 

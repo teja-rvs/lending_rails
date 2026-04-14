@@ -9,6 +9,12 @@ Rails.application.routes.draw do
   resources :loan_applications, only: %i[index show update], constraints: {
     id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
   } do
+    member do
+      patch :approve
+      patch :reject
+      patch :cancel
+    end
+
     resources :review_steps, only: [] do
       patch :approve, on: :member
       patch :request_details, on: :member

@@ -4,6 +4,8 @@
 <% active_review_step = @loan_application.active_review_step %>
 <% workflow_complete = active_review_step.nil? && @loan_application.review_steps.any? %>
 <% waiting_for_details = active_review_step&.status == "waiting for details" %>
+<% final_decision = LoanApplication::FINAL_DECISION_STATUSES.include?(@loan_application.status) %>
+<% approvable = workflow_complete && @loan_application.approvable? %>
 <% borrower_context = @borrower_history.current_context %>
 <% borrower_eligibility = @borrower_history.eligibility %>
 <% detail_source = params[:from].presence %>
@@ -114,7 +116,7 @@
         </p>
       <% elsif workflow_complete %>
         <p class="text-sm leading-6 text-slate-600">
-          Every review step is already complete. Final application outcome handling is reserved for the later decision story.
+          Every review step is already complete. Use the application decision section below to record the final outcome.
         </p>
       <% else %>
         <p class="text-sm leading-6 text-slate-600">
@@ -231,6 +233,67 @@
         <p class="mt-2 text-sm leading-6 text-slate-600">
           Keep reviewing this application here, or open the full borrower profile if you need to confirm identity and record ownership before making a decision.
         </p>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="space-y-3">
+      <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Application decision</h2>
+      <p class="text-sm leading-6 text-slate-600">
+        Final application outcomes stay visible here so the decision remains traceable without losing the surrounding borrower and workflow context.
+      </p>
+    </div>
+
+    <% if final_decision %>
+      <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Final outcome</p>
+            <h3 class="text-xl font-semibold text-slate-950"><%= @loan_application.status_label %></h3>
+            <p class="text-sm leading-6 text-slate-600">
+              This application is now locked for further review and detail changes.
+            </p>
+          </div>
+
+          <%= render Shared::StatusBadgeComponent.new(label: @loan_application.status_label, tone: @loan_application.status_tone) %>
+        </div>
+
+        <dl class="mt-6 grid gap-5 sm:grid-cols-2">
+          <div>
+            <dt class="text-sm font-medium text-slate-500">Decision recorded</dt>
+            <dd class="mt-2 text-base font-semibold text-slate-950"><%= @loan_application.updated_at.to_fs(:long) %></dd>
+          </div>
+
+          <% if @loan_application.decision_notes.present? %>
+            <div class="sm:col-span-2">
+              <dt class="text-sm font-medium text-slate-500">Decision notes</dt>
+              <dd class="mt-2 text-base font-semibold text-slate-950"><%= @loan_application.decision_notes_display %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    <% elsif editable %>
+      <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+        <div class="space-y-4">
+          <p class="text-sm leading-6 text-slate-600">
+            <% if approvable %>
+              All review steps are approved. You can now record the final application outcome here.
+            <% else %>
+              Approval becomes available once review has started and every review step is approved. Rejection and cancellation remain available while the application is still pre-decision.
+            <% end %>
+          </p>
+
+          <div class="flex flex-wrap gap-3">
+            <% if approvable %>
+              <%= button_to "Approve application", approve_loan_application_path(@loan_application, from: detail_source), method: :patch, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+            <% end %>
+
+            <%= button_to "Reject application", reject_loan_application_path(@loan_application, from: detail_source), method: :patch, data: { turbo_confirm: "Are you sure you want to reject this application? This action cannot be undone." }, class: "inline-flex items-center justify-center rounded-xl border border-rose-300 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-400 hover:text-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-500/15 focus:ring-offset-2 cursor-pointer" %>
+
+            <%= button_to "Cancel application", cancel_loan_application_path(@loan_application, from: detail_source), method: :patch, data: { turbo_confirm: "Are you sure you want to cancel this application? This action cannot be undone." }, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+          </div>
+        </div>
       </div>
     <% end %>
   </section>

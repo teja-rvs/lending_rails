@@ -6,6 +6,22 @@ FactoryBot.define do
     borrower_full_name_snapshot { borrower.full_name }
     borrower_phone_number_snapshot { borrower.phone_number_normalized }
 
+    trait :in_progress do
+      status { "in progress" }
+    end
+
+    trait :approved do
+      status { "approved" }
+    end
+
+    trait :rejected do
+      status { "rejected" }
+    end
+
+    trait :cancelled do
+      status { "cancelled" }
+    end
+
     trait :with_details do
       requested_amount { 25_000 }
       requested_tenure_in_months { 12 }

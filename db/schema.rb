@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_13_173000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_111000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -70,6 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_13_173000) do
     t.uuid "borrower_id", null: false
     t.string "borrower_phone_number_snapshot"
     t.datetime "created_at", null: false
+    t.text "decision_notes"
     t.string "proposed_interest_mode"
     t.text "request_notes"
     t.bigint "requested_amount_cents"

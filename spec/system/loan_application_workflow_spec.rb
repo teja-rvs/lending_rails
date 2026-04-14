@@ -13,6 +13,20 @@ RSpec.describe "Loan application workflow", type: :system do
     ENV["ADMIN_EMAIL_ADDRESSES"] = original_admin_addresses
   end
 
+  def sign_in_as(user)
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+  end
+
+  def create_completed_review_workflow(loan_application)
+    create(:review_step, :history_check, loan_application:, status: "approved")
+    create(:review_step, :phone_screening, loan_application:, status: "approved")
+    create(:review_step, :verification, loan_application:, status: "approved")
+  end
+
   it "lets an admin move from an eligible borrower into the application workspace and see the fixed review workflow" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
@@ -110,6 +124,97 @@ RSpec.describe "Loan application workflow", type: :system do
     )
     expect(page).to have_link(matching.application_number, href: loan_application_path(matching, from: "applications"))
     expect(page).not_to have_content("APP-0102")
+  end
+
+  it "lets an admin approve an application once every review step is approved" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, status: "in progress")
+    create_completed_review_workflow(application)
+
+    sign_in_as(user)
+    visit loan_application_path(application)
+
+    expect(page).to have_button("Approve application")
+    expect(page).to have_button("Reject application")
+    expect(page).to have_button("Cancel application")
+
+    click_button "Approve application"
+
+    expect(page).to have_current_path(loan_application_path(application))
+    expect(page).to have_content("Application approved successfully.")
+    expect(page).to have_content("This application is now locked for further review and detail changes.")
+    expect(page).to have_content("Approved")
+    expect(page).not_to have_button("Approve application")
+    expect(page).not_to have_button("Reject application")
+    expect(page).not_to have_button("Cancel application")
+  end
+
+  it "lets an admin reject an application during review" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, status: "in progress")
+    create(:review_step, :history_check, loan_application: application, status: "approved")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    sign_in_as(user)
+    visit loan_application_path(application)
+
+    expect(page).not_to have_button("Approve application")
+    expect(page).to have_button("Reject application")
+    expect(page).to have_button("Cancel application")
+
+    click_button "Reject application"
+
+    expect(page).to have_current_path(loan_application_path(application))
+    expect(page).to have_content("Application rejected successfully.")
+    expect(page).to have_content("Rejected")
+    expect(page).not_to have_button("Approve application")
+    expect(page).not_to have_button("Reject application")
+    expect(page).not_to have_button("Cancel application")
+  end
+
+  it "lets an admin cancel an application during review" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, status: "open")
+    create(:review_step, :history_check, loan_application: application, status: "initialized")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    sign_in_as(user)
+    visit loan_application_path(application)
+
+    expect(page).not_to have_button("Approve application")
+    expect(page).to have_button("Reject application")
+    expect(page).to have_button("Cancel application")
+
+    click_button "Cancel application"
+
+    expect(page).to have_current_path(loan_application_path(application))
+    expect(page).to have_content("Application cancelled successfully.")
+    expect(page).to have_content("Cancelled")
+    expect(page).not_to have_button("Approve application")
+    expect(page).not_to have_button("Reject application")
+    expect(page).not_to have_button("Cancel application")
+  end
+
+  it "shows decision notes for applications that already have a final decision" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(
+      :loan_application,
+      status: "rejected",
+      decision_notes: "Borrower could not provide the required verification."
+    )
+    create(:review_step, :history_check, loan_application: application, status: "approved")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    sign_in_as(user)
+    visit loan_application_path(application)
+
+    expect(page).to have_content("Borrower could not provide the required verification.")
+    expect(page).not_to have_button("Approve application")
+    expect(page).not_to have_button("Reject application")
+    expect(page).not_to have_button("Cancel application")
   end
 
   it "shows locked-state guidance when the application is no longer editable" do

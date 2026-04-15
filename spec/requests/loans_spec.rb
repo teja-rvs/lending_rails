@@ -51,6 +51,14 @@ RSpec.describe "Loans", type: :request do
     expect(response).to redirect_to(new_session_path)
   end
 
+  it "redirects unauthenticated visitors away from complete documentation" do
+    loan = create(:loan, :documentation_in_progress)
+
+    patch complete_documentation_loan_path(loan)
+
+    expect(response).to redirect_to(new_session_path)
+  end
+
   it "renders an empty loans list state for signed-in admins" do
     user = create(:user, email_address: "admin@example.com")
 
@@ -115,6 +123,7 @@ RSpec.describe "Loans", type: :request do
     assert_select "span.border-slate-200.bg-slate-100.text-slate-700", text: "Created"
     assert_select "a[href='#{borrower_path(borrower)}']", text: borrower.full_name
     assert_select "a[href='#{loan_application_path(application)}']", text: "APP-0101"
+    assert_select "h2", text: "Loan documentation"
     assert_select "h2", text: "Pre-disbursement loan details"
     assert_select "h2", text: "Current loan summary"
     assert_select "input[type='submit'][value='Save loan details']"
@@ -232,5 +241,38 @@ RSpec.describe "Loans", type: :request do
     expect(response).to have_http_status(:ok)
     assert_select "p", text: "This loan cannot begin documentation from its current state."
     expect(loan.reload).to be_active
+  end
+
+  it "lets a signed-in admin complete documentation from documentation_in_progress" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :documentation_in_progress, :with_details, loan_number: "LOAN-4003")
+
+    sign_in_as(user)
+    patch complete_documentation_loan_path(loan), params: { from: "loans" }
+
+    expect(response).to redirect_to(loan_path(loan, from: "loans"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Documentation completed for LOAN-4003. Loan is now ready for disbursement."
+    assert_select "dd", text: "Ready For Disbursement"
+    expect(loan.reload).to be_ready_for_disbursement
+  end
+
+  it "guards complete documentation when the state transition is invalid" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :created, :with_details, loan_number: "LOAN-4004")
+
+    sign_in_as(user)
+    patch complete_documentation_loan_path(loan)
+
+    expect(response).to redirect_to(loan_path(loan))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "This loan cannot complete documentation from its current state."
+    expect(loan.reload).to be_created
   end
 end

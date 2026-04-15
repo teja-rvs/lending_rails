@@ -25,6 +25,14 @@ Rails.application.routes.draw do
   } do
     member do
       patch :begin_documentation
+      patch :complete_documentation
+    end
+
+    resources :documents, only: :create, controller: "documents"
+  end
+  resources :documents, only: [] do
+    member do
+      patch :replace
     end
   end
   mount MissionControl::Jobs::Engine, at: "/jobs"

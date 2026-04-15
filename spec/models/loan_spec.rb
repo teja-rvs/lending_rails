@@ -1,5 +1,66 @@
 require "rails_helper"
 
+RSpec.describe Loan, type: :model do
+  subject(:loan) { create(:loan, :documentation_in_progress) }
+
+  it { is_expected.to have_many(:document_uploads).dependent(:restrict_with_exception) }
+
+  describe "#active_documents" do
+    it "returns only active documents ordered newest first" do
+      older_document = create(:document_upload, documentable: loan, created_at: 2.days.ago)
+      newest_document = create(:document_upload, documentable: loan, created_at: 1.day.ago)
+      create(
+        :document_upload,
+        documentable: loan,
+        status: "superseded",
+        superseded_at: Time.current
+      )
+
+      expect(loan.active_documents).to eq([ newest_document, older_document ])
+    end
+  end
+
+  describe "#has_documents?" do
+    it "returns true when an active document exists" do
+      create(:document_upload, documentable: loan)
+
+      expect(loan).to have_documents
+    end
+
+    it "returns false when only superseded documents exist" do
+      create(
+        :document_upload,
+        documentable: loan,
+        status: "superseded",
+        superseded_at: Time.current
+      )
+
+      expect(loan).not_to have_documents
+    end
+  end
+
+  describe "#documentation_uploadable?" do
+    it "returns true for created loans" do
+      expect(build(:loan, :created)).to be_documentation_uploadable
+    end
+
+    it "returns true for loans in documentation_in_progress" do
+      expect(build(:loan, :documentation_in_progress)).to be_documentation_uploadable
+    end
+
+    it "returns true for loans ready for disbursement" do
+      expect(build(:loan, :ready_for_disbursement)).to be_documentation_uploadable
+    end
+
+    it "returns false after disbursement" do
+      expect(build(:loan, :active)).not_to be_documentation_uploadable
+      expect(build(:loan, :overdue)).not_to be_documentation_uploadable
+      expect(build(:loan, :closed)).not_to be_documentation_uploadable
+    end
+  end
+end
+require "rails_helper"
+
 RSpec.describe Loan do
   describe "validations" do
     it "requires borrower snapshot fields" do

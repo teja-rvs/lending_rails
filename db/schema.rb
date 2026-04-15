@@ -10,10 +10,38 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_15_161146) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_172000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
+
+  create_table "active_storage_attachments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.uuid "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "borrowers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -23,6 +51,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_161146) do
     t.datetime "updated_at", null: false
     t.index ["full_name"], name: "index_borrowers_on_full_name"
     t.index ["phone_number_normalized"], name: "index_borrowers_on_phone_number_normalized", unique: true
+  end
+
+  create_table "document_uploads", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.uuid "documentable_id", null: false
+    t.string "documentable_type", null: false
+    t.string "file_name", null: false
+    t.string "status", default: "active", null: false
+    t.datetime "superseded_at"
+    t.uuid "superseded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "uploaded_by_id", null: false
+    t.index ["documentable_type", "documentable_id"], name: "idx_on_documentable_type_documentable_id_1f5970d10b"
+    t.index ["status"], name: "index_document_uploads_on_status"
+    t.index ["superseded_by_id"], name: "index_document_uploads_on_superseded_by_id"
+    t.index ["uploaded_by_id"], name: "index_document_uploads_on_uploaded_by_id"
   end
 
   create_table "double_entry_account_balances", force: :cascade do |t|
@@ -150,6 +195,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_161146) do
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "document_uploads", "document_uploads", column: "superseded_by_id"
+  add_foreign_key "document_uploads", "users", column: "uploaded_by_id"
   add_foreign_key "loan_applications", "borrowers"
   add_foreign_key "loans", "borrowers"
   add_foreign_key "loans", "loan_applications"

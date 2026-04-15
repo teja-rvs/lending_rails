@@ -1,5 +1,5 @@
 class LoansController < ApplicationController
-  before_action :set_loan, only: %i[show update begin_documentation]
+  before_action :set_loan, only: %i[show update begin_documentation complete_documentation]
 
   def index
     @search_query = params[:q].to_s.squish
@@ -9,6 +9,7 @@ class LoansController < ApplicationController
   end
 
   def show
+    @document_upload = @loan.document_uploads.build(uploaded_by: Current.user)
   end
 
   def update
@@ -36,9 +37,28 @@ class LoansController < ApplicationController
     end
   end
 
+  def complete_documentation
+    @loan.with_lock do
+      if @loan.may_complete_documentation?
+        @loan.complete_documentation!
+        redirect_to loan_redirect_path, notice: "Documentation completed for #{@loan.loan_number}. Loan is now ready for disbursement."
+      else
+        redirect_to loan_redirect_path, alert: "This loan cannot complete documentation from its current state."
+      end
+    end
+  end
+
   private
     def set_loan
-      @loan = Loan.includes(:borrower, :loan_application).find(params[:id])
+      @loan = Loan.includes(
+        :borrower,
+        :loan_application,
+        document_uploads: [
+          :uploaded_by,
+          :superseded_by,
+          { file_attachment: :blob }
+        ]
+      ).find(params[:id])
     end
 
     def loan_params

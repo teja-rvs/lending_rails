@@ -5,6 +5,10 @@ RSpec.describe "Loan detail flow", type: :system do
     driven_by(:rack_test)
   end
 
+  def fixture_path(name)
+    Rails.root.join("spec/fixtures/files/#{name}")
+  end
+
   around do |example|
     original_admin_addresses = ENV["ADMIN_EMAIL_ADDRESSES"]
     ENV["ADMIN_EMAIL_ADDRESSES"] = "admin@example.com"
@@ -140,5 +144,68 @@ RSpec.describe "Loan detail flow", type: :system do
 
     expect(page).to have_current_path(loans_path)
     expect(page).to have_selector("h1", text: "Loans")
+  end
+
+  it "lets an admin upload, replace, and preserve document history during documentation" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Meera Shah", phone_number: "98765 43212")
+    loan = create(
+      :loan,
+      :created,
+      :with_details,
+      borrower:,
+      loan_number: "LOAN-5003"
+    )
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_path(loan, from: "loans")
+
+    click_button "Begin documentation"
+
+    expect(page).to have_content("Documentation stage started for LOAN-5003.")
+    expect(page).to have_content("Documentation In Progress")
+
+    within("#loan-documentation") do
+      attach_file "Document file", fixture_path("sample.pdf")
+      fill_in "Document name", with: "Borrower ID"
+      fill_in "Description", with: "Government issued ID."
+      click_button "Upload document"
+    end
+
+    expect(page).to have_content("Document 'Borrower ID' uploaded successfully.")
+    expect(page).to have_link("Borrower ID")
+    expect(page).to have_content("admin@example.com")
+
+    within("article", text: "Borrower ID") do
+      find("summary", text: "Replace document").click
+
+      within("details[open]") do
+        attach_file "Replacement file", fixture_path("replacement.pdf")
+        fill_in "Replacement document name", with: "Borrower ID v2"
+        fill_in "Replacement description", with: "Updated document scan."
+        click_button "Replace document"
+      end
+    end
+
+    expect(page).to have_content("Document replaced. Previous version preserved in history.")
+    expect(page).to have_link("Borrower ID v2")
+
+    find("summary", text: "Document history").click
+
+    within("details[open]", text: "Document history") do
+      expect(page).to have_content("Borrower ID")
+      expect(page).to have_content("Replaced by Borrower ID v2")
+    end
+
+    click_button "Complete documentation"
+
+    expect(page).to have_content("Documentation completed for LOAN-5003. Loan is now ready for disbursement.")
+    expect(page).to have_content("Ready For Disbursement")
+    expect(page).to have_field("Document name")
   end
 end

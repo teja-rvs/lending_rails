@@ -13,6 +13,7 @@ class Loan < ApplicationRecord
 
   belongs_to :borrower
   belongs_to :loan_application, optional: true
+  has_many :document_uploads, as: :documentable, dependent: :restrict_with_exception
   has_paper_trail
 
   monetize :principal_amount_cents, allow_nil: true
@@ -124,6 +125,18 @@ class Loan < ApplicationRecord
 
   def editable_details?
     %i[created documentation_in_progress ready_for_disbursement].include?(aasm.current_state)
+  end
+
+  def active_documents
+    document_uploads.active.ordered
+  end
+
+  def has_documents?
+    document_uploads.active.exists?
+  end
+
+  def documentation_uploadable?
+    editable_details?
   end
 
   def principal_amount_display

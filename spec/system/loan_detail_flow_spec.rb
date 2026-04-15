@@ -77,4 +77,68 @@ RSpec.describe "Loan detail flow", type: :system do
     expect(page).to have_selector("nav[aria-label='Breadcrumb']", text: "Bhavya Rao")
     expect(page).not_to have_content("Linked application")
   end
+
+  it "lets an admin move from the workspace to the loans list, update details, and begin documentation" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    created_loan = create(
+      :loan,
+      :created,
+      :with_details,
+      borrower:,
+      loan_number: "LOAN-5001"
+    )
+    create(:loan, :active, :with_details, loan_number: "LOAN-5002")
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    expect(page).to have_current_path(root_path)
+    click_link "Loans"
+
+    expect(page).to have_current_path(loans_path)
+    expect(page).to have_selector("h1", text: "Loans")
+
+    click_link "Created", match: :first
+
+    expect(page).to have_current_path(loans_path(status: "created"))
+    expect(page).to have_link("LOAN-5001", href: loan_path(created_loan, from: "loans"))
+    expect(page).not_to have_link("LOAN-5002")
+
+    click_link "LOAN-5001"
+
+    expect(page).to have_current_path(loan_path(created_loan, from: "loans"))
+    within("nav[aria-label='Breadcrumb']") do
+      expect(page).to have_link("Loans", href: loans_path)
+    end
+
+    fill_in "Principal amount", with: "48000"
+    fill_in "Tenure (months)", with: "14"
+    select "Weekly", from: "Repayment frequency"
+    fill_in "Interest rate", with: "13.2500"
+    fill_in "Notes", with: "Weekly repayments confirmed with the borrower."
+    click_button "Save loan details"
+
+    expect(page).to have_current_path(loan_path(created_loan, from: "loans"))
+    expect(page).to have_content("Loan details saved successfully.")
+    expect(page).to have_content("48000.00")
+    expect(page).to have_content("14 months")
+    expect(page).to have_content("Weekly")
+    expect(page).to have_content("13.2500%")
+    expect(page).to have_content("Weekly repayments confirmed with the borrower.")
+
+    click_button "Begin documentation"
+
+    expect(page).to have_current_path(loan_path(created_loan, from: "loans"))
+    expect(page).to have_content("Documentation stage started for LOAN-5001.")
+    expect(page).to have_content("Documentation In Progress")
+
+    click_link "Loans"
+
+    expect(page).to have_current_path(loans_path)
+    expect(page).to have_selector("h1", text: "Loans")
+  end
 end

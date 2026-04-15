@@ -1,14 +1,30 @@
 class Loan < ApplicationRecord
   include AASM
 
+  REPAYMENT_FREQUENCIES = [
+    "weekly",
+    "bi-weekly",
+    "monthly"
+  ].freeze
+  INTEREST_MODES = [
+    "rate",
+    "total_interest_amount"
+  ].freeze
+
   belongs_to :borrower
   belongs_to :loan_application, optional: true
   has_paper_trail
+
+  monetize :principal_amount_cents, allow_nil: true
+  monetize :total_interest_amount_cents, allow_nil: true
 
   normalizes :loan_number, with: ->(value) { value.to_s.squish.presence }
   normalizes :borrower_full_name_snapshot, with: ->(value) { value.to_s.squish.presence }
   normalizes :borrower_phone_number_snapshot, with: ->(value) { value.to_s.squish.presence }
   normalizes :status, with: ->(value) { value.to_s.squish.presence&.downcase }
+  normalizes :repayment_frequency, with: ->(value) { value.to_s.squish.presence&.downcase }
+  normalizes :interest_mode, with: ->(value) { value.to_s.squish.presence&.downcase }
+  normalizes :notes, with: ->(value) { value.to_s.squish.presence }
 
   validates :loan_number, presence: true, uniqueness: true
   validates :borrower_full_name_snapshot, presence: true
@@ -16,6 +32,20 @@ class Loan < ApplicationRecord
   validates :status, presence: true, inclusion: {
     in: ->(loan) { loan.class.aasm.states.map { |state| state.name.to_s } }
   }
+  validates :principal_amount, presence: true, numericality: {
+    greater_than: 0
+  }, on: :details_update
+  validates :tenure_in_months, presence: true, numericality: {
+    only_integer: true,
+    greater_than: 0
+  }, on: :details_update
+  validates :repayment_frequency, presence: true, inclusion: {
+    in: REPAYMENT_FREQUENCIES
+  }, on: :details_update
+  validates :interest_mode, presence: true, inclusion: {
+    in: INTEREST_MODES
+  }, on: :details_update
+  validate :validate_interest_details, on: :details_update
 
   aasm column: :status, whiny_transitions: true do
     state :created, initial: true
@@ -92,6 +122,56 @@ class Loan < ApplicationRecord
     borrower_phone_number_snapshot.presence || borrower&.phone_number_normalized
   end
 
+  def editable_details?
+    %i[created documentation_in_progress ready_for_disbursement].include?(aasm.current_state)
+  end
+
+  def principal_amount_display
+    return "Not provided yet" if principal_amount.blank?
+
+    format("%.2f", principal_amount.to_d)
+  end
+
+  def tenure_display
+    return "Not provided yet" if tenure_in_months.blank?
+
+    "#{tenure_in_months} months"
+  end
+
+  def repayment_frequency_label
+    repayment_frequency.to_s.split("-").map(&:capitalize).join("-")
+  end
+
+  def interest_mode_label
+    case interest_mode
+    when "rate"
+      "Interest rate"
+    when "total_interest_amount"
+      "Total interest amount"
+    else
+      interest_mode.to_s.humanize
+    end
+  end
+
+  def interest_display
+    case interest_mode
+    when "rate"
+      return "Not provided yet" if interest_rate.blank?
+
+      format("%.4f%%", interest_rate)
+    when "total_interest_amount"
+      return "Not provided yet" if total_interest_amount.blank?
+
+      format("%.2f", total_interest_amount.to_d)
+    else
+      "Not provided yet"
+    end
+  end
+
+  def notes_display
+    notes.presence || "Not provided yet"
+  end
+
   def next_lifecycle_stage_label
     case aasm.current_state
     when :created
@@ -125,4 +205,16 @@ class Loan < ApplicationRecord
       "This loan has completed its lifecycle and no further transition is expected."
     end
   end
+
+  private
+    def validate_interest_details
+      case interest_mode
+      when "rate"
+        errors.add(:interest_rate, "can't be blank") if interest_rate.blank?
+        errors.add(:total_interest_amount, "must be blank when interest mode is rate") if total_interest_amount.present?
+      when "total_interest_amount"
+        errors.add(:total_interest_amount, "can't be blank") if total_interest_amount.blank?
+        errors.add(:interest_rate, "must be blank when interest mode is total interest amount") if interest_rate.present?
+      end
+    end
 end

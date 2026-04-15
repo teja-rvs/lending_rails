@@ -20,9 +20,13 @@ Rails.application.routes.draw do
       patch :request_details, on: :member
     end
   end
-  resources :loans, only: :show, constraints: {
+  resources :loans, only: %i[index show update], constraints: {
     id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
-  }
+  } do
+    member do
+      patch :begin_documentation
+    end
+  end
   mount MissionControl::Jobs::Engine, at: "/jobs"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

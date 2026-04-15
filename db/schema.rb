@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_173000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_161146) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -90,13 +90,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_173000) do
     t.uuid "borrower_id", null: false
     t.string "borrower_phone_number_snapshot"
     t.datetime "created_at", null: false
+    t.date "disbursement_date"
+    t.string "interest_mode"
+    t.decimal "interest_rate", precision: 8, scale: 4
     t.uuid "loan_application_id"
     t.string "loan_number", null: false
+    t.text "notes"
+    t.bigint "principal_amount_cents"
+    t.string "repayment_frequency"
     t.string "status", null: false
+    t.integer "tenure_in_months"
+    t.bigint "total_interest_amount_cents"
     t.datetime "updated_at", null: false
     t.index ["borrower_id"], name: "index_loans_on_borrower_id"
+    t.index ["interest_mode"], name: "index_loans_on_interest_mode"
     t.index ["loan_application_id"], name: "index_loans_on_loan_application_id"
     t.index ["loan_number"], name: "index_loans_on_loan_number", unique: true
+    t.index ["repayment_frequency"], name: "index_loans_on_repayment_frequency"
     t.index ["status"], name: "index_loans_on_status"
   end
 

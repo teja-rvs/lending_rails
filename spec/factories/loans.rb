@@ -6,6 +6,14 @@ FactoryBot.define do
     status { "created" }
     borrower_full_name_snapshot { borrower.full_name }
     borrower_phone_number_snapshot { borrower.phone_number_normalized }
+    principal_amount { nil }
+    tenure_in_months { nil }
+    repayment_frequency { nil }
+    interest_mode { nil }
+    interest_rate { nil }
+    total_interest_amount { nil }
+    disbursement_date { nil }
+    notes { nil }
 
     trait :created do
       status { "created" }
@@ -29,6 +37,26 @@ FactoryBot.define do
 
     trait :closed do
       status { "closed" }
+    end
+
+    trait :with_details do
+      principal_amount { 45_000 }
+      tenure_in_months { 12 }
+      repayment_frequency { "monthly" }
+      interest_mode { "rate" }
+      interest_rate { BigDecimal("12.5000") }
+      total_interest_amount { nil }
+      notes { "Borrower confirmed monthly repayment preference." }
+    end
+
+    trait :with_total_interest_details do
+      principal_amount { 45_000 }
+      tenure_in_months { 12 }
+      repayment_frequency { "monthly" }
+      interest_mode { "total_interest_amount" }
+      interest_rate { nil }
+      total_interest_amount { 8_000 }
+      notes { "Borrower agreed to a fixed total interest amount." }
     end
   end
 end

@@ -1,9 +1,20 @@
 <% content_for :title, "#{@loan.loan_number} | lending_rails" %>
 
+<% editable = @loan.editable_details? %>
+<% detail_source = params[:from].presence %>
+<% detail_from_loans = detail_source == "loans" %>
+<% selected_interest_mode = @loan.interest_mode.presence %>
+<% show_rate_input = selected_interest_mode.blank? || selected_interest_mode == "rate" %>
+<% show_total_interest_input = selected_interest_mode.blank? || selected_interest_mode == "total_interest_amount" %>
+
 <section class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8">
   <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
     <%= link_to "Workspace", root_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
     <span aria-hidden="true" class="text-slate-300">/</span>
+    <% if detail_from_loans %>
+      <%= link_to "Loans", loans_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+      <span aria-hidden="true" class="text-slate-300">/</span>
+    <% end %>
     <%= link_to "Borrowers", borrowers_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
     <span aria-hidden="true" class="text-slate-300">/</span>
     <%= link_to @loan.borrower.full_name, borrower_path(@loan.borrower), class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
@@ -66,6 +77,193 @@
       <div class="sm:col-span-2">
         <dt class="text-sm font-medium text-slate-500">Lifecycle guidance</dt>
         <dd class="mt-2 text-base leading-7 text-slate-600"><%= @loan.next_lifecycle_stage_guidance %></dd>
+      </div>
+    </dl>
+
+    <% if @loan.may_begin_documentation? %>
+      <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-2">
+            <h2 class="text-xl font-semibold text-slate-950">Next valid action</h2>
+            <p class="text-sm leading-6 text-slate-600">
+              This loan is still in its editable pre-disbursement stage. Begin documentation once the loan details below are complete and reviewed.
+            </p>
+          </div>
+
+          <%= button_to "Begin documentation",
+              begin_documentation_loan_path(@loan, from: detail_source),
+              method: :patch,
+              data: {
+                turbo_confirm: "Begin documentation for #{@loan.loan_number}? This moves the loan into documentation in progress."
+              },
+              class: "inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2" %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="space-y-3">
+      <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Pre-disbursement loan details</h2>
+      <p class="text-sm leading-6 text-slate-600">
+        Principal, tenure, repayment frequency, interest details, and operational notes stay editable only before the loan crosses the disbursement boundary.
+      </p>
+    </div>
+
+    <% if @loan.errors.any? %>
+      <div class="mt-8 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4" role="alert" aria-live="assertive" tabindex="-1">
+        <h2 class="text-sm font-semibold text-rose-900">Please correct the highlighted loan details.</h2>
+        <ul class="mt-3 space-y-2 text-sm text-rose-700">
+          <% @loan.errors.full_messages.each do |message| %>
+            <li><p><%= message %></p></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <% unless editable %>
+      <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+        <p class="text-sm font-semibold text-amber-900">These loan details can no longer be edited after disbursement.</p>
+        <p class="mt-2 text-sm leading-6 text-amber-800">
+          The lifecycle context remains visible here for orientation, but pre-money details are now locked to preserve the accounting boundary.
+        </p>
+      </div>
+    <% end %>
+
+    <%= form_with model: @loan, class: "mt-8 space-y-8", data: { controller: "interest-mode-toggle" } do |form| %>
+      <% if detail_source.present? %>
+        <%= hidden_field_tag :from, detail_source %>
+      <% end %>
+
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div class="space-y-2">
+          <%= form.label :principal_amount, "Principal amount", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.number_field :principal_amount,
+              required: editable,
+              disabled: !editable,
+              min: 0,
+              step: "0.01",
+              value: (@loan.principal_amount.present? ? format("%.2f", @loan.principal_amount.to_d) : nil),
+              class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100" %>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :tenure_in_months, "Tenure (months)", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.number_field :tenure_in_months,
+              required: editable,
+              disabled: !editable,
+              min: 1,
+              step: 1,
+              class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100" %>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :repayment_frequency, "Repayment frequency", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.select :repayment_frequency,
+              Loan::REPAYMENT_FREQUENCIES.map { |value| [ value.split("-").map(&:capitalize).join("-"), value ] },
+              { include_blank: "Select a repayment frequency" },
+              {
+                required: editable,
+                disabled: !editable,
+                class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100"
+              } %>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :interest_mode, "Interest mode", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.select :interest_mode,
+              [
+                [ "Interest rate", "rate" ],
+                [ "Total interest amount", "total_interest_amount" ]
+              ],
+              { include_blank: "Select an interest mode" },
+              {
+                required: editable,
+                disabled: !editable,
+                class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100",
+                data: {
+                  interest_mode_toggle_target: "mode",
+                  action: "change->interest-mode-toggle#sync"
+                }
+              } %>
+        </div>
+
+        <div class="<%= show_rate_input ? "" : "hidden " %>space-y-2" data-interest-mode-toggle-target="rateSection">
+          <%= form.label :interest_rate, "Interest rate", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.number_field :interest_rate,
+              min: 0,
+              step: "0.0001",
+              disabled: !editable || selected_interest_mode != "rate",
+              value: (@loan.interest_rate.present? ? format("%.4f", @loan.interest_rate) : nil),
+              class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100",
+              data: { interest_mode_toggle_target: "rateInput" } %>
+          <% if selected_interest_mode.blank? %>
+            <p class="text-xs leading-5 text-slate-500">Select an interest mode to enable the matching input.</p>
+          <% end %>
+        </div>
+
+        <div class="<%= show_total_interest_input ? "" : "hidden " %>space-y-2" data-interest-mode-toggle-target="amountSection">
+          <%= form.label :total_interest_amount, "Total interest amount", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.number_field :total_interest_amount,
+              min: 0,
+              step: "0.01",
+              disabled: !editable || selected_interest_mode != "total_interest_amount",
+              value: (@loan.total_interest_amount.present? ? format("%.2f", @loan.total_interest_amount.to_d) : nil),
+              class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100",
+              data: { interest_mode_toggle_target: "amountInput" } %>
+          <% if selected_interest_mode.blank? %>
+            <p class="text-xs leading-5 text-slate-500">Select an interest mode to enable the matching input.</p>
+          <% end %>
+        </div>
+
+        <div class="space-y-2 lg:col-span-2">
+          <%= form.label :notes, "Notes", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.text_area :notes,
+              rows: 4,
+              disabled: !editable,
+              class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100" %>
+        </div>
+      </div>
+
+      <% if editable %>
+        <div class="flex justify-end border-t border-slate-200 pt-6">
+          <%= form.submit "Save loan details", class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2 cursor-pointer" %>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Current loan summary</h2>
+    <dl class="mt-8 grid gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:grid-cols-2">
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Principal amount</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.principal_amount_display %></dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Tenure</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.tenure_display %></dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Repayment frequency</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.repayment_frequency.present? ? @loan.repayment_frequency_label : "Not provided yet" %></dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Interest mode</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.interest_mode.present? ? @loan.interest_mode_label : "Not provided yet" %></dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Interest details</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.interest_display %></dd>
+      </div>
+
+      <div class="sm:col-span-2">
+        <dt class="text-sm font-medium text-slate-500">Notes</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.notes_display %></dd>
       </div>
     </dl>
   </section>

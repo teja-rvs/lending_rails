@@ -29,6 +29,7 @@ FactoryBot.define do
 
     trait :active do
       status { "active" }
+      disbursement_date { Date.current }
     end
 
     trait :overdue do

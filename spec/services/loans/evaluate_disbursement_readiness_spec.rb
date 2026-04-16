@@ -99,5 +99,38 @@ RSpec.describe Loans::EvaluateDisbursementReadiness do
       expect(result.blocked_summary).to include("Required financial details are incomplete")
       expect(result.blocked_summary).to include("Complete the missing pre-disbursement loan details before attempting disbursement.")
     end
+
+    it "returns a ready result for ready_for_disbursement loans that use total interest amount details" do
+      loan = create(:loan, :ready_for_disbursement, :with_total_interest_details)
+
+      result = described_class.call(loan:)
+
+      expect(result).to be_ready_for_disbursement_action
+      expect(result.blocked_summary).to be_nil
+      expect(result.items).to all(be_met)
+    end
+
+    it "surfaces missing total interest amount details for fixed-interest loans" do
+      loan = create(
+        :loan,
+        :ready_for_disbursement,
+        principal_amount: 45_000,
+        tenure_in_months: 12,
+        repayment_frequency: "monthly",
+        interest_mode: "total_interest_amount",
+        total_interest_amount: nil
+      )
+
+      result = described_class.call(loan:)
+
+      expect(result).not_to be_ready_for_disbursement_action
+
+      financial_item = readiness_item(result, :financial_details_complete)
+
+      expect(financial_item).not_to be_met
+      expect(financial_item.detail).to eq("Total interest amount can't be blank.")
+      expect(result.blocked_summary).to include("Required financial details are incomplete")
+      expect(result.blocked_summary).to include("Complete the missing pre-disbursement loan details before attempting disbursement.")
+    end
   end
 end

@@ -208,4 +208,186 @@ RSpec.describe "Loan detail flow", type: :system do
     expect(page).to have_content("Ready For Disbursement")
     expect(page).to have_field("Document name")
   end
+
+  it "lets an admin confirm disbursement and then shows the locked invoice summary" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Kiran Rao", phone_number: "98765 43213")
+    loan = create(
+      :loan,
+      :ready_for_disbursement,
+      :with_details,
+      borrower:,
+      loan_number: "LOAN-5004"
+    )
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_path(loan, from: "loans")
+
+    expect(page).to have_selector("section#loan-disbursement")
+    expect(page).to have_button("Confirm disbursement")
+    expect(page).to have_content("This loan is ready for the guarded disbursement handoff.")
+
+    click_button "Confirm disbursement"
+
+    invoice = loan.reload.disbursement_invoice
+
+    expect(page).to have_current_path(loan_path(loan, from: "loans"))
+    expect(page).to have_content("LOAN-5004 has been disbursed.")
+    expect(page).to have_content("This loan has been disbursed.")
+    expect(page).to have_content("Invoice number")
+    expect(page).to have_content(invoice.invoice_number)
+    expect(page).to have_content("Disbursement date")
+    expect(page).to have_content(Date.current.to_fs(:long))
+    expect(page).to have_content("Disbursed amount")
+    expect(page).to have_content("Locked")
+    expect(page).to have_content("loan is now active")
+    expect(page).not_to have_button("Confirm disbursement")
+    expect(page).not_to have_button("Save loan details")
+  end
+
+  it "lets an admin recover from blocked disbursement readiness after filling missing details" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Ritu Sen", phone_number: "98765 43214")
+    loan = create(
+      :loan,
+      :ready_for_disbursement,
+      borrower:,
+      loan_number: "LOAN-5005",
+      interest_mode: "rate"
+    )
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_path(loan, from: "loans")
+
+    expect(page).to have_content("Disbursement is currently blocked.")
+    expect(page).to have_content("Disbursement is blocked because Required financial details are incomplete.")
+    expect(page).to have_content("Complete the missing pre-disbursement loan details before attempting disbursement.")
+    expect(page).to have_button("Proceed toward disbursement", disabled: true)
+    expect(page).not_to have_button("Confirm disbursement")
+
+    fill_in "Principal amount", with: "52500"
+    fill_in "Tenure (months)", with: "18"
+    select "Bi-Weekly", from: "Repayment frequency"
+    fill_in "Interest rate", with: "11.7500"
+    fill_in "Notes", with: "Updated after final affordability review."
+    click_button "Save loan details"
+
+    expect(page).to have_current_path(loan_path(loan, from: "loans"))
+    expect(page).to have_content("Loan details saved successfully.")
+    expect(page).to have_content("This loan is ready for the guarded disbursement handoff.")
+    expect(page).to have_button("Proceed toward disbursement")
+    expect(page).to have_button("Confirm disbursement")
+
+    click_button "Proceed toward disbursement"
+
+    expect(page).to have_current_path(loan_path(loan, from: "loans"))
+    expect(page).to have_content("Disbursement readiness confirmed for LOAN-5005.")
+
+    click_button "Confirm disbursement"
+
+    expect(page).to have_current_path(loan_path(loan, from: "loans"))
+    expect(page).to have_content("LOAN-5005 has been disbursed.")
+    expect(page).to have_content("Locked")
+    expect(loan.reload).to be_active
+  end
+
+  it "lets an admin disburse a loan that uses total interest amount details" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Neha Iyer", phone_number: "98765 43215")
+    loan = create(
+      :loan,
+      :ready_for_disbursement,
+      :with_total_interest_details,
+      borrower:,
+      loan_number: "LOAN-5006"
+    )
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_path(loan, from: "loans")
+
+    expect(page).to have_content("Total interest amount")
+    expect(page).to have_content("8000.00")
+    expect(page).to have_button("Confirm disbursement")
+    expect(page).not_to have_content("12.5000%")
+
+    click_button "Confirm disbursement"
+
+    invoice = loan.reload.disbursement_invoice
+
+    expect(page).to have_current_path(loan_path(loan, from: "loans"))
+    expect(page).to have_content("LOAN-5006 has been disbursed.")
+    expect(page).to have_content(invoice.invoice_number)
+    expect(page).to have_content("Total interest amount")
+    expect(page).to have_content("8000.00")
+    expect(page).to have_content("Locked")
+    expect(page).not_to have_button("Confirm disbursement")
+    expect(page).not_to have_button("Save loan details")
+    expect(loan).to be_active
+  end
+
+  it "lets an admin recover from blocked fixed-interest readiness by entering total interest amount" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Sana Kapoor", phone_number: "98765 43216")
+    loan = create(
+      :loan,
+      :ready_for_disbursement,
+      borrower:,
+      loan_number: "LOAN-5007",
+      principal_amount: 45_000,
+      tenure_in_months: 12,
+      repayment_frequency: "monthly",
+      interest_mode: "total_interest_amount",
+      total_interest_amount: nil
+    )
+
+    visit new_session_path
+
+    fill_in "Email address", with: user.email_address
+    fill_in "Password", with: "password123!"
+    click_button "Sign in"
+
+    visit loan_path(loan, from: "loans")
+
+    expect(page).to have_content("Disbursement is currently blocked.")
+    expect(page).to have_content("Total interest amount can't be blank.")
+    expect(page).to have_button("Proceed toward disbursement", disabled: true)
+    expect(page).not_to have_button("Confirm disbursement")
+
+    fill_in "Total interest amount", with: "9100"
+    fill_in "Notes", with: "Fixed interest amount finalized during closing review."
+    click_button "Save loan details"
+
+    expect(page).to have_current_path(loan_path(loan, from: "loans"))
+    expect(page).to have_content("Loan details saved successfully.")
+    expect(page).to have_content("9100.00")
+    expect(page).to have_content("This loan is ready for the guarded disbursement handoff.")
+    expect(page).to have_button("Confirm disbursement")
+
+    click_button "Confirm disbursement"
+
+    invoice = loan.reload.disbursement_invoice
+
+    expect(page).to have_current_path(loan_path(loan, from: "loans"))
+    expect(page).to have_content("LOAN-5007 has been disbursed.")
+    expect(page).to have_content(invoice.invoice_number)
+    expect(page).to have_content("9100.00")
+    expect(page).to have_content("Locked")
+    expect(page).not_to have_button("Confirm disbursement")
+    expect(loan).to be_active
+  end
 end

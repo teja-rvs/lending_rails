@@ -1,20 +1,19 @@
 require "double_entry"
 
 DoubleEntry.configure do |config|
-  # Use json(b) column in double_entry_lines table to store metadata instead of separate metadata table
   config.json_metadata = true
 
-  # config.define_accounts do |accounts|
-  #   user_scope = ->(user) do
-  #     raise 'not a User' unless user.class.name == 'User'
-  #     user.id
-  #   end
-  #   accounts.define(identifier: :savings,  scope_identifier: user_scope, positive_only: true)
-  #   accounts.define(identifier: :checking, scope_identifier: user_scope)
-  # end
-  #
-  # config.define_transfers do |transfers|
-  #   transfers.define(from: :checking, to: :savings,  code: :deposit)
-  #   transfers.define(from: :savings,  to: :checking, code: :withdraw)
-  # end
+  config.define_accounts do |accounts|
+    loan_scope = ->(loan) do
+      raise "not a Loan" unless loan.instance_of?(Loan)
+      loan.id
+    end
+
+    accounts.define(identifier: :loan_receivable, scope_identifier: loan_scope, positive_only: true)
+    accounts.define(identifier: :disbursement_clearing, scope_identifier: loan_scope)
+  end
+
+  config.define_transfers do |transfers|
+    transfers.define(from: :disbursement_clearing, to: :loan_receivable, code: :disbursement)
+  end
 end

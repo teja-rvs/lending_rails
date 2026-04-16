@@ -13,6 +13,8 @@
 <% readiness = @disbursement_readiness %>
 <% readiness_ready = readiness&.ready_for_disbursement_action? %>
 <% pre_disbursement_state = @loan.created? || @loan.documentation_in_progress? || @loan.ready_for_disbursement? %>
+<% post_disbursement = @loan.disbursed? %>
+<% disbursement_invoice = @loan.disbursement_invoice %>
 
 <section class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8">
   <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
@@ -286,80 +288,144 @@
     <% end %>
   </section>
 
-  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div class="space-y-3">
-        <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Disbursement readiness</h2>
-        <p class="text-sm leading-6 text-slate-600">
-          <% if @loan.created? %>
-            Documentation is still the next lifecycle stage. This checklist shows what must be completed before the loan can move toward disbursement.
-          <% elsif @loan.documentation_in_progress? %>
-            Documentation is still in progress. Disbursement stays blocked until this stage is completed and the remaining prerequisites are met.
-          <% elsif @loan.ready_for_disbursement? %>
-            This checklist confirms whether the loan can proceed to the guarded disbursement step without relying on UI-only checks.
-          <% else %>
-            This loan is already beyond the pre-disbursement phase. The readiness checklist remains visible here as historical context for the controlled handoff.
-          <% end %>
-        </p>
-      </div>
+  <% if pre_disbursement_state %>
+    <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-3">
+          <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Disbursement readiness</h2>
+          <p class="text-sm leading-6 text-slate-600">
+            <% if @loan.created? %>
+              Documentation is still the next lifecycle stage. This checklist shows what must be completed before the loan can move toward disbursement.
+            <% elsif @loan.documentation_in_progress? %>
+              Documentation is still in progress. Disbursement stays blocked until this stage is completed and the remaining prerequisites are met.
+            <% else %>
+              This checklist confirms whether the loan can proceed to the guarded disbursement step without relying on UI-only checks.
+            <% end %>
+          </p>
+        </div>
 
-      <% if pre_disbursement_state %>
         <%= button_to "Proceed toward disbursement",
             attempt_disbursement_loan_path(@loan, from: detail_source),
             method: :patch,
             disabled: !readiness_ready,
             class: "inline-flex cursor-pointer items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 #{readiness_ready ? 'bg-slate-950 text-white hover:bg-slate-800 focus:ring-slate-950/15' : 'cursor-not-allowed bg-slate-200 text-slate-500'}" %>
+      </div>
+
+      <% if readiness_ready %>
+        <div class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+          <p class="text-sm font-semibold text-emerald-900">This loan is ready for the guarded disbursement handoff.</p>
+          <p class="mt-2 text-sm leading-6 text-emerald-800">
+            Documentation is complete and the required pre-disbursement financial details are consistent.
+          </p>
+        </div>
+      <% elsif readiness&.blocked_summary.present? %>
+        <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4" role="status" aria-live="polite">
+          <p class="text-sm font-semibold text-amber-900">Disbursement is currently blocked.</p>
+          <p class="mt-2 text-sm leading-6 text-amber-800"><%= readiness.blocked_summary %></p>
+        </div>
       <% end %>
-    </div>
 
-    <% if readiness_ready %>
-      <div class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-        <p class="text-sm font-semibold text-emerald-900">This loan is ready for the guarded disbursement handoff.</p>
-        <p class="mt-2 text-sm leading-6 text-emerald-800">
-          Documentation is complete and the required pre-disbursement financial details are consistent.
-        </p>
-      </div>
-    <% elsif pre_disbursement_state && readiness&.blocked_summary.present? %>
-      <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4" role="status" aria-live="polite">
-        <p class="text-sm font-semibold text-amber-900">Disbursement is currently blocked.</p>
-        <p class="mt-2 text-sm leading-6 text-amber-800"><%= readiness.blocked_summary %></p>
-      </div>
-    <% else %>
-      <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-        <p class="text-sm font-semibold text-slate-900">Disbursement readiness is shown as historical context.</p>
-        <p class="mt-2 text-sm leading-6 text-slate-700">
-          This loan has already crossed the pre-disbursement boundary, so this checklist remains visible only to explain the completed handoff.
-        </p>
-      </div>
-    <% end %>
-
-    <div class="mt-8 space-y-4">
-      <% readiness.items.each do |item| %>
-        <article class="rounded-2xl border <%= item.met? ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/70' %> p-5">
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div class="flex items-start gap-3">
-              <span aria-hidden="true" class="inline-flex h-9 w-9 items-center justify-center rounded-full <%= item.met? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %> text-sm font-semibold">
-                <%= item.met? ? "OK" : "!" %>
-              </span>
-              <div class="space-y-2">
-                <h3 class="text-base font-semibold text-slate-950"><%= item.label %></h3>
-                <p class="text-sm leading-6 text-slate-700"><%= item.detail %></p>
-                <p class="text-sm leading-6 text-slate-600"><span class="font-semibold text-slate-700">Next step:</span> <%= item.next_step %></p>
+      <div class="mt-8 space-y-4">
+        <% readiness.items.each do |item| %>
+          <article class="rounded-2xl border <%= item.met? ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/70' %> p-5">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div class="flex items-start gap-3">
+                <span aria-hidden="true" class="inline-flex h-9 w-9 items-center justify-center rounded-full <%= item.met? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %> text-sm font-semibold">
+                  <%= item.met? ? "OK" : "!" %>
+                </span>
+                <div class="space-y-2">
+                  <h3 class="text-base font-semibold text-slate-950"><%= item.label %></h3>
+                  <p class="text-sm leading-6 text-slate-700"><%= item.detail %></p>
+                  <p class="text-sm leading-6 text-slate-600"><span class="font-semibold text-slate-700">Next step:</span> <%= item.next_step %></p>
+                </div>
               </div>
+
+              <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] <%= item.met? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
+                <%= item.met? ? "Met" : "Action needed" %>
+              </span>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @loan.ready_for_disbursement? || post_disbursement %>
+    <section id="loan-disbursement" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+      <% if post_disbursement %>
+        <div class="space-y-3">
+          <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Disbursement</h2>
+          <p class="text-sm leading-6 text-slate-600">
+            This loan has been disbursed. The disbursement event activated the loan for repayment servicing and locked pre-disbursement details.
+          </p>
+        </div>
+
+        <dl class="mt-8 grid gap-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 sm:grid-cols-2">
+          <div>
+            <dt class="text-sm font-medium text-emerald-800">Disbursement date</dt>
+            <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.disbursement_date&.to_fs(:long) || "—" %></dd>
+          </div>
+
+          <% if disbursement_invoice %>
+            <div>
+              <dt class="text-sm font-medium text-emerald-800">Invoice number</dt>
+              <dd class="mt-2 text-lg font-semibold text-slate-950"><%= disbursement_invoice.invoice_number %></dd>
             </div>
 
-            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] <%= item.met? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
-              <%= item.met? ? "Met" : "Action needed" %>
-            </span>
+            <div>
+              <dt class="text-sm font-medium text-emerald-800">Disbursed amount</dt>
+              <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(disbursement_invoice.amount) %></dd>
+            </div>
+          <% end %>
+
+          <div>
+            <dt class="text-sm font-medium text-emerald-800">Status</dt>
+            <dd class="mt-2 flex items-center gap-2 text-lg font-semibold text-slate-950">
+              <span aria-hidden="true" class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-200 text-emerald-800 text-xs">✓</span>
+              Disbursed — loan is now <%= @loan.status_label.downcase %>
+            </dd>
           </div>
-        </article>
+        </dl>
+
+        <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+          <p class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <span aria-hidden="true" class="text-amber-600">🔒</span>
+            Locked — pre-disbursement details are no longer editable
+          </p>
+        </div>
+      <% else %>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-3">
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Disbursement</h2>
+            <p class="text-sm leading-6 text-slate-600">
+              Disbursement records the release of funds, creates the disbursement invoice, posts accounting entries, and locks the loan for active servicing.
+            </p>
+          </div>
+
+          <% if readiness_ready %>
+            <%= button_to "Confirm disbursement",
+                disburse_loan_path(@loan, from: detail_source),
+                method: :patch,
+                data: {
+                  turbo_confirm: "You are about to disburse #{@loan.loan_number}.\n\nThis action records the disbursement date, creates the disbursement invoice, posts accounting entries, and locks the loan for active servicing.\n\nLoan details will no longer be editable after disbursement.\n\nThis action cannot be undone."
+                },
+                class: "inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2" %>
+          <% end %>
+        </div>
+
+        <% unless readiness_ready %>
+          <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4" role="status" aria-live="polite">
+            <p class="text-sm font-semibold text-amber-900">Disbursement is currently blocked.</p>
+            <p class="mt-2 text-sm leading-6 text-amber-800"><%= readiness&.blocked_summary %></p>
+          </div>
+        <% end %>
       <% end %>
-    </div>
-  </section>
+    </section>
+  <% end %>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
     <div class="space-y-3">
-      <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Pre-disbursement loan details</h2>
+      <h2 class="text-2xl font-semibold tracking-tight text-slate-950"><%= post_disbursement ? "Loan details (locked)" : "Pre-disbursement loan details" %></h2>
       <p class="text-sm leading-6 text-slate-600">
         Principal, tenure, repayment frequency, interest details, and operational notes stay editable only before the loan crosses the disbursement boundary.
       </p>

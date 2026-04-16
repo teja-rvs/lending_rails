@@ -1,5 +1,5 @@
 class LoansController < ApplicationController
-  before_action :set_loan, only: %i[show update begin_documentation complete_documentation attempt_disbursement]
+  before_action :set_loan, only: %i[show update begin_documentation complete_documentation attempt_disbursement disburse]
 
   def index
     @search_query = params[:q].to_s.squish
@@ -55,10 +55,20 @@ class LoansController < ApplicationController
       readiness = Loans::EvaluateDisbursementReadiness.call(loan: @loan)
 
       if readiness.ready_for_disbursement_action?
-        redirect_to loan_redirect_path, notice: "Disbursement readiness confirmed for #{@loan.loan_number}. Guarded disbursement execution will be added in the next story."
+        redirect_to loan_redirect_path, notice: "Disbursement readiness confirmed for #{@loan.loan_number}."
       else
         redirect_to loan_redirect_path, alert: readiness.blocked_summary
       end
+    end
+  end
+
+  def disburse
+    result = Loans::Disburse.call(loan: @loan, disbursed_by: Current.user)
+
+    if result.success?
+      redirect_to loan_redirect_path, notice: "#{@loan.loan_number} has been disbursed. The loan is now active and repayment tracking begins."
+    else
+      redirect_to loan_redirect_path, alert: result.error
     end
   end
 
@@ -67,6 +77,7 @@ class LoansController < ApplicationController
       @loan = Loan.includes(
         :borrower,
         :loan_application,
+        :invoices,
         document_uploads: [
           :uploaded_by,
           :superseded_by,

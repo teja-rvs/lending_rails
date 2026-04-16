@@ -282,7 +282,7 @@ RSpec.describe "Loans", type: :request do
     assert_select "button[disabled='disabled']", text: "Proceed toward disbursement", count: 0
   end
 
-  it "shows readiness as historical context after the loan is already active" do
+  it "shows the disbursement summary instead of readiness after the loan is already active" do
     user = create(:user, email_address: "admin@example.com")
     loan = create(:loan, :active, :with_details, loan_number: "LOAN-4003AA")
 
@@ -290,9 +290,9 @@ RSpec.describe "Loans", type: :request do
     get loan_path(loan, from: "loans")
 
     expect(response).to have_http_status(:ok)
-    assert_select "p", text: /already beyond the pre-disbursement phase/
-    assert_select "p", text: "Disbursement readiness is shown as historical context."
-    assert_select "p", text: "Disbursement is currently blocked.", count: 0
+    assert_select "h2", text: "Disbursement"
+    assert_select "h2", text: "Disbursement readiness", count: 0
+    assert_select "p", text: /This loan has been disbursed/
     assert_select "form.button_to[action='#{attempt_disbursement_loan_path(loan, from: "loans")}']", count: 0
   end
 
@@ -326,5 +326,164 @@ RSpec.describe "Loans", type: :request do
     expect(response).to have_http_status(:ok)
     assert_select "p", text: "This loan cannot complete documentation from its current state."
     expect(loan.reload).to be_created
+  end
+
+  it "redirects unauthenticated visitors away from disburse" do
+    loan = create(:loan, :ready_for_disbursement, :with_details)
+
+    patch disburse_loan_path(loan)
+
+    expect(response).to redirect_to(new_session_path)
+  end
+
+  it "disburses a ready loan and shows the confirmation" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :ready_for_disbursement, :with_details, loan_number: "LOAN-5001")
+
+    sign_in_as(user)
+    patch disburse_loan_path(loan), params: { from: "loans" }
+
+    expect(response).to redirect_to(loan_path(loan, from: "loans"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: /LOAN-5001 has been disbursed/
+    expect(loan.reload).to be_active
+    expect(loan.disbursement_date).to eq(Date.current)
+    expect(loan.invoices.disbursement.count).to eq(1)
+  end
+
+  it "blocks server-side disbursement when the loan is not ready" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :created, :with_details, loan_number: "LOAN-5002")
+
+    sign_in_as(user)
+    patch disburse_loan_path(loan)
+
+    expect(response).to redirect_to(loan_path(loan))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: /cannot be disbursed/
+    expect(loan.reload).to be_created
+  end
+
+  it "shows the disbursement section with confirm button on a ready-for-disbursement loan" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :ready_for_disbursement, :with_details, loan_number: "LOAN-5003")
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section#loan-disbursement"
+    assert_select "form.button_to[action='#{disburse_loan_path(loan, from: "loans")}']"
+    assert_select "button", text: "Confirm disbursement"
+  end
+
+  it "does not show the disbursement section on pre-ready loans" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :created, :with_details, loan_number: "LOAN-5004")
+
+    sign_in_as(user)
+    get loan_path(loan)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section#loan-disbursement", count: 0
+  end
+
+  it "shows disbursement summary after disbursement and locks loan details" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :ready_for_disbursement, :with_details, loan_number: "LOAN-5005")
+
+    sign_in_as(user)
+    patch disburse_loan_path(loan, from: "loans")
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section#loan-disbursement"
+    assert_select "h2", text: "Disbursement readiness", count: 0
+    assert_select "h2", text: "Loan details (locked)"
+    assert_select "input[type='submit'][value='Save loan details']", count: 0
+    assert_select "form.button_to[action='#{disburse_loan_path(loan, from: "loans")}']", count: 0
+  end
+
+  it "renders invoice details in the disbursement summary for active loans" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, loan_number: "LOAN-5006")
+    invoice = create(
+      :invoice,
+      loan: loan,
+      invoice_number: "INV-9001",
+      amount_cents: loan.principal_amount_cents,
+      issued_on: loan.disbursement_date
+    )
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section#loan-disbursement"
+    assert_select "h2", text: "Disbursement"
+    assert_select "dt", text: "Invoice number"
+    assert_select "dd", text: invoice.invoice_number
+    assert_select "dt", text: "Disbursed amount"
+    expect(response.body).to match(/45,?000\.00/)
+    assert_select "p", text: /Locked/
+    assert_select "input[type='submit'][value='Save loan details']", count: 0
+    assert_select "form.button_to[action='#{disburse_loan_path(loan, from: "loans")}']", count: 0
+  end
+
+  it "renders the fixed total-interest summary for active loans after disbursement" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_total_interest_details, loan_number: "LOAN-5007")
+    invoice = create(
+      :invoice,
+      loan: loan,
+      invoice_number: "INV-9002",
+      amount_cents: loan.principal_amount_cents,
+      issued_on: loan.disbursement_date
+    )
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "section#loan-disbursement"
+    assert_select "dd", text: invoice.invoice_number
+    assert_select "dt", text: "Interest mode"
+    assert_select "dd", text: "Total interest amount"
+    assert_select "dt", text: "Interest details"
+    assert_select "dd", text: "8000.00"
+    assert_select "input[type='submit'][value='Save loan details']", count: 0
+    expect(response.body).not_to include("12.5000%")
+  end
+
+  it "renders a blocked readiness summary for fixed-interest loans missing total interest amount" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(
+      :loan,
+      :ready_for_disbursement,
+      loan_number: "LOAN-5008",
+      principal_amount: 45_000,
+      tenure_in_months: 12,
+      repayment_frequency: "monthly",
+      interest_mode: "total_interest_amount",
+      total_interest_amount: nil
+    )
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Disbursement readiness"
+    assert_select "p", text: /Disbursement is blocked because Required financial details are incomplete/
+    assert_select "p", text: /Complete the missing pre-disbursement loan details before attempting disbursement\./
+    assert_select "h3", text: "Required financial details are complete"
+    assert_select "p", text: "Total interest amount can't be blank."
+    assert_select "button[disabled='disabled']", text: "Proceed toward disbursement"
+    assert_select "button", text: "Confirm disbursement", count: 0
   end
 end

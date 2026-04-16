@@ -14,6 +14,7 @@ class Loan < ApplicationRecord
   belongs_to :borrower
   belongs_to :loan_application, optional: true
   has_many :document_uploads, as: :documentable, dependent: :restrict_with_exception
+  has_many :invoices, dependent: :restrict_with_exception
   has_paper_trail
 
   monetize :principal_amount_cents, allow_nil: true
@@ -121,6 +122,14 @@ class Loan < ApplicationRecord
 
   def borrower_phone_number_display
     borrower_phone_number_snapshot.presence || borrower&.phone_number_normalized
+  end
+
+  def disbursement_invoice
+    invoices.disbursement.first
+  end
+
+  def disbursed?
+    active? || overdue? || closed?
   end
 
   def editable_details?

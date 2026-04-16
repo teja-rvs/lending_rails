@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_15_172000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_114826) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -109,6 +109,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_172000) do
     t.index ["scope", "account", "id"], name: "lines_scope_account_id_idx"
   end
 
+  create_table "invoices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.bigint "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.string "invoice_number", null: false
+    t.string "invoice_type", null: false
+    t.date "issued_on", null: false
+    t.uuid "loan_id", null: false
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.index ["invoice_number"], name: "index_invoices_on_invoice_number", unique: true
+    t.index ["invoice_type"], name: "index_invoices_on_invoice_type"
+    t.index ["issued_on"], name: "index_invoices_on_issued_on"
+    t.index ["loan_id"], name: "index_invoices_on_loan_id"
+  end
+
   create_table "loan_applications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "application_number", null: false
     t.string "borrower_full_name_snapshot"
@@ -199,6 +215,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_172000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "document_uploads", "document_uploads", column: "superseded_by_id"
   add_foreign_key "document_uploads", "users", column: "uploaded_by_id"
+  add_foreign_key "invoices", "loans"
   add_foreign_key "loan_applications", "borrowers"
   add_foreign_key "loans", "borrowers"
   add_foreign_key "loans", "loan_applications"

@@ -10,6 +10,9 @@
 <% active_documents = @loan.active_documents %>
 <% superseded_documents = @loan.document_uploads.superseded.ordered %>
 <% all_documents = @loan.document_uploads.ordered %>
+<% readiness = @disbursement_readiness %>
+<% readiness_ready = readiness&.ready_for_disbursement_action? %>
+<% pre_disbursement_state = @loan.created? || @loan.documentation_in_progress? || @loan.ready_for_disbursement? %>
 
 <section class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8">
   <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
@@ -281,6 +284,77 @@
         </div>
       </details>
     <% end %>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div class="space-y-3">
+        <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Disbursement readiness</h2>
+        <p class="text-sm leading-6 text-slate-600">
+          <% if @loan.created? %>
+            Documentation is still the next lifecycle stage. This checklist shows what must be completed before the loan can move toward disbursement.
+          <% elsif @loan.documentation_in_progress? %>
+            Documentation is still in progress. Disbursement stays blocked until this stage is completed and the remaining prerequisites are met.
+          <% elsif @loan.ready_for_disbursement? %>
+            This checklist confirms whether the loan can proceed to the guarded disbursement step without relying on UI-only checks.
+          <% else %>
+            This loan is already beyond the pre-disbursement phase. The readiness checklist remains visible here as historical context for the controlled handoff.
+          <% end %>
+        </p>
+      </div>
+
+      <% if pre_disbursement_state %>
+        <%= button_to "Proceed toward disbursement",
+            attempt_disbursement_loan_path(@loan, from: detail_source),
+            method: :patch,
+            disabled: !readiness_ready,
+            class: "inline-flex cursor-pointer items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 #{readiness_ready ? 'bg-slate-950 text-white hover:bg-slate-800 focus:ring-slate-950/15' : 'cursor-not-allowed bg-slate-200 text-slate-500'}" %>
+      <% end %>
+    </div>
+
+    <% if readiness_ready %>
+      <div class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+        <p class="text-sm font-semibold text-emerald-900">This loan is ready for the guarded disbursement handoff.</p>
+        <p class="mt-2 text-sm leading-6 text-emerald-800">
+          Documentation is complete and the required pre-disbursement financial details are consistent.
+        </p>
+      </div>
+    <% elsif pre_disbursement_state && readiness&.blocked_summary.present? %>
+      <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4" role="status" aria-live="polite">
+        <p class="text-sm font-semibold text-amber-900">Disbursement is currently blocked.</p>
+        <p class="mt-2 text-sm leading-6 text-amber-800"><%= readiness.blocked_summary %></p>
+      </div>
+    <% else %>
+      <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+        <p class="text-sm font-semibold text-slate-900">Disbursement readiness is shown as historical context.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-700">
+          This loan has already crossed the pre-disbursement boundary, so this checklist remains visible only to explain the completed handoff.
+        </p>
+      </div>
+    <% end %>
+
+    <div class="mt-8 space-y-4">
+      <% readiness.items.each do |item| %>
+        <article class="rounded-2xl border <%= item.met? ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/70' %> p-5">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="flex items-start gap-3">
+              <span aria-hidden="true" class="inline-flex h-9 w-9 items-center justify-center rounded-full <%= item.met? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %> text-sm font-semibold">
+                <%= item.met? ? "OK" : "!" %>
+              </span>
+              <div class="space-y-2">
+                <h3 class="text-base font-semibold text-slate-950"><%= item.label %></h3>
+                <p class="text-sm leading-6 text-slate-700"><%= item.detail %></p>
+                <p class="text-sm leading-6 text-slate-600"><span class="font-semibold text-slate-700">Next step:</span> <%= item.next_step %></p>
+              </div>
+            </div>
+
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] <%= item.met? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
+              <%= item.met? ? "Met" : "Action needed" %>
+            </span>
+          </div>
+        </article>
+      <% end %>
+    </div>
   </section>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">

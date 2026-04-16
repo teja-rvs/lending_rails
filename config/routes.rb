@@ -26,6 +26,7 @@ Rails.application.routes.draw do
     member do
       patch :begin_documentation
       patch :complete_documentation
+      patch :attempt_disbursement
     end
 
     resources :documents, only: :create, controller: "documents"

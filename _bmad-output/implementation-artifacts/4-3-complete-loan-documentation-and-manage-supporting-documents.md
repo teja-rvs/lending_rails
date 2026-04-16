@@ -1,6 +1,6 @@
 # Story 4.3: Complete Loan Documentation and Manage Supporting Documents
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -617,4 +617,4 @@ GPT-5.4
 
 ### Status
 
-review
+done

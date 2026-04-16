@@ -17,6 +17,7 @@ class DocumentsController < ApplicationController
       redirect_to loan_redirect_path(@loan), alert: result.error
     else
       @document_upload = result.document_upload
+      @disbursement_readiness = Loans::EvaluateDisbursementReadiness.call(loan: @loan)
       flash.now[:alert] = "Document could not be uploaded."
       render "loans/show", status: :unprocessable_content
     end

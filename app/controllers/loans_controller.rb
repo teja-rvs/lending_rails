@@ -1,5 +1,5 @@
 class LoansController < ApplicationController
-  before_action :set_loan, only: %i[show update begin_documentation complete_documentation]
+  before_action :set_loan, only: %i[show update begin_documentation complete_documentation attempt_disbursement]
 
   def index
     @search_query = params[:q].to_s.squish
@@ -9,6 +9,7 @@ class LoansController < ApplicationController
   end
 
   def show
+    set_disbursement_readiness
     @document_upload = @loan.document_uploads.build(uploaded_by: Current.user)
   end
 
@@ -22,6 +23,7 @@ class LoansController < ApplicationController
     elsif result.blocked?
       redirect_to loan_redirect_path, alert: result.error
     else
+      set_disbursement_readiness
       render :show, status: :unprocessable_content
     end
   end
@@ -48,6 +50,18 @@ class LoansController < ApplicationController
     end
   end
 
+  def attempt_disbursement
+    @loan.with_lock do
+      readiness = Loans::EvaluateDisbursementReadiness.call(loan: @loan)
+
+      if readiness.ready_for_disbursement_action?
+        redirect_to loan_redirect_path, notice: "Disbursement readiness confirmed for #{@loan.loan_number}. Guarded disbursement execution will be added in the next story."
+      else
+        redirect_to loan_redirect_path, alert: readiness.blocked_summary
+      end
+    end
+  end
+
   private
     def set_loan
       @loan = Loan.includes(
@@ -59,6 +73,10 @@ class LoansController < ApplicationController
           { file_attachment: :blob }
         ]
       ).find(params[:id])
+    end
+
+    def set_disbursement_readiness
+      @disbursement_readiness = Loans::EvaluateDisbursementReadiness.call(loan: @loan)
     end
 
     def loan_params

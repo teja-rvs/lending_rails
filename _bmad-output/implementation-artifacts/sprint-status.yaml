@@ -1,5 +1,5 @@
 # generated: 2026-03-30T22:54:36+05:30
-# last_updated: 2026-04-16T18:53:57+0530
+# last_updated: 2026-04-16T19:00:00+0530
 # project: lending_rails
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-30T22:54:36+05:30
-last_updated: 2026-04-16T18:53:57+0530
+last_updated: 2026-04-16T19:00:00+0530
 project: lending_rails
 project_key: NOKEY
 tracking_system: file-system
@@ -62,13 +62,13 @@ development_status:
   3-4-review-borrower-history-during-decisioning: done
   3-5-approve-reject-and-cancel-applications-with-preserved-history: done
   epic-3-retrospective: done
-  epic-4: in-progress
+  epic-4: done
   4-1-create-a-loan-from-an-approved-application: done
   4-2-prepare-and-review-loan-details-before-disbursement: done
   4-3-complete-loan-documentation-and-manage-supporting-documents: done
   4-4-validate-disbursement-readiness: done
   4-5-execute-guarded-disbursement-create-financial-records-and-lock-the-loan: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
   epic-5: backlog
   5-1-generate-the-repayment-schedule-from-disbursement: backlog
   5-2-view-upcoming-and-overdue-repayment-work: backlog

@@ -13,6 +13,8 @@ RSpec.describe Loans::Disburse do
       expect(loan.reload).to be_active
       expect(loan.disbursement_date).to eq(Date.current)
       expect(result.invoice).to be_persisted
+      expect(result.payments.size).to eq(12)
+      expect(result.payments).to all(be_persisted)
       expect(result.invoice.invoice_type).to eq("disbursement")
       expect(result.invoice.amount_cents).to eq(loan.principal_amount_cents)
     end
@@ -96,6 +98,30 @@ RSpec.describe Loans::Disburse do
       expect(loan.reload).to be_ready_for_disbursement
       expect(loan.disbursement_date).to be_nil
       expect(loan.invoices.disbursement.count).to eq(1)
+    end
+
+    it "rolls back the disbursement when repayment schedule generation is blocked" do
+      loan = create(:loan, :ready_for_disbursement, :with_details)
+      blocked_result = Loans::GenerateRepaymentSchedule::Result.new(
+        loan:,
+        payments: [],
+        error: "Repayment schedule could not be generated."
+      )
+
+      allow(Loans::GenerateRepaymentSchedule).to receive(:call).with(loan: loan).and_return(blocked_result)
+
+      expect {
+        @result = described_class.call(loan: loan, disbursed_by: admin)
+      }.not_to change(DoubleEntry::Line, :count)
+
+      result = @result
+
+      expect(result).to be_blocked
+      expect(result.error).to include("Disbursement failed")
+      expect(loan.reload).to be_ready_for_disbursement
+      expect(loan.disbursement_date).to be_nil
+      expect(loan.invoices).to be_empty
+      expect(loan.payments).to be_empty
     end
 
     it "is idempotent: second disbursement attempt on an active loan is blocked" do

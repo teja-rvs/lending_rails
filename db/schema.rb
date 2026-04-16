@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_114826) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_215225) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -171,6 +171,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_114826) do
     t.index ["status"], name: "index_loans_on_status"
   end
 
+  create_table "payments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.date "due_date", null: false
+    t.integer "installment_number", null: false
+    t.bigint "interest_amount_cents", null: false
+    t.bigint "late_fee_cents", default: 0, null: false
+    t.uuid "loan_id", null: false
+    t.text "notes"
+    t.date "payment_date"
+    t.string "payment_mode"
+    t.bigint "principal_amount_cents", null: false
+    t.string "status", default: "pending", null: false
+    t.bigint "total_amount_cents", null: false
+    t.datetime "updated_at", null: false
+    t.index ["due_date"], name: "index_payments_on_due_date"
+    t.index ["loan_id", "installment_number"], name: "index_payments_on_loan_id_and_installment_number", unique: true
+    t.index ["loan_id"], name: "index_payments_on_loan_id"
+    t.index ["status"], name: "index_payments_on_status"
+  end
+
   create_table "review_steps", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.uuid "loan_application_id", null: false
@@ -219,6 +240,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_114826) do
   add_foreign_key "loan_applications", "borrowers"
   add_foreign_key "loans", "borrowers"
   add_foreign_key "loans", "loan_applications"
+  add_foreign_key "payments", "loans"
   add_foreign_key "review_steps", "loan_applications"
   add_foreign_key "sessions", "users"
 end

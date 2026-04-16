@@ -1,6 +1,6 @@
 module Loans
   class Disburse < ApplicationService
-    Result = Struct.new(:loan, :invoice, :error, keyword_init: true) do
+    Result = Struct.new(:loan, :invoice, :payments, :error, keyword_init: true) do
       def success?
         error.blank?
       end
@@ -20,6 +20,8 @@ module Loans
       receivable = DoubleEntry.account(:loan_receivable, scope: loan)
 
       invoice = nil
+      payments = []
+      failure_message = nil
 
       DoubleEntry.lock_accounts(clearing, receivable) do
         loan.lock!
@@ -36,6 +38,7 @@ module Loans
 
         invoice_result = Invoices::IssueDisbursementInvoice.call(loan: loan)
         if invoice_result.blocked?
+          failure_message = invoice_result.error
           raise ActiveRecord::Rollback, invoice_result.error
         end
 
@@ -48,12 +51,20 @@ module Loans
           code: :disbursement,
           metadata: { loan_id: loan.id, invoice_id: invoice.id, disbursed_by: disbursed_by.id }
         )
+
+        schedule_result = Loans::GenerateRepaymentSchedule.call(loan: loan)
+        if schedule_result.blocked?
+          failure_message = schedule_result.error
+          raise ActiveRecord::Rollback, schedule_result.error
+        end
+
+        payments = schedule_result.payments
       end
 
-      if invoice.present?
-        Result.new(loan:, invoice:)
+      if invoice.present? && payments.any?
+        Result.new(loan:, invoice:, payments:)
       else
-        blocked("Disbursement failed — invoice could not be created.")
+        blocked("Disbursement failed — #{failure_message || 'invoice could not be created.'}")
       end
     end
 
@@ -61,7 +72,7 @@ module Loans
       attr_reader :loan, :disbursed_by
 
       def blocked(message)
-        Result.new(loan:, invoice: nil, error: message)
+        Result.new(loan:, invoice: nil, payments: [], error: message)
       end
   end
 end

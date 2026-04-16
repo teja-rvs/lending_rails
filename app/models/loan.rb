@@ -15,6 +15,7 @@ class Loan < ApplicationRecord
   belongs_to :loan_application, optional: true
   has_many :document_uploads, as: :documentable, dependent: :restrict_with_exception
   has_many :invoices, dependent: :restrict_with_exception
+  has_many :payments, dependent: :restrict_with_exception
   has_paper_trail
 
   monetize :principal_amount_cents, allow_nil: true
@@ -130,6 +131,14 @@ class Loan < ApplicationRecord
 
   def disbursed?
     active? || overdue? || closed?
+  end
+
+  def has_repayment_schedule?
+    payments.exists?
+  end
+
+  def total_scheduled_amount
+    payments.sum(:total_amount_cents)
   end
 
   def editable_details?

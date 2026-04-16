@@ -4,6 +4,7 @@ RSpec.describe Loan, type: :model do
   subject(:loan) { create(:loan, :documentation_in_progress) }
 
   it { is_expected.to have_many(:document_uploads).dependent(:restrict_with_exception) }
+  it { is_expected.to have_many(:payments).dependent(:restrict_with_exception) }
 
   describe "#active_documents" do
     it "returns only active documents ordered newest first" do
@@ -56,6 +57,27 @@ RSpec.describe Loan, type: :model do
       expect(build(:loan, :active)).not_to be_documentation_uploadable
       expect(build(:loan, :overdue)).not_to be_documentation_uploadable
       expect(build(:loan, :closed)).not_to be_documentation_uploadable
+    end
+  end
+
+  describe "#has_repayment_schedule?" do
+    it "returns true when the loan has generated payments" do
+      create(:payment, loan:)
+
+      expect(loan).to have_repayment_schedule
+    end
+
+    it "returns false when the loan has no payments" do
+      expect(loan).not_to have_repayment_schedule
+    end
+  end
+
+  describe "#total_scheduled_amount" do
+    it "returns the total scheduled repayment amount in cents" do
+      create(:payment, loan:, installment_number: 1, total_amount_cents: 421_875)
+      create(:payment, loan:, installment_number: 2, total_amount_cents: 421_875)
+
+      expect(loan.total_scheduled_amount).to eq(843_750)
     end
   end
 end

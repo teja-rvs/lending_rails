@@ -436,6 +436,41 @@ RSpec.describe "Loans", type: :request do
     assert_select "form.button_to[action='#{disburse_loan_path(loan, from: "loans")}']", count: 0
   end
 
+  it "renders the repayment schedule section for active loans with generated payments" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, loan_number: "LOAN-5006A")
+    create(:payment, loan:, installment_number: 1, due_date: Date.new(2026, 5, 16))
+    create(:payment, loan:, installment_number: 2, due_date: Date.new(2026, 6, 16))
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Repayment Schedule"
+    assert_select "dt", text: "Installments"
+    assert_select "dd", text: "2"
+    assert_select "th", text: "#"
+    assert_select "th", text: "Due date"
+    assert_select "th", text: "Principal"
+    assert_select "th", text: "Interest"
+    assert_select "th", text: "Total"
+    assert_select "th", text: "Status"
+    assert_select "td", text: "1"
+    assert_select "td", text: "2"
+    assert_select "span.border-slate-200.bg-slate-100.text-slate-700", text: "Pending", count: 2
+  end
+
+  it "does not render the repayment schedule section before disbursement" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :ready_for_disbursement, :with_details, loan_number: "LOAN-5006B")
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Repayment Schedule", count: 0
+  end
+
   it "renders the fixed total-interest summary for active loans after disbursement" do
     user = create(:user, email_address: "admin@example.com")
     loan = create(:loan, :active, :with_total_interest_details, loan_number: "LOAN-5007")

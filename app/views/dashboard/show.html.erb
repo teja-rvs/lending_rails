@@ -1,0 +1,64 @@
+<% content_for :title, "Dashboard | lending_rails" %>
+
+<section aria-label="Dashboard" class="flex flex-1 flex-col gap-8">
+  <header>
+    <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Dashboard</h1>
+    <p class="mt-1 text-sm text-slate-500">
+      <%= Date.current.strftime("%A, %B %-d, %Y") %> &middot; <%= Current.user.email_address %>
+    </p>
+  </header>
+
+  <section aria-label="Operational triage">
+    <h2 class="sr-only">Action items</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <%= render Dashboard::TriageWidgetComponent.new(
+        title: "Overdue payments",
+        count: @overdue_payments_count,
+        tone: :danger,
+        href: payments_path(view: "overdue"),
+        label: "View all"
+      ) %>
+      <%= render Dashboard::TriageWidgetComponent.new(
+        title: "Upcoming payments",
+        count: @upcoming_payments_count,
+        tone: :warning,
+        href: payments_path(view: "upcoming"),
+        label: "View all"
+      ) %>
+      <%= render Dashboard::TriageWidgetComponent.new(
+        title: "Open applications",
+        count: @open_applications_count,
+        tone: :neutral,
+        href: loan_applications_path(status: "open"),
+        label: "View all"
+      ) %>
+      <%= render Dashboard::TriageWidgetComponent.new(
+        title: "Active loans",
+        count: @active_loans_count,
+        tone: :neutral,
+        href: loans_path(status: "active"),
+        label: "View all"
+      ) %>
+    </div>
+  </section>
+
+  <section aria-label="Portfolio summary">
+    <h2 class="mb-4 text-lg font-semibold text-slate-800">Portfolio summary</h2>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <%= render Dashboard::SummaryWidgetComponent.new(
+        title: "Closed loans",
+        value: @portfolio.closed_loans_count.to_s,
+        href: loans_path(status: "closed"),
+        label: "View all"
+      ) %>
+      <%= render Dashboard::SummaryWidgetComponent.new(
+        title: "Total disbursed",
+        value: humanized_money_with_symbol(Money.new(@portfolio.total_disbursed_cents, "INR"))
+      ) %>
+      <%= render Dashboard::SummaryWidgetComponent.new(
+        title: "Total repayment",
+        value: humanized_money_with_symbol(Money.new(@portfolio.total_repayment_cents, "INR"))
+      ) %>
+    </div>
+  </section>
+</section>

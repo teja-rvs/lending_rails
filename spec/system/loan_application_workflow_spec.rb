@@ -37,7 +37,7 @@ RSpec.describe "Loan application workflow", type: :system do
     fill_in "Password", with: "password123!"
     click_button "Sign in"
 
-    click_link "Browse borrowers"
+    click_link "Borrowers", match: :first
     click_link borrower.full_name
     click_button "Start application"
 

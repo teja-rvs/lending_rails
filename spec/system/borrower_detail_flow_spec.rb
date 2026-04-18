@@ -23,7 +23,7 @@ RSpec.describe "Borrower detail flow", type: :system do
     fill_in "Password", with: "password123!"
     click_button "Sign in"
 
-    click_link "Browse borrowers"
+    click_link "Borrowers", match: :first
     click_link borrower.full_name
 
     expect(page).to have_current_path(borrower_path(borrower))
@@ -47,7 +47,7 @@ RSpec.describe "Borrower detail flow", type: :system do
     fill_in "Password", with: "password123!"
     click_button "Sign in"
 
-    click_link "Browse borrowers"
+    click_link "Borrowers", match: :first
     click_link borrower.full_name
 
     expect(page).to have_content("New application blocked")

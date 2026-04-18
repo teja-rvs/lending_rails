@@ -101,7 +101,7 @@ RSpec.describe "Loan detail flow", type: :system do
     click_button "Sign in"
 
     expect(page).to have_current_path(root_path)
-    click_link "Loans"
+    within("nav[aria-label='Main navigation']") { click_link "Loans" }
 
     expect(page).to have_current_path(loans_path)
     expect(page).to have_selector("h1", text: "Loans")
@@ -140,7 +140,7 @@ RSpec.describe "Loan detail flow", type: :system do
     expect(page).to have_content("Documentation stage started for LOAN-5001.")
     expect(page).to have_content("Documentation In Progress")
 
-    click_link "Loans"
+    within("nav[aria-label='Main navigation']") { click_link "Loans" }
 
     expect(page).to have_current_path(loans_path)
     expect(page).to have_selector("h1", text: "Loans")

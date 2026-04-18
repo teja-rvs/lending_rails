@@ -23,7 +23,7 @@ RSpec.describe "Borrower search flow", type: :system do
     fill_in "Password", with: "password123!"
     click_button "Sign in"
 
-    click_link "Browse borrowers"
+    click_link "Borrowers", match: :first
 
     expect(page).to have_current_path(borrowers_path)
     expect(page).to have_selector("h1", text: "Borrowers")

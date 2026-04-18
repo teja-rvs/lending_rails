@@ -22,7 +22,7 @@ RSpec.describe "Borrower intake flow", type: :system do
     fill_in "Password", with: "password123!"
     click_button "Sign in"
 
-    click_link "Create borrower"
+    visit new_borrower_path
 
     expect(page).to have_current_path(new_borrower_path)
     expect(page).to have_selector("h1", text: "Create borrower")

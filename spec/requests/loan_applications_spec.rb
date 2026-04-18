@@ -454,7 +454,7 @@ RSpec.describe "LoanApplications", type: :request do
     expect(response).to have_http_status(:ok)
     assert_select "p", text: "Review steps can no longer be updated after a final decision."
     assert_select "p", text: "Review steps are locked because this application has already crossed a final decision boundary."
-    assert_select "form.button_to", count: 0
+    assert_select "main form.button_to", count: 0
     expect(current_step.reload.status).to eq("initialized")
   end
 

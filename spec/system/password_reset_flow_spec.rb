@@ -56,8 +56,8 @@ RSpec.describe "Password reset flow", type: :system do
     click_button "Sign in"
 
     expect(page).to have_current_path(root_path)
-    expect(page).to have_selector("h1", text: "Lending operations workspace")
-    expect(page).to have_content("Signed in as #{user.email_address}")
+    expect(page).to have_selector("h1", text: "Dashboard")
+    expect(page).to have_content(user.email_address)
   end
 
   it "redirects an invalid reset link back to the password request screen" do

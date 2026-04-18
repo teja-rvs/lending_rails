@@ -1,0 +1,7 @@
+<article role="region" aria-label="<%= title %>" class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+  <p class="text-sm font-medium text-slate-500"><%= title %></p>
+  <p class="mt-1 text-3xl font-semibold text-slate-950"><%= value %></p>
+  <% if link? %>
+    <%= link_to label, href, class: "mt-2 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded" %>
+  <% end %>
+</article>

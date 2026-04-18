@@ -25,6 +25,30 @@
 
   <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
     <div class="min-h-screen">
+      <% if Current.user %>
+        <nav aria-label="Main navigation" class="border-b border-slate-200 bg-white">
+          <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
+            <span class="text-sm font-semibold tracking-tight text-slate-950">lending_rails</span>
+            <div class="flex items-center gap-6">
+              <%
+                nav_links = [
+                  ["Dashboard", dashboard_path],
+                  ["Borrowers", borrowers_path],
+                  ["Applications", loan_applications_path],
+                  ["Loans", loans_path],
+                  ["Payments", payments_path]
+                ]
+              %>
+              <% nav_links.each do |label, path| %>
+                <% active = current_page?(path) %>
+                <%= link_to label, path, class: "text-sm font-medium #{active ? 'text-slate-950 underline underline-offset-4 decoration-2 decoration-slate-950' : 'text-slate-600 hover:text-slate-900'} focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded" %>
+              <% end %>
+              <%= button_to "Sign out", session_path, method: :delete, class: "text-sm font-medium text-slate-600 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded" %>
+            </div>
+          </div>
+        </nav>
+      <% end %>
+
       <% if alert = flash[:alert] %>
         <div class="border-b border-rose-200 bg-rose-50">
           <p class="mx-auto max-w-7xl px-6 py-3 text-sm font-medium text-rose-700"><%= alert %></p>

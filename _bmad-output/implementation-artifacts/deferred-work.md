@@ -35,3 +35,9 @@
 - `DeriveOverdueStates` query scope (`Payment.where(status: "pending")`) misses loans with only already-overdue, unassessed payments (late_fee_cents == 0). Per-request `RefreshStatus` hooks cover this gap interactively; batch sweep may leave unassessed fees if no pending-past-due payments remain. Pre-existing Story 5.5 design. [app/services/payments/derive_overdue_states.rb:14]
 - `DeriveOverdueStates` bare `rescue => e` swallows all exception types including programming errors (`NoMethodError`, `TypeError`) in the late-fee and closure paths. Isolation is intentional (one loan failure doesn't abort the sweep) but hides regressions in batch sweeps. Pre-existing Story 5.5 pattern. [app/services/payments/derive_overdue_states.rb:30]
 - No model-level validation preventing negative `late_fee_cents` on Payment. Only writer is `ApplyLateFee` which always sets the positive constant, so no current path produces a negative value. Consider adding `validates :late_fee_cents, numericality: { greater_than_or_equal_to: 0 }` if external writers emerge. [app/models/payment.rb]
+
+## Deferred from: code review of story 6-1-build-the-action-first-operational-dashboard (2026-04-18)
+
+- Duplicated `self.call(...)` boilerplate across all 5 dashboard query classes. Same pattern exists across all query objects in the project — should be extracted to `ApplicationQuery` base class as a project-wide refactor. [app/queries/dashboard/*.rb]
+- System specs use `match: :first` and `visit` hacks to resolve nav link ambiguity after adding the global nav bar. Tests still pass but are slightly weaker in exercising link discoverability. [spec/system/*_spec.rb]
+- Nav bar logic defined inline in the application layout (array of tuples, iteration, `current_page?` logic). Should be extracted to a helper or ViewComponent for maintainability as nav grows. [app/views/layouts/application.html.erb:30-48]

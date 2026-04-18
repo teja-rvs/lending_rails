@@ -44,8 +44,10 @@ RSpec.describe "Workspace access", type: :request do
     get root_path
 
     expect(response).to have_http_status(:ok)
-    assert_select "h1", text: "Lending operations workspace"
-    assert_select "p", text: /Signed in as #{Regexp.escape(user.email_address)}/
-    assert_select "form[action='#{session_path}'] button", text: "Sign out"
+    assert_select "h1", text: "Dashboard"
+    assert_select "p", text: /#{Regexp.escape(user.email_address)}/
+    assert_select "nav[aria-label='Main navigation']" do
+      assert_select "button", text: "Sign out"
+    end
   end
 end

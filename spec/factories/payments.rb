@@ -21,7 +21,7 @@ FactoryBot.define do
 
     trait :completed do
       status { "completed" }
-      payment_date { loan.disbursement_date + installment_number.months }
+      payment_date { Date.current }
       payment_mode { "cash" }
       completed_at { Time.current }
     end

@@ -148,7 +148,7 @@
                 <th scope="col" class="px-5 py-4">Interest</th>
                 <th scope="col" class="px-5 py-4">Total</th>
                 <th scope="col" class="px-5 py-4">Status</th>
-                <th scope="col" class="px-5 py-4">Open</th>
+                <th scope="col" class="px-5 py-4">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 bg-white text-sm text-slate-700">
@@ -176,7 +176,8 @@
                     <%= render Shared::StatusBadgeComponent.new(label: payment.status_label, tone: payment.status_tone) %>
                   </td>
                   <td class="px-5 py-4">
-                    <%= link_to "Open payment", payment_path(payment, from: "payments"), class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+                    <% action_label = payment.completed? ? "View" : "Mark complete" %>
+                    <%= link_to action_label, payment_path(payment, from: "payments"), class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
                   </td>
                 </tr>
               <% end %>

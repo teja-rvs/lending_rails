@@ -1,5 +1,5 @@
 class PaymentsController < ApplicationController
-  before_action :set_payment, only: :show
+  before_action :set_payment, only: %i[show mark_completed]
 
   def index
     @search_query = params[:q].to_s.squish
@@ -18,7 +18,28 @@ class PaymentsController < ApplicationController
   def show
   end
 
+  def mark_completed
+    result = Payments::MarkCompleted.call(
+      payment: @payment,
+      payment_date: completion_params[:payment_date],
+      payment_mode: completion_params[:payment_mode],
+      notes: completion_params[:notes]
+    )
+
+    if result.success?
+      redirect_to payment_path(@payment, from: params[:from]),
+                  notice: "Payment ##{@payment.installment_number} for #{@payment.loan.loan_number} recorded as completed."
+    else
+      flash.now[:alert] = result.error
+      render :show, status: :unprocessable_content
+    end
+  end
+
   private
+    def completion_params
+      params.require(:payment).permit(:payment_date, :payment_mode, :notes)
+    end
+
     def set_payment
       @payment = Payment.includes(loan: :borrower).find(params[:id])
     end

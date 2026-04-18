@@ -28,11 +28,107 @@
           <%= loan.loan_number %> · Installment #<%= @payment.installment_number %>
         </h1>
         <p class="text-sm leading-6 text-slate-600">
-          This detail page surfaces the repayment installment facts needed to verify an upcoming or overdue payment. Recording a completed payment is guarded by its own confirmation flow introduced in a later step.
+          <% if @payment.completed? %>
+            This payment has been recorded. The completion details below are locked and preserved as financial history.
+          <% else %>
+            Verify the installment facts below — loan, borrower, amounts, and due date — before recording this payment as completed through the guarded action.
+          <% end %>
         </p>
       </div>
       <%= render Shared::StatusBadgeComponent.new(label: @payment.status_label, tone: @payment.status_tone) %>
     </div>
+
+    <% if @payment.editable? %>
+      <section aria-labelledby="payment-completion-heading" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 id="payment-completion-heading" class="text-lg font-semibold text-slate-950">Record completed payment</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          Completing this payment locks the record. The payment date, mode, and notes cannot be edited afterward.
+        </p>
+
+        <%= form_with model: @payment, url: mark_completed_payment_path(@payment, from: params[:from]), method: :patch, scope: :payment, local: true, html: { class: "mt-6 space-y-5" } do |form| %>
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+              <%= form.label :payment_date, "Payment date", class: "block text-sm font-medium text-slate-700" %>
+              <%= form.date_field :payment_date,
+                    required: true,
+                    max: Date.current,
+                    value: params.dig(:payment, :payment_date) || Date.current,
+                    class: "mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
+            </div>
+
+            <div>
+              <%= form.label :payment_mode, "Payment mode", class: "block text-sm font-medium text-slate-700" %>
+              <%= form.select :payment_mode,
+                    Payment::PAYMENT_MODES.map { |m| [ m.humanize, m ] },
+                    { include_blank: "Select a mode", selected: params.dig(:payment, :payment_mode) },
+                    required: true,
+                    class: "mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
+            </div>
+          </div>
+
+          <div>
+            <%= form.label :notes, "Notes", class: "block text-sm font-medium text-slate-700" %>
+            <%= form.text_area :notes,
+                  rows: 3,
+                  value: params.dig(:payment, :notes),
+                  class: "mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
+            <p class="mt-1 text-xs text-slate-500">Optional context that will be stored alongside this completion record.</p>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <%= form.submit "Mark payment complete",
+                  data: {
+                    turbo_confirm: "Mark this payment as completed?\n\nThis will lock the payment date, mode, and notes — these fields cannot be edited afterward."
+                  },
+                  class: "inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2" %>
+            <% cancel_path = detail_from_loans ? loan_path(loan, from: "loans") : payments_path %>
+            <%= link_to "Cancel", cancel_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+          </div>
+        <% end %>
+      </section>
+    <% elsif @payment.completed? %>
+      <section aria-labelledby="payment-completed-heading" class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="space-y-2">
+            <h2 id="payment-completed-heading" class="text-lg font-semibold text-slate-950">Payment completed</h2>
+            <p class="text-sm leading-6 text-slate-700">
+              This payment was recorded on <%= @payment.completed_at&.to_fs(:long) %>. The payment date, mode, and notes are now locked and cannot be edited.
+            </p>
+          </div>
+          <%= render Shared::StatusBadgeComponent.new(label: "Completed", tone: :success) %>
+        </div>
+
+        <dl class="mt-6 grid gap-5 sm:grid-cols-2">
+          <div>
+            <dt class="text-sm font-medium text-slate-500">Payment date</dt>
+            <dd class="mt-2 text-base font-semibold text-slate-950"><%= @payment.payment_date&.to_fs(:long) || "—" %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-slate-500">Payment mode</dt>
+            <dd class="mt-2 text-base font-semibold text-slate-950"><%= @payment.payment_mode_label || "—" %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-slate-500">Completed at</dt>
+            <dd class="mt-2 text-base font-semibold text-slate-950"><%= @payment.completed_at&.to_fs(:long) || "—" %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-slate-500">Completed by</dt>
+            <dd class="mt-2 text-base font-semibold text-slate-950">
+              <%
+                last_version = @payment.versions.where(event: "update").last
+                whodunnit = last_version&.whodunnit
+                completed_by_user = whodunnit.present? ? User.find_by(id: whodunnit) : nil
+              %>
+              <%= completed_by_user&.email_address || "—" %>
+            </dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt class="text-sm font-medium text-slate-500">Notes</dt>
+            <dd class="mt-2 text-base leading-6 text-slate-800"><%= @payment.notes.presence || "—" %></dd>
+          </div>
+        </dl>
+      </section>
+    <% end %>
 
     <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
       <p class="text-sm font-medium text-slate-500">Due date</p>
@@ -102,12 +198,12 @@
 
       <div>
         <dt class="text-sm font-medium text-slate-500">Payment date</dt>
-        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @payment.payment_date&.to_fs(:long) || "Not recorded yet" %></dd>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @payment.payment_date&.to_fs(:long) || (@payment.completed? ? "—" : "Not recorded yet") %></dd>
       </div>
 
       <div>
         <dt class="text-sm font-medium text-slate-500">Payment mode</dt>
-        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @payment.payment_mode.presence&.humanize || "Not recorded yet" %></dd>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @payment.payment_mode_label || (@payment.completed? ? "—" : "Not recorded yet") %></dd>
       </div>
 
       <div>
@@ -121,11 +217,5 @@
       </div>
     </dl>
 
-    <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-      <h2 class="text-lg font-semibold text-slate-950">Completion is recorded through a guarded flow</h2>
-      <p class="mt-2 text-sm leading-6 text-slate-600">
-        Recording a completed payment is guarded by its own confirmation flow introduced in a later step. This page surfaces the verification data you need today — the payment amount, due date, borrower, and linked loan — without promising an action that has not yet been built.
-      </p>
-    </div>
   </section>
 </section>

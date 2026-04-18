@@ -5,3 +5,12 @@
 ## Deferred from: code review of 5-2-view-upcoming-and-overdue-repayment-work (2026-04-18)
 
 - Payments index has no pagination and will load the entire result set into memory at render time. Mirrors the pre-existing pattern on `loans` and `loan_applications` indexes; would need a project-wide pagination initiative to address consistently.
+
+## Deferred from: code review of story 5-3-mark-payments-completed-with-locked-financial-history (2026-04-18)
+
+- `Payment#readonly?` blocks UPDATE but not DELETE — completed payments can still be destroyed directly via `Payment.find(id).destroy` (Loan-level `dependent: :restrict_with_exception` blocks cascade from the loan side). Pre-existing pattern; story 5-3 spec only required update/save protection. [app/models/payment.rb:55-59]
+- `Payment#readonly?` will block future legitimate after-completion callbacks (e.g., story 5-5 "recompute loan overdue after completion" will raise `ActiveRecord::ReadOnlyRecord`). Design decision belongs to 5-5/5-6. [app/models/payment.rb:55-59]
+- No lower bound on `payment_date` against `loan.disbursement_date` — arbitrary historical dates (e.g., 1990-01-01) are accepted on modern loans. Not in story 5-3 spec scope. [app/services/payments/mark_completed.rb:24]
+- No loan-state guard — a payment can be marked completed on a loan still in `ready_for_disbursement`, `closed`, or `cancelled`. Story 5-3 spec scope is payment-state only; loan-state invariants belong to 5-5/5-6. [app/services/payments/mark_completed.rb:22]
+- Out-of-order installment completion allowed — installment #5 can be marked completed while #1-#4 remain pending. Overdue derivation in 5-5 will need to handle it. [app/services/payments/mark_completed.rb]
+- No length bound on `Payment#notes` — arbitrarily large blobs accepted and then locked permanently. Pre-existing model concern. [app/models/payment.rb:16]

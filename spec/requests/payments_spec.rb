@@ -83,7 +83,7 @@ RSpec.describe "Payments", type: :request do
     assert_select "a[href='#{payments_path}']", text: "Clear filters"
   end
 
-  it "renders a payment detail page without a completion action for signed-in admins" do
+  it "renders a payment detail page with the guarded completion form for pending payments" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
     loan = create(:loan, :active, :with_details, borrower:, loan_number: "LOAN-5701")
@@ -97,9 +97,127 @@ RSpec.describe "Payments", type: :request do
     assert_select "h1", text: /Installment #3/
     assert_select "a[href='#{loan_path(loan)}']", text: "LOAN-5701"
     assert_select "a[href='#{borrower_path(borrower)}']", text: "Asha Patel"
+    assert_select "form[action='#{mark_completed_payment_path(payment, from: 'payments')}']"
+    assert_select "input[type='submit'][data-turbo-confirm*='lock'][value='Mark payment complete']"
+  end
+
+  it "renders the locked summary card for completed payments without form inputs" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, loan_number: "LOAN-5702")
+    payment = create(:payment, :completed, loan:, installment_number: 1, due_date: Date.current, notes: "Paid in full")
+
+    sign_in_as(user)
+    get payment_path(payment, from: "payments")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Payment completed"
     assert_select "form[action*='mark_completed']", count: 0
-    assert_select "button", text: /Mark.*complete/i, count: 0
     assert_select "input[type='submit']", count: 0
+  end
+
+  describe "PATCH /payments/:id/mark_completed" do
+    it "redirects unauthenticated visitors to the sign-in page" do
+      payment = create(:payment, :pending)
+
+      patch mark_completed_payment_path(payment), params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to redirect_to(new_session_path)
+    end
+
+    it "marks a pending payment complete and redirects with a success flash" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5801")
+      payment = create(:payment, :pending, loan:, installment_number: 2, due_date: Date.current + 3.days)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash", notes: "ok" } }
+
+      expect(response).to redirect_to(payment_path(payment, from: "payments"))
+      expect(flash[:notice]).to include("LOAN-5801")
+      expect(flash[:notice]).to include("#2")
+      expect(payment.reload).to be_completed
+    end
+
+    it "re-renders the detail page with the blocked alert when payment_date is missing" do
+      user = create(:user, email_address: "admin@example.com")
+      payment = create(:payment, :pending)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: "", payment_mode: "cash", notes: "draft note" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash.now[:alert]).to eq("Payment date is required.")
+      expect(response.body).to include("Payment date is required.")
+      expect(response.body).to include("draft note")
+      assert_select "form[action='#{mark_completed_payment_path(payment, from: 'payments')}']"
+      expect(payment.reload).to be_pending
+    end
+
+    it "re-renders the detail page with the blocked alert for unsupported payment modes" do
+      user = create(:user, email_address: "admin@example.com")
+      payment = create(:payment, :pending)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "wire_transfer" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash.now[:alert]).to eq("wire_transfer is not a supported payment mode.")
+    end
+
+    it "re-renders with the idempotency alert when completing twice" do
+      user = create(:user, email_address: "admin@example.com")
+      payment = create(:payment, :completed)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash.now[:alert]).to include("already been completed")
+    end
+
+    it "preserves the from=loans breadcrumb through the redirect" do
+      user = create(:user, email_address: "admin@example.com")
+      payment = create(:payment, :pending)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "loans"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to redirect_to(payment_path(payment, from: "loans"))
+    end
+
+    it "rejects a signed-in non-admin session before invoking the service" do
+      non_admin = create(:user, email_address: "operator@example.com")
+      session_record = non_admin.sessions.create!(user_agent: "RSpec", ip_address: "127.0.0.1")
+      set_signed_session_cookie(session_record)
+      payment = create(:payment, :pending)
+
+      expect(Payments::MarkCompleted).not_to receive(:call)
+
+      patch mark_completed_payment_path(payment),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to redirect_to(new_session_path)
+      expect(payment.reload).to be_pending
+      expect(Session.exists?(session_record.id)).to be(false)
+    end
+
+    it "captures the signed-in admin as PaperTrail whodunnit on the completion version" do
+      user = create(:user, email_address: "admin@example.com")
+      payment = create(:payment, :pending)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to redirect_to(payment_path(payment, from: "payments"))
+      expect(payment.reload).to be_completed
+      expect(payment.versions.where(event: "update").last.whodunnit).to eq(user.id.to_s)
+    end
   end
 
   it "uses the loan breadcrumb when the admin drills in from a loan workspace" do

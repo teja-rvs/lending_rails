@@ -79,6 +79,9 @@ RSpec.describe Payment, type: :model do
 
     it "marks pending payments as completed" do
       payment = create(:payment, :pending)
+      payment.payment_date = Date.current
+      payment.payment_mode = "cash"
+      payment.completed_at = Time.current
 
       payment.mark_completed!
 
@@ -87,6 +90,9 @@ RSpec.describe Payment, type: :model do
 
     it "marks overdue payments as completed" do
       payment = create(:payment, :overdue)
+      payment.payment_date = Date.current
+      payment.payment_mode = "cash"
+      payment.completed_at = Time.current
 
       payment.mark_completed!
 
@@ -105,6 +111,75 @@ RSpec.describe Payment, type: :model do
       payment = create(:payment, :completed)
 
       expect { payment.mark_overdue! }.to raise_error(AASM::InvalidTransition)
+    end
+  end
+
+  describe "completion-context validations" do
+    it "requires payment_date, payment_mode, and completed_at when completed" do
+      payment = build(:payment, :pending)
+      payment.status = "completed"
+      payment.payment_date = nil
+      payment.payment_mode = nil
+      payment.completed_at = nil
+
+      expect(payment).not_to be_valid
+      expect(payment.errors[:payment_date]).to include("can't be blank")
+      expect(payment.errors[:payment_mode]).to include("can't be blank")
+      expect(payment.errors[:completed_at]).to include("can't be blank")
+    end
+
+    it "rejects unsupported payment modes when completed" do
+      payment = build(:payment, :completed, payment_mode: "wire")
+
+      expect(payment).not_to be_valid
+      expect(payment.errors[:payment_mode]).to include("is not included in the list")
+    end
+
+    it "accepts every supported payment mode when completed" do
+      Payment::PAYMENT_MODES.each do |mode|
+        payment = build(:payment, :completed, payment_mode: mode)
+        expect(payment).to be_valid, "expected #{mode} to be a valid payment mode"
+      end
+    end
+
+    it "rejects a future payment_date when completed" do
+      payment = build(:payment, :completed, payment_date: Date.current + 1.day)
+
+      expect(payment).not_to be_valid
+      expect(payment.errors[:payment_date]).to include("cannot be in the future")
+    end
+  end
+
+  describe "#payment_mode_label" do
+    it "humanizes the stored mode" do
+      expect(build(:payment, :completed, payment_mode: "bank_transfer").payment_mode_label).to eq("Bank transfer")
+    end
+
+    it "returns nil when payment_mode is blank" do
+      expect(build(:payment, :pending, payment_mode: nil).payment_mode_label).to be_nil
+    end
+  end
+
+  describe "#readonly?" do
+    it "returns false for new records" do
+      expect(build(:payment, :pending)).not_to be_readonly
+    end
+
+    it "returns false for pending persisted records" do
+      expect(create(:payment, :pending)).not_to be_readonly
+    end
+
+    it "returns false for overdue persisted records" do
+      expect(create(:payment, :overdue)).not_to be_readonly
+    end
+
+    it "returns true for completed persisted records and blocks AR-level updates" do
+      payment = create(:payment, :completed, notes: "original")
+
+      expect(payment).to be_readonly
+      expect { payment.update(notes: "changed") }.to raise_error(ActiveRecord::ReadOnlyRecord)
+      expect(payment.reload.notes).to eq("original")
+      expect { payment.update!(notes: "changed") }.to raise_error(ActiveRecord::ReadOnlyRecord)
     end
   end
 

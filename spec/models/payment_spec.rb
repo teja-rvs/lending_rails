@@ -228,4 +228,41 @@ RSpec.describe Payment, type: :model do
       expect(build(:payment, :completed)).not_to be_editable
     end
   end
+
+  describe "total_matches_components validation" do
+    it "is valid when total equals principal plus interest" do
+      payment = build(:payment, principal_amount_cents: 300_000, interest_amount_cents: 50_000, total_amount_cents: 350_000)
+
+      expect(payment).to be_valid
+    end
+
+    it "is invalid when total does not equal principal plus interest" do
+      payment = build(:payment, principal_amount_cents: 300_000, interest_amount_cents: 50_000, total_amount_cents: 999_999)
+
+      expect(payment).not_to be_valid
+      expect(payment.errors[:total_amount_cents]).to include("must equal principal plus interest")
+    end
+  end
+
+  describe "installment_number uniqueness" do
+    it "enforces uniqueness of installment_number scoped to loan" do
+      loan = create(:loan, :active, :with_details)
+      create(:payment, loan: loan, installment_number: 1, due_date: Date.new(2026, 5, 16))
+
+      duplicate = build(:payment, loan: loan, installment_number: 1, due_date: Date.new(2026, 6, 16))
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:installment_number]).to include("has already been taken")
+    end
+
+    it "allows the same installment_number on different loans" do
+      first_loan = create(:loan, :active, :with_details)
+      second_loan = create(:loan, :active, :with_details)
+      create(:payment, loan: first_loan, installment_number: 1, due_date: Date.new(2026, 5, 16))
+
+      payment = build(:payment, loan: second_loan, installment_number: 1, due_date: Date.new(2026, 5, 16))
+
+      expect(payment).to be_valid
+    end
+  end
 end

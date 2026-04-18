@@ -120,4 +120,85 @@ RSpec.describe ReviewStep, type: :model do
       expect(review_step.versions.order(:created_at).pluck(:event).last).to eq("update")
     end
   end
+
+  describe ".definition_for" do
+    it "returns the definition for a known step key" do
+      definition = described_class.definition_for("history_check")
+
+      expect(definition).to be_present
+      expect(definition.step_key).to eq("history_check")
+      expect(definition.label).to eq("History check")
+      expect(definition.position).to eq(1)
+    end
+
+    it "returns nil for an unknown step key" do
+      expect(described_class.definition_for("nonexistent_step")).to be_nil
+    end
+  end
+
+  describe "#label" do
+    it "returns the human-readable label from the workflow definition" do
+      review_step = build(:review_step, :phone_screening)
+
+      expect(review_step.label).to eq("Phone screening")
+    end
+
+    it "falls back to humanizing the step_key for unknown keys" do
+      review_step = build(:review_step, step_key: "custom_step", position: 1)
+
+      expect(review_step.label).to eq("Custom step")
+    end
+  end
+
+  describe "#active_candidate?" do
+    it "returns true for initialized status" do
+      review_step = build(:review_step, status: "initialized")
+
+      expect(review_step).to be_active_candidate
+    end
+
+    it "returns true for 'waiting for details' status" do
+      review_step = build(:review_step, status: "waiting for details")
+
+      expect(review_step).to be_active_candidate
+    end
+
+    it "returns false for approved status" do
+      review_step = build(:review_step, status: "approved")
+
+      expect(review_step).not_to be_active_candidate
+    end
+
+    it "returns false for rejected status" do
+      review_step = build(:review_step, status: "rejected")
+
+      expect(review_step).not_to be_active_candidate
+    end
+  end
+
+  describe "#final?" do
+    it "returns true for approved status" do
+      review_step = build(:review_step, status: "approved")
+
+      expect(review_step).to be_final
+    end
+
+    it "returns true for rejected status" do
+      review_step = build(:review_step, status: "rejected")
+
+      expect(review_step).to be_final
+    end
+
+    it "returns false for initialized status" do
+      review_step = build(:review_step, status: "initialized")
+
+      expect(review_step).not_to be_final
+    end
+
+    it "returns false for 'waiting for details' status" do
+      review_step = build(:review_step, status: "waiting for details")
+
+      expect(review_step).not_to be_final
+    end
+  end
 end

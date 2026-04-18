@@ -75,4 +75,14 @@ RSpec.describe "Passwords", type: :request do
 
     expect(response).to redirect_to(new_password_path)
   end
+
+  it "renders the password reset request form" do
+    get new_password_path
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h1", text: "Forgot your password?"
+    assert_select "form[action='#{passwords_path}']"
+    assert_select "input[type='email'][name='email_address']"
+    assert_select "input[type='submit'][value='Email reset instructions']"
+  end
 end

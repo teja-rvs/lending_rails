@@ -102,4 +102,74 @@ RSpec.describe "Documents", type: :request do
     expect(document.reload).to be_superseded
     expect(document.superseded_by.file_name).to eq("Updated document")
   end
+
+  it "blocks document creation when the loan is in a post-disbursement state" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details)
+
+    sign_in_as(user)
+
+    post loan_documents_path(loan), params: {
+      from: "loans",
+      document: {
+        file: uploaded_file,
+        file_name: "Borrower ID",
+        description: "Government issued ID."
+      }
+    }
+
+    expect(response).to redirect_to(loan_path(loan, from: "loans"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Documents cannot be uploaded to this record in its current state."
+  end
+
+  it "redirects with a validation error when replacing a document with an invalid file type" do
+    user = create(:user, email_address: "admin@example.com")
+    document = create(:document_upload, documentable: create(:loan, :documentation_in_progress))
+
+    sign_in_as(user)
+
+    patch replace_document_path(document), params: {
+      from: "loans",
+      document: {
+        file: uploaded_file("invalid.exe", "application/octet-stream"),
+        file_name: "Bad file",
+        description: "Should fail."
+      }
+    }
+
+    expect(response).to redirect_to(loan_path(document.documentable, from: "loans"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: /must be a PDF/
+  end
+
+  it "blocks replacement when the document is already superseded" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :documentation_in_progress)
+    original = create(:document_upload, documentable: loan, status: "superseded", superseded_at: 1.hour.ago)
+
+    sign_in_as(user)
+
+    patch replace_document_path(original), params: {
+      from: "loans",
+      document: {
+        file: uploaded_file("replacement.pdf"),
+        file_name: "Updated document",
+        description: "Should be blocked."
+      }
+    }
+
+    expect(response).to redirect_to(loan_path(loan, from: "loans"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "This document has already been superseded."
+  end
 end

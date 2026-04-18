@@ -60,5 +60,26 @@ RSpec.describe Loans::CreateFromApplication do
       expect(result).to be_blocked
       expect(result.error).to eq("A loan already exists for this application.")
     end
+
+    it "creates a loan without locking the application when lock_application is false" do
+      borrower = create(:borrower, full_name: "Priya Sharma", phone_number: "+91 91234 56789")
+      loan_application = create(:loan_application, :approved, borrower:)
+
+      result = nil
+
+      expect {
+        result = described_class.call(loan_application:, lock_application: false)
+      }.to change(Loan, :count).by(1)
+
+      expect(result).to be_success
+      expect(result).not_to be_blocked
+      expect(result.loan).to have_attributes(
+        borrower:,
+        loan_application:,
+        status: "created",
+        borrower_full_name_snapshot: "Priya Sharma",
+        borrower_phone_number_snapshot: borrower.phone_number_normalized
+      )
+    end
   end
 end

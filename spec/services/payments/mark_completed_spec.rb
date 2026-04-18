@@ -159,5 +159,15 @@ RSpec.describe Payments::MarkCompleted do
 
       described_class.call(payment: payment, payment_date: Date.current, payment_mode: "cash")
     end
+
+    it "blocks when payment_date is an unparseable string" do
+      payment = create(:payment, :pending)
+
+      result = described_class.call(payment: payment, payment_date: "not-a-date", payment_mode: "cash")
+
+      expect(result).to be_blocked
+      expect(result.error).to eq("Payment date is required.")
+      expect(payment.reload).to be_pending
+    end
   end
 end

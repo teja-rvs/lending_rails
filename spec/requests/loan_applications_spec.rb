@@ -739,4 +739,40 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "ol li", minimum: 1
     assert_select "p", text: "Created"
   end
+
+  it "blocks approval when the application is not in 'in progress' status" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0901", status: "open")
+    create_completed_review_workflow(application)
+
+    sign_in_as(user)
+    patch approve_loan_application_path(application), params: { from: "applications" }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "This application can only be approved after review has started."
+    expect(application.reload.status).to eq("open")
+  end
+
+  it "blocks approval when review steps are not all approved" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0902", status: "in progress")
+    create(:review_step, :history_check, loan_application: application, status: "approved")
+    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :verification, loan_application: application, status: "initialized")
+
+    sign_in_as(user)
+    patch approve_loan_application_path(application), params: { from: "applications" }
+
+    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "This application can only be approved after every review step is approved."
+    expect(application.reload.status).to eq("in progress")
+  end
 end

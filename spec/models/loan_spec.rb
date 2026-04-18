@@ -400,4 +400,68 @@ RSpec.describe Loan do
       expect(loan.versions.order(:created_at).pluck(:event)).to include("create")
     end
   end
+
+  describe "additional associations" do
+    subject(:loan) { build(:loan) }
+
+    it { is_expected.to belong_to(:borrower) }
+    it { is_expected.to belong_to(:loan_application).optional }
+    it { is_expected.to have_many(:invoices).dependent(:restrict_with_exception) }
+  end
+
+  describe "close event" do
+    it "transitions from active to closed" do
+      loan = create(:loan, :active)
+
+      loan.close!
+
+      expect(loan.reload).to be_closed
+    end
+  end
+
+  describe "#disbursed?" do
+    it "returns true for active loans" do
+      expect(build(:loan, :active)).to be_disbursed
+    end
+
+    it "returns true for overdue loans" do
+      expect(build(:loan, :overdue)).to be_disbursed
+    end
+
+    it "returns true for closed loans" do
+      expect(build(:loan, :closed)).to be_disbursed
+    end
+
+    it "returns false for pre-disbursement states" do
+      expect(build(:loan, :created)).not_to be_disbursed
+      expect(build(:loan, :documentation_in_progress)).not_to be_disbursed
+      expect(build(:loan, :ready_for_disbursement)).not_to be_disbursed
+    end
+  end
+
+  describe "#next_lifecycle_stage_label" do
+    it "returns 'Documentation In Progress' for created loans" do
+      expect(build(:loan, :created).next_lifecycle_stage_label).to eq("Documentation In Progress")
+    end
+
+    it "returns 'Ready For Disbursement' for documentation_in_progress loans" do
+      expect(build(:loan, :documentation_in_progress).next_lifecycle_stage_label).to eq("Ready For Disbursement")
+    end
+
+    it "returns 'Active' for ready_for_disbursement loans" do
+      expect(build(:loan, :ready_for_disbursement).next_lifecycle_stage_label).to eq("Active")
+    end
+
+    it "returns 'Overdue' for active loans" do
+      expect(build(:loan, :active).next_lifecycle_stage_label).to eq("Overdue")
+    end
+
+    it "returns 'Active' for overdue loans" do
+      expect(build(:loan, :overdue).next_lifecycle_stage_label).to eq("Active")
+    end
+
+    it "returns 'Closed' for closed loans" do
+      expect(build(:loan, :closed).next_lifecycle_stage_label).to eq("Closed")
+    end
+  end
 end

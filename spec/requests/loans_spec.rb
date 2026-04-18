@@ -862,4 +862,33 @@ RSpec.describe "Loans", type: :request do
     assert_select "ol li", minimum: 1
     assert_select "p", text: "Created"
   end
+
+  it "confirms disbursement readiness for a ready_for_disbursement loan with complete details" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :ready_for_disbursement, :with_details, loan_number: "LOAN-6001")
+
+    sign_in_as(user)
+    patch attempt_disbursement_loan_path(loan), params: { from: "loans" }
+
+    expect(response).to redirect_to(loan_path(loan, from: "loans"))
+
+    follow_redirect!
+
+    expect(response).to have_http_status(:ok)
+    assert_select "p", text: "Disbursement readiness confirmed for LOAN-6001."
+    expect(loan.reload).to be_ready_for_disbursement
+  end
+
+  it "searches the loans list by loan number" do
+    user = create(:user, email_address: "admin@example.com")
+    matching = create(:loan, :created, loan_number: "LOAN-0115")
+    create(:loan, :created, loan_number: "LOAN-0226")
+
+    sign_in_as(user)
+    get loans_path, params: { q: "LOAN-0115" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_path(matching, from: "loans")}']", text: matching.loan_number
+    assert_select "a", text: "LOAN-0226", count: 0
+  end
 end

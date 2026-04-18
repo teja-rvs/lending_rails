@@ -215,4 +215,89 @@ RSpec.describe LoanApplication, type: :model do
       expect(loan_application.versions.order(:created_at).pluck(:event).last).to eq("update")
     end
   end
+
+  describe "associations" do
+    subject(:loan_application) { build(:loan_application) }
+
+    it { is_expected.to belong_to(:borrower) }
+    it { is_expected.to have_many(:review_steps).dependent(:restrict_with_exception) }
+    it { is_expected.to have_many(:loans).dependent(:restrict_with_exception) }
+  end
+
+  describe "application_number uniqueness" do
+    it "enforces uniqueness of application_number" do
+      create(:loan_application, application_number: "APP-0042")
+      duplicate = build(:loan_application, application_number: "APP-0042")
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:application_number]).to include("has already been taken")
+    end
+  end
+
+  describe "#approvable?" do
+    it "returns true when status is 'in progress' and all review steps are approved" do
+      loan_application = create(:loan_application, :in_progress)
+      create(:review_step, :history_check, loan_application:, status: "approved")
+      create(:review_step, :phone_screening, loan_application:, status: "approved")
+      create(:review_step, :verification, loan_application:, status: "approved")
+
+      expect(loan_application).to be_approvable
+    end
+
+    it "returns false when not all review steps are approved" do
+      loan_application = create(:loan_application, :in_progress)
+      create(:review_step, :history_check, loan_application:, status: "approved")
+      create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :verification, loan_application:, status: "initialized")
+
+      expect(loan_application).not_to be_approvable
+    end
+
+    it "returns false when status is not 'in progress'" do
+      loan_application = create(:loan_application, status: "open")
+      create(:review_step, :history_check, loan_application:, status: "approved")
+      create(:review_step, :phone_screening, loan_application:, status: "approved")
+      create(:review_step, :verification, loan_application:, status: "approved")
+
+      expect(loan_application).not_to be_approvable
+    end
+
+    it "returns false when there are no review steps" do
+      loan_application = create(:loan_application, :in_progress)
+
+      expect(loan_application).not_to be_approvable
+    end
+  end
+
+  describe "#rejectable?" do
+    it "returns true for open applications" do
+      expect(build(:loan_application, status: "open")).to be_rejectable
+    end
+
+    it "returns true for in-progress applications" do
+      expect(build(:loan_application, status: "in progress")).to be_rejectable
+    end
+
+    it "returns false for already-decided applications" do
+      expect(build(:loan_application, status: "approved")).not_to be_rejectable
+      expect(build(:loan_application, status: "rejected")).not_to be_rejectable
+      expect(build(:loan_application, status: "cancelled")).not_to be_rejectable
+    end
+  end
+
+  describe "#cancellable?" do
+    it "returns true for open applications" do
+      expect(build(:loan_application, status: "open")).to be_cancellable
+    end
+
+    it "returns true for in-progress applications" do
+      expect(build(:loan_application, status: "in progress")).to be_cancellable
+    end
+
+    it "returns false for already-decided applications" do
+      expect(build(:loan_application, status: "approved")).not_to be_cancellable
+      expect(build(:loan_application, status: "rejected")).not_to be_cancellable
+      expect(build(:loan_application, status: "cancelled")).not_to be_cancellable
+    end
+  end
 end

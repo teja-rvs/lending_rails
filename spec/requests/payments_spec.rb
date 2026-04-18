@@ -549,4 +549,51 @@ RSpec.describe "Payments", type: :request do
     assert_select "ol li", minimum: 1
     assert_select "p", text: "Created"
   end
+
+  it "shows only completed payments when view=completed is applied" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    loan = create(:loan, :active, :with_details, borrower:, loan_number: "LOAN-5920")
+    completed = create(:payment, :completed, loan:, installment_number: 1, due_date: Date.current - 10.days)
+    pending = create(:payment, :pending, loan:, installment_number: 2, due_date: Date.current + 10.days)
+
+    sign_in_as(user)
+    get payments_path, params: { view: "completed" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{payment_path(completed, from: "payments")}']"
+    assert_select "a[href='#{payment_path(pending, from: "payments")}']", count: 0
+  end
+
+  it "searches the payments list by loan number" do
+    user = create(:user, email_address: "admin@example.com")
+    matching_borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    matching_loan = create(:loan, :active, :with_details, borrower: matching_borrower, loan_number: "LOAN-5520")
+    matching_payment = create(:payment, loan: matching_loan, installment_number: 1, due_date: Date.current + 5.days)
+    other_borrower = create(:borrower, full_name: "Rahul Singh", phone_number: "91234 56789")
+    other_loan = create(:loan, :active, :with_details, borrower: other_borrower, loan_number: "LOAN-5521")
+    create(:payment, loan: other_loan, installment_number: 1, due_date: Date.current + 5.days)
+
+    sign_in_as(user)
+    get payments_path, params: { q: "LOAN-5520" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{payment_path(matching_payment, from: "payments")}']"
+    assert_select "td", text: "Rahul Singh", count: 0
+  end
+
+  it "shows only payments due within the next 7 days when due_window=next_7_days is applied" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    loan = create(:loan, :active, :with_details, borrower:, loan_number: "LOAN-5930")
+    within_window = create(:payment, :pending, loan:, installment_number: 1, due_date: Date.current + 3.days)
+    outside_window = create(:payment, :pending, loan:, installment_number: 2, due_date: Date.current + 30.days)
+
+    sign_in_as(user)
+    get payments_path, params: { view: "upcoming", due_window: "next_7_days" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{payment_path(within_window, from: "payments")}']"
+    assert_select "a[href='#{payment_path(outside_window, from: "payments")}']", count: 0
+  end
 end

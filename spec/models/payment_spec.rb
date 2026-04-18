@@ -5,6 +5,12 @@ RSpec.describe Payment, type: :model do
 
   it { is_expected.to belong_to(:loan) }
 
+  describe "deletion protection" do
+    subject { create(:payment) }
+
+    it_behaves_like "deletion protected"
+  end
+
   describe "associations" do
     it "has one invoice resolving to the payment's own invoice" do
       loan = create(:loan, :active, :with_details)
@@ -20,7 +26,7 @@ RSpec.describe Payment, type: :model do
       payment = create(:payment, :completed, loan: loan)
       create(:invoice, :payment, payment: payment)
 
-      expect { payment.destroy }.to raise_error(ActiveRecord::DeleteRestrictionError)
+      expect { payment.destroy }.to raise_error(ActiveRecord::ReadOnlyRecord)
     end
   end
 

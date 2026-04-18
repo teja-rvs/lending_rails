@@ -752,4 +752,17 @@ RSpec.describe "Loans", type: :request do
       expect(loan.reload).to be_closed
     end
   end
+
+  it "renders the Record history section on the loan show page when versions exist" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :documentation_in_progress)
+
+    sign_in_as(user)
+    get loan_path(loan)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Record history"
+    assert_select "ol li", minimum: 1
+    assert_select "p", text: "Created"
+  end
 end

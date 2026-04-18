@@ -1,5 +1,6 @@
 class Payment < ApplicationRecord
   include AASM
+  include DeletionProtection
 
   PAYMENT_MODES = %w[cash upi bank_transfer cheque other].freeze
 

@@ -1,5 +1,6 @@
 class Loan < ApplicationRecord
   include AASM
+  include DeletionProtection
 
   REPAYMENT_FREQUENCIES = [
     "weekly",

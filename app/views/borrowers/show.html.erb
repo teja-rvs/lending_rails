@@ -48,4 +48,6 @@
       </section>
     </aside>
   </div>
+
+  <%= render Shared::ActivityTimelineComponent.new(versions: @borrower.versions.order(created_at: :desc)) %>
 </section>

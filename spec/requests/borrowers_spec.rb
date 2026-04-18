@@ -358,4 +358,17 @@ RSpec.describe "Borrowers", type: :request do
       assert_select "span.border-emerald-200.bg-emerald-50.text-emerald-700", text: "Active"
     end
   end
+
+  it "renders the Record history section on the borrower show page when versions exist" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get borrower_path(borrower)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Record history"
+    assert_select "ol li", minimum: 1
+    assert_select "p", text: "Created"
+  end
 end

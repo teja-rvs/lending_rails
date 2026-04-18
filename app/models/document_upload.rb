@@ -1,4 +1,5 @@
 class DocumentUpload < ApplicationRecord
+  include DeletionProtection
   STATUSES = %w[active superseded].freeze
   ALLOWED_CONTENT_TYPES = %w[
     application/pdf

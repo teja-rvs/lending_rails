@@ -663,4 +663,17 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "dd", text: "25000.00"
     assert_select "input[type='submit'][value='Save application details']", count: 0
   end
+
+  it "renders the Record history section when the loan application has PaperTrail versions" do
+    user = create(:user, email_address: "admin@example.com")
+    application = create(:loan_application, application_number: "APP-0701", status: "open")
+
+    sign_in_as(user)
+    get loan_application_path(application)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "Record history"
+    assert_select "ol li", minimum: 1
+    assert_select "p", text: "Created"
+  end
 end

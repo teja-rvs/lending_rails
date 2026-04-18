@@ -1,4 +1,5 @@
 class ReviewStep < ApplicationRecord
+  include DeletionProtection
   WorkflowDefinition = Struct.new(:step_key, :label, :position, keyword_init: true)
 
   STATUSES = [

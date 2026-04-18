@@ -6,6 +6,12 @@ RSpec.describe Invoice, type: :model do
     it { is_expected.to belong_to(:payment).optional }
   end
 
+  describe "deletion protection" do
+    subject { create(:invoice) }
+
+    it_behaves_like "deletion protected"
+  end
+
   describe "INVOICE_TYPES" do
     it "includes disbursement and payment" do
       expect(Invoice::INVOICE_TYPES).to include("disbursement", "payment")

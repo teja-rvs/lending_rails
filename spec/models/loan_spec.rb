@@ -6,6 +6,12 @@ RSpec.describe Loan, type: :model do
   it { is_expected.to have_many(:document_uploads).dependent(:restrict_with_exception) }
   it { is_expected.to have_many(:payments).dependent(:restrict_with_exception) }
 
+  describe "deletion protection" do
+    subject { create(:loan, :documentation_in_progress) }
+
+    it_behaves_like "deletion protected"
+  end
+
   describe "#active_documents" do
     it "returns only active documents ordered newest first" do
       older_document = create(:document_upload, documentable: loan, created_at: 2.days.ago)

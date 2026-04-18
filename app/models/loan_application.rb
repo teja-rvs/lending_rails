@@ -1,4 +1,5 @@
 class LoanApplication < ApplicationRecord
+  include DeletionProtection
   STATUSES = [
     "open",
     "in progress",
@@ -23,7 +24,7 @@ class LoanApplication < ApplicationRecord
 
   belongs_to :borrower
   has_many :loans, dependent: :restrict_with_exception
-  has_many :review_steps, -> { order(:position) }, dependent: :destroy
+  has_many :review_steps, -> { order(:position) }, dependent: :restrict_with_exception
   has_paper_trail
 
   monetize :requested_amount_cents, allow_nil: true

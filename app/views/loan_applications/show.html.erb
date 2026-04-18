@@ -393,4 +393,6 @@
       </div>
     </dl>
   </section>
+
+  <%= render Shared::ActivityTimelineComponent.new(versions: @loan_application.versions.order(created_at: :desc)) %>
 </section>

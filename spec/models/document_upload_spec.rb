@@ -7,6 +7,12 @@ RSpec.describe DocumentUpload, type: :model do
   it { is_expected.to belong_to(:uploaded_by).class_name("User") }
   it { is_expected.to belong_to(:superseded_by).class_name("DocumentUpload").optional }
 
+  describe "deletion protection" do
+    subject { create(:document_upload) }
+
+    it_behaves_like "deletion protected"
+  end
+
   describe "associations" do
     it "belongs to a polymorphic documentable" do
       loan = create(:loan, :documentation_in_progress)

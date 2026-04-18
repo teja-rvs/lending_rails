@@ -238,4 +238,6 @@
     </dl>
 
   </section>
+
+  <%= render Shared::ActivityTimelineComponent.new(versions: @payment.versions.order(created_at: :desc)) %>
 </section>

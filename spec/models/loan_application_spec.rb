@@ -1,6 +1,12 @@
 require "rails_helper"
 
 RSpec.describe LoanApplication, type: :model do
+  describe "deletion protection" do
+    subject { create(:loan_application) }
+
+    it_behaves_like "deletion protected"
+  end
+
   describe "application number generation" do
     it "assigns the next APP number when one is not provided" do
       create(:loan_application, application_number: "APP-0007")

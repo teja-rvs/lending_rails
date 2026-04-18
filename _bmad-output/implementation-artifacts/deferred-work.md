@@ -60,3 +60,8 @@
 - Tripled raw SQL search predicate across three query objects. Identical `OR borrowers.phone_number_normalized ILIKE :query` in `LoanApplications::FilteredListQuery`, `Loans::FilteredListQuery`, and `Payments::FilteredListQuery`. Pre-existing duplication pattern (the `full_name ILIKE` clause was already duplicated). [app/queries/*/filtered_list_query.rb]
 - Test setup duplication: every test creates `create(:user, email_address: "admin@example.com")` independently. Pre-existing pattern across all request specs. [spec/requests/*_spec.rb]
 - No special-character test for phone search input (`%`, `_`, `+`). `sanitize_sql_like` is used correctly; general test hardening task. [spec/requests/*_spec.rb]
+
+## Deferred from: code review of story 6-4-record-audit-history-and-protect-operational-records (2026-04-18)
+
+- `DeletionProtection` concern uses `before_destroy` callback which does not guard `Model.delete`, `Model.delete_all`, or `Model.where(...).delete_all`. These bypass ActiveRecord callbacks entirely. FR70 is met at the application layer (destroy), but not at the raw SQL layer. A database-level trigger or revoked DELETE privilege would close this gap project-wide.
+- `spec/models/concerns/deletion_protection_spec.rb` is a near-duplicate of the shared example already exercised via `borrower_spec.rb`. Minor test file hygiene — not blocking.

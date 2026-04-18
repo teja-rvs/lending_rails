@@ -6,6 +6,25 @@ RSpec.describe Borrower, type: :model do
   it { is_expected.to validate_presence_of(:full_name) }
   it { is_expected.to validate_presence_of(:phone_number) }
 
+  describe "deletion protection" do
+    subject { create(:borrower) }
+
+    it_behaves_like "deletion protected"
+  end
+
+  describe 'version tracking' do
+    it 'responds to versions' do
+      expect(Borrower.new).to respond_to(:versions)
+    end
+
+    it 'creates a PaperTrail version on create' do
+      borrower = create(:borrower)
+
+      expect(borrower.versions.count).to eq(1)
+      expect(borrower.versions.last.event).to eq("create")
+    end
+  end
+
   describe 'identity' do
     it 'uses uuid primary keys' do
       saved_borrower = create(:borrower)

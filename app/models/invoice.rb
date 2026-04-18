@@ -1,4 +1,5 @@
 class Invoice < ApplicationRecord
+  include DeletionProtection
   INVOICE_TYPES = %w[disbursement payment].freeze
 
   belongs_to :loan

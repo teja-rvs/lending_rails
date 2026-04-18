@@ -1,6 +1,12 @@
 require "rails_helper"
 
 RSpec.describe ReviewStep, type: :model do
+  describe "deletion protection" do
+    subject { create(:review_step) }
+
+    it_behaves_like "deletion protected"
+  end
+
   describe "workflow definition" do
     it "exposes the fixed MVP review sequence from one canonical place" do
       expect(described_class.workflow_definition.map(&:step_key)).to eq(

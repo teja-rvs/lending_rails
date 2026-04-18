@@ -5,6 +5,25 @@ RSpec.describe Payment, type: :model do
 
   it { is_expected.to belong_to(:loan) }
 
+  describe "associations" do
+    it "has one invoice resolving to the payment's own invoice" do
+      loan = create(:loan, :active, :with_details)
+      payment = create(:payment, :completed, loan: loan)
+      create(:invoice, :disbursement, loan: loan)
+      payment_invoice = create(:invoice, :payment, payment: payment)
+
+      expect(payment.reload.invoice).to eq(payment_invoice)
+    end
+
+    it "prevents destroying a payment that has an invoice" do
+      loan = create(:loan, :active, :with_details)
+      payment = create(:payment, :completed, loan: loan)
+      create(:invoice, :payment, payment: payment)
+
+      expect { payment.destroy }.to raise_error(ActiveRecord::DeleteRestrictionError)
+    end
+  end
+
   describe "validations" do
     it "requires the core scheduling fields" do
       payment = build(

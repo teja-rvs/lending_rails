@@ -4,6 +4,7 @@ class Payment < ApplicationRecord
   PAYMENT_MODES = %w[cash upi bank_transfer cheque other].freeze
 
   belongs_to :loan
+  has_one :invoice, dependent: :restrict_with_exception
   has_paper_trail
 
   monetize :principal_amount_cents

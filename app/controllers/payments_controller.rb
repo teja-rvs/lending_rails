@@ -19,7 +19,7 @@ class PaymentsController < ApplicationController
   end
 
   def mark_completed
-    result = Payments::MarkCompleted.call(
+    result = Loans::RecordRepayment.call(
       payment: @payment,
       payment_date: completion_params[:payment_date],
       payment_mode: completion_params[:payment_mode],

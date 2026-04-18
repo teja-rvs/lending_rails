@@ -3,6 +3,13 @@ require "rails_helper"
 RSpec.describe Invoice, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:loan) }
+    it { is_expected.to belong_to(:payment).optional }
+  end
+
+  describe "INVOICE_TYPES" do
+    it "includes disbursement and payment" do
+      expect(Invoice::INVOICE_TYPES).to include("disbursement", "payment")
+    end
   end
 
   describe "validations" do
@@ -21,8 +28,19 @@ RSpec.describe Invoice, type: :model do
     it ".disbursement returns only disbursement invoices" do
       loan = create(:loan, :with_details)
       disbursement_inv = create(:invoice, loan: loan, invoice_type: "disbursement")
+      payment = create(:payment, :completed, loan: create(:loan, :active, :with_details))
+      create(:invoice, :payment, payment: payment)
 
       expect(described_class.disbursement).to contain_exactly(disbursement_inv)
+    end
+
+    it ".payment returns only payment invoices" do
+      loan = create(:loan, :with_details)
+      create(:invoice, loan: loan, invoice_type: "disbursement")
+      payment = create(:payment, :completed, loan: create(:loan, :active, :with_details))
+      payment_inv = create(:invoice, :payment, payment: payment)
+
+      expect(described_class.payment).to contain_exactly(payment_inv)
     end
 
     it ".ordered returns invoices by issued_on desc, created_at desc" do
@@ -30,7 +48,7 @@ RSpec.describe Invoice, type: :model do
       older = create(:invoice, loan: loan, issued_on: 2.days.ago)
       newer = create(:invoice, loan: loan, issued_on: Date.current)
 
-      expect(described_class.ordered).to eq([newer, older])
+      expect(described_class.ordered).to eq([ newer, older ])
     end
   end
 
@@ -53,6 +71,32 @@ RSpec.describe Invoice, type: :model do
       create(:invoice, loan: loan, invoice_number: "OTHER-9999")
 
       expect(described_class.next_invoice_number).to eq("INV-0006")
+    end
+  end
+
+  describe "payment linkage validations" do
+    it "is invalid when a payment invoice has no payment" do
+      loan = create(:loan, :active, :with_details)
+      invoice = build(:invoice, loan: loan, invoice_type: "payment", payment: nil)
+
+      expect(invoice).not_to be_valid
+      expect(invoice.errors[:payment]).to include("can't be blank")
+    end
+
+    it "is invalid when a disbursement invoice has a payment attached" do
+      loan = create(:loan, :active, :with_details)
+      payment = create(:payment, :completed, loan: loan)
+      invoice = build(:invoice, loan: loan, invoice_type: "disbursement", payment: payment)
+
+      expect(invoice).not_to be_valid
+      expect(invoice.errors[:payment]).to include("must be blank for disbursement invoices")
+    end
+
+    it "is valid when a disbursement invoice has no payment" do
+      loan = create(:loan, :active, :with_details)
+      invoice = build(:invoice, loan: loan, invoice_type: "disbursement", payment: nil)
+
+      expect(invoice).to be_valid
     end
   end
 

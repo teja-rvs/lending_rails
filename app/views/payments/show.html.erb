@@ -122,6 +122,10 @@
               <%= completed_by_user&.email_address || "—" %>
             </dd>
           </div>
+          <div>
+            <dt class="text-sm font-medium text-slate-500">Payment invoice</dt>
+            <dd class="mt-2 text-base font-semibold text-slate-950"><%= @payment.invoice&.invoice_number || "—" %></dd>
+          </div>
           <div class="sm:col-span-2">
             <dt class="text-sm font-medium text-slate-500">Notes</dt>
             <dd class="mt-2 text-base leading-6 text-slate-800"><%= @payment.notes.presence || "—" %></dd>

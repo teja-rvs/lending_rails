@@ -129,6 +129,10 @@ class Loan < ApplicationRecord
     invoices.disbursement.first
   end
 
+  def payment_invoices
+    invoices.payment.ordered
+  end
+
   def disbursed?
     active? || overdue? || closed?
   end

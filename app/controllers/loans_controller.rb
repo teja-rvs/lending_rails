@@ -11,7 +11,7 @@ class LoansController < ApplicationController
   def show
     set_disbursement_readiness
     @document_upload = @loan.document_uploads.build(uploaded_by: Current.user)
-    @payments = @loan.payments.ordered
+    @payments = @loan.payments.includes(:invoice).ordered
   end
 
   def update

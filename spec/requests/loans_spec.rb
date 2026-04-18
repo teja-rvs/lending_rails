@@ -455,6 +455,7 @@ RSpec.describe "Loans", type: :request do
     assert_select "th", text: "Interest"
     assert_select "th", text: "Total"
     assert_select "th", text: "Status"
+    assert_select "th", text: "Invoice"
     assert_select "th", text: "Open"
     assert_select "td", text: "1"
     assert_select "td", text: "2"
@@ -464,6 +465,21 @@ RSpec.describe "Loans", type: :request do
     assert_select "dt", text: "Pending installments"
     assert_select "dt", text: "Overdue installments"
     assert_select "a[href='#{payment_path(first_payment, from: "loans")}']", text: "Open payment"
+  end
+
+  it "renders the invoice number in the repayment schedule for completed installments" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, loan_number: "LOAN-5006C")
+    completed_payment = create(:payment, :completed, loan:, installment_number: 1, due_date: Date.current - 10.days)
+    create(:invoice, :payment, payment: completed_payment, invoice_number: "INV-9000")
+    create(:payment, :pending, loan:, installment_number: 2, due_date: Date.current + 20.days)
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("INV-9000")
+    assert_select "td", text: "—"
   end
 
   it "does not render the repayment schedule section before disbursement" do

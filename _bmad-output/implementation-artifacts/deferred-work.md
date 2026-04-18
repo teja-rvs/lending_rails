@@ -14,3 +14,7 @@
 - No loan-state guard — a payment can be marked completed on a loan still in `ready_for_disbursement`, `closed`, or `cancelled`. Story 5-3 spec scope is payment-state only; loan-state invariants belong to 5-5/5-6. [app/services/payments/mark_completed.rb:22]
 - Out-of-order installment completion allowed — installment #5 can be marked completed while #1-#4 remain pending. Overdue derivation in 5-5 will need to handle it. [app/services/payments/mark_completed.rb]
 - No length bound on `Payment#notes` — arbitrarily large blobs accepted and then locked permanently. Pre-existing model concern. [app/models/payment.rb:16]
+
+## Deferred from: code review of story 5-4-generate-payment-financial-records-and-preserve-the-accounting-boundary (2026-04-18)
+
+- Cross-loan isolation spec for `loan_receivable` / `repayment_received` scopes (Dev Notes Edge Case #7) — intrinsic to `DoubleEntry.account(scope: loan)` and guarded structurally by the `scope_identifier: loan_scope` initializer contract; no current code change threatens the invariant. Add later if a bug in `loan_scope` is ever suspected. [spec/services/loans/record_repayment_spec.rb]

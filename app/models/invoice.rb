@@ -1,7 +1,8 @@
 class Invoice < ApplicationRecord
-  INVOICE_TYPES = %w[disbursement].freeze
+  INVOICE_TYPES = %w[disbursement payment].freeze
 
   belongs_to :loan
+  belongs_to :payment, optional: true
   has_paper_trail
 
   monetize :amount_cents
@@ -15,8 +16,11 @@ class Invoice < ApplicationRecord
   validates :invoice_type, presence: true, inclusion: { in: INVOICE_TYPES }
   validates :amount_cents, presence: true, numericality: { greater_than: 0 }
   validates :issued_on, presence: true
+  validates :payment, presence: true, if: -> { invoice_type == "payment" }
+  validate :payment_absent_for_disbursement_invoices
 
   scope :disbursement, -> { where(invoice_type: "disbursement") }
+  scope :payment, -> { where(invoice_type: "payment") }
   scope :ordered, -> { order(issued_on: :desc, created_at: :desc) }
 
   def self.next_invoice_number
@@ -34,4 +38,12 @@ class Invoice < ApplicationRecord
       create!(**attributes, invoice_number: next_invoice_number)
     end
   end
+
+  private
+    def payment_absent_for_disbursement_invoices
+      return unless invoice_type == "disbursement"
+      return if payment_id.blank?
+
+      errors.add(:payment, "must be blank for disbursement invoices")
+    end
 end

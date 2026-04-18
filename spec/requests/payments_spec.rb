@@ -13,6 +13,22 @@ RSpec.describe "Payments", type: :request do
     post session_path, params: { email_address: user.email_address, password: "password123!" }
   end
 
+  # Seed the loan_receivable account so RecordRepayment can transfer from it.
+  # Mirrors the post-disbursement ledger state without running the full disburse service.
+  def seed_receivable_for(loan, amount_cents: loan.principal_amount_cents || 4_500_000)
+    clearing = DoubleEntry.account(:disbursement_clearing, scope: loan)
+    receivable = DoubleEntry.account(:loan_receivable, scope: loan)
+    DoubleEntry.lock_accounts(clearing, receivable) do
+      DoubleEntry.transfer(
+        Money.new(amount_cents, "INR"),
+        from: clearing,
+        to: receivable,
+        code: :disbursement,
+        metadata: { loan_id: loan.id }
+      )
+    end
+  end
+
   it "redirects unauthenticated visitors away from the payments list" do
     get payments_path
 
@@ -128,6 +144,7 @@ RSpec.describe "Payments", type: :request do
       user = create(:user, email_address: "admin@example.com")
       loan = create(:loan, :active, :with_details, loan_number: "LOAN-5801")
       payment = create(:payment, :pending, loan:, installment_number: 2, due_date: Date.current + 3.days)
+      seed_receivable_for(loan)
 
       sign_in_as(user)
       patch mark_completed_payment_path(payment, from: "payments"),
@@ -137,6 +154,60 @@ RSpec.describe "Payments", type: :request do
       expect(flash[:notice]).to include("LOAN-5801")
       expect(flash[:notice]).to include("#2")
       expect(payment.reload).to be_completed
+    end
+
+    it "creates a payment invoice and posts ledger lines on successful completion" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details)
+      payment = create(:payment, :pending, loan:, installment_number: 1, due_date: Date.current + 3.days)
+      seed_receivable_for(loan)
+
+      sign_in_as(user)
+
+      expect {
+        patch mark_completed_payment_path(payment, from: "payments"),
+              params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+      }.to change { Invoice.payment.where(payment_id: payment.id).count }.from(0).to(1)
+        .and change { DoubleEntry::Line.where(account: "repayment_received", scope: loan.id).count }.by(1)
+        .and change { DoubleEntry::Line.where(account: "loan_receivable", scope: loan.id).count }.by(1)
+
+      expect(response).to redirect_to(payment_path(payment, from: "payments"))
+      expect(payment.reload).to be_completed
+    end
+
+    it "renders the invoice number on the payment detail page after completion" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details)
+      payment = create(:payment, :pending, loan:, installment_number: 1, due_date: Date.current + 3.days)
+      seed_receivable_for(loan)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      follow_redirect!
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to match(/INV-\d{4,}/)
+    end
+
+    it "does not create invoice or ledger lines when completion is blocked (missing payment_date)" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details)
+      payment = create(:payment, :pending, loan:)
+
+      sign_in_as(user)
+
+      invoice_count_before = Invoice.count
+      lines_before = DoubleEntry::Line.where(account: "repayment_received").count
+
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: "", payment_mode: "cash" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(payment.reload).to be_pending
+      expect(Invoice.count).to eq(invoice_count_before)
+      expect(DoubleEntry::Line.where(account: "repayment_received").count).to eq(lines_before)
     end
 
     it "re-renders the detail page with the blocked alert when payment_date is missing" do
@@ -182,6 +253,7 @@ RSpec.describe "Payments", type: :request do
     it "preserves the from=loans breadcrumb through the redirect" do
       user = create(:user, email_address: "admin@example.com")
       payment = create(:payment, :pending)
+      seed_receivable_for(payment.loan)
 
       sign_in_as(user)
       patch mark_completed_payment_path(payment, from: "loans"),
@@ -196,7 +268,7 @@ RSpec.describe "Payments", type: :request do
       set_signed_session_cookie(session_record)
       payment = create(:payment, :pending)
 
-      expect(Payments::MarkCompleted).not_to receive(:call)
+      expect(Loans::RecordRepayment).not_to receive(:call)
 
       patch mark_completed_payment_path(payment),
             params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
@@ -209,6 +281,7 @@ RSpec.describe "Payments", type: :request do
     it "captures the signed-in admin as PaperTrail whodunnit on the completion version" do
       user = create(:user, email_address: "admin@example.com")
       payment = create(:payment, :pending)
+      seed_receivable_for(payment.loan)
 
       sign_in_as(user)
       patch mark_completed_payment_path(payment, from: "payments"),
@@ -217,6 +290,22 @@ RSpec.describe "Payments", type: :request do
       expect(response).to redirect_to(payment_path(payment, from: "payments"))
       expect(payment.reload).to be_completed
       expect(payment.versions.where(event: "update").last.whodunnit).to eq(user.id.to_s)
+    end
+
+    it "captures the signed-in admin as PaperTrail whodunnit on the invoice creation version" do
+      user = create(:user, email_address: "admin@example.com")
+      payment = create(:payment, :pending)
+      seed_receivable_for(payment.loan)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      invoice = payment.reload.invoice
+      expect(invoice).to be_present
+      create_version = invoice.versions.where(event: "create").first
+      expect(create_version).to be_present
+      expect(create_version.whodunnit).to eq(user.id.to_s)
     end
   end
 

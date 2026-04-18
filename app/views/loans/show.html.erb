@@ -496,6 +496,7 @@
                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Interest</th>
                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Total</th>
                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Status</th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Invoice</th>
                 <th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Open</th>
               </tr>
             </thead>
@@ -510,6 +511,7 @@
                   <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700">
                     <%= render Shared::StatusBadgeComponent.new(label: payment.status_label, tone: payment.status_tone) %>
                   </td>
+                  <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><%= payment.invoice&.invoice_number || "—" %></td>
                   <td class="whitespace-nowrap px-4 py-4 text-right text-sm">
                     <%= link_to "Open payment", payment_path(payment, from: "loans"), class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
                   </td>

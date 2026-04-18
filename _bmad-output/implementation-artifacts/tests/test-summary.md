@@ -1,35 +1,48 @@
 # Test Automation Summary
 
+Generated: 2026-04-18
+
 ## Generated Tests
 
-### API Tests
-- [x] `spec/requests/loans_spec.rb` - Verifies an active loan detail page renders the disbursement summary with invoice metadata, amount text, and locked post-disbursement state.
-- [x] `spec/requests/loans_spec.rb` - Verifies an active loan using the `total_interest_amount` variant renders the fixed-interest summary and locked post-disbursement state server-side.
-- [x] `spec/requests/loans_spec.rb` - Verifies a ready loan using the `total_interest_amount` variant renders the blocked readiness summary and disables the handoff action when the fixed-interest amount is missing.
+### Service Specs
+- [x] `spec/services/payments/late_fee_policy_spec.rb` — Validates the `Payments::LateFeePolicy` module: flat fee value, type contract, determinism, frozen constant (4 examples)
+- [x] `spec/services/review_steps/transition_spec.rb` — Validates the abstract `ReviewSteps::Transition` base class: NotImplementedError contract, shared guard behaviour across all subclass scenarios (11 examples)
 
-### E2E Tests
-- [x] `spec/system/loan_detail_flow_spec.rb` - Covers the admin disbursement confirmation flow from a ready loan through the locked post-disbursement UI, including invoice number visibility.
-- [x] `spec/system/loan_detail_flow_spec.rb` - Covers recovery from a blocked ready-for-disbursement state by completing missing financial details, confirming readiness, and successfully disbursing.
-- [x] `spec/system/loan_detail_flow_spec.rb` - Covers the guarded disbursement browser flow for loans that use the `total_interest_amount` variant, verifying the fixed-interest summary survives through the locked post-disbursement state.
-- [x] `spec/system/loan_detail_flow_spec.rb` - Covers recovery from a blocked `total_interest_amount` readiness state by entering the missing fixed-interest amount and completing disbursement end-to-end.
+### Query Specs
+- [x] `spec/queries/borrowers/lookup_query_spec.rb` — Validates `Borrowers::LookupQuery`: phone search, name search (case-insensitive, substring), blank/whitespace handling, custom scope, empty results, fallback behaviour (11 examples)
 
-### Supporting Service Coverage
-- [x] `spec/services/loans/evaluate_disbursement_readiness_spec.rb` - Verifies readiness succeeds for complete `total_interest_amount` loans and surfaces the correct missing-field message when the fixed-interest amount is absent.
-- [x] `spec/services/loans/disburse_spec.rb` - Verifies disbursement rolls back loan state and accounting side effects when invoice creation is blocked.
+### Model Specs
+- [x] `spec/models/session_spec.rb` — Validates the `Session` model: belongs_to user, creation, validation, multiple sessions per user, destruction (5 examples)
+
+### System (E2E) Specs
+- [x] `spec/system/payment_workflow_spec.rb` — End-to-end payment admin workflow: browse payments, drill into pending payment, mark complete, overdue derivation and late fees, filter by overdue view, empty filter state, resolve overdue loan back to active, close loan on final payment, validation errors, breadcrumb navigation (8 examples)
+- [x] `spec/system/repayment_schedule_spec.rb` — End-to-end repayment schedule viewing: schedule section visibility, installment table columns, pre-disbursement guard, completed/pending counts, invoice display, overdue and late fee summary, drill into specific payment, auto-close on all completed (8 examples)
+
+## Test Results
+
+```
+558 examples, 0 failures
+Line Coverage: 97.14% (1732 / 1783)
+Branch Coverage: 83.98% (430 / 512)
+```
 
 ## Coverage
-- Request coverage: 3/3 targeted disbursement rendering and blocked-readiness request paths covered in `spec/requests/loans_spec.rb`
-- Browser workflow coverage: 4/4 targeted guarded-disbursement browser paths covered in `spec/system/loan_detail_flow_spec.rb`
-- Service edge coverage: 3/3 targeted readiness and rollback paths covered in `spec/services/loans/evaluate_disbursement_readiness_spec.rb` and `spec/services/loans/disburse_spec.rb`
-- Full RSpec suite line coverage after this pass: 96.59%
-- Full RSpec suite branch coverage after this pass: 80.73%
 
-## Validation
-- [x] Ran `bundle exec rspec spec/services/loans/evaluate_disbursement_readiness_spec.rb spec/services/loans/disburse_spec.rb spec/requests/loans_spec.rb spec/system/loan_detail_flow_spec.rb`
-- [x] Focused spec result: 53 examples, 0 failures
-- [x] Focused run required follow-up full-suite validation because `SimpleCov` thresholds are enforced for narrow runs in this repo
-- [x] Ran `bundle exec rspec`
-- [x] Result: 322 examples, 0 failures
+| Category | Before | After | Delta |
+|---|---|---|---|
+| Total examples | 511 | 558 | +47 |
+| Line coverage | ~96% | 97.14% | improved |
+| Branch coverage | ~82% | 83.98% | improved |
+
+### Gaps Closed
+- **Payments::LateFeePolicy** — was only indirectly tested via `ApplyLateFee` spec; now has dedicated policy spec
+- **ReviewSteps::Transition** — abstract base class was only tested through subclass specs; now has explicit contract and shared guard tests
+- **Borrowers::LookupQuery** — was only exercised indirectly via borrower request specs; now has comprehensive query-level spec
+- **Session model** — had no model spec despite being used in auth flows; now validates associations and lifecycle
+- **Payment workflow (system)** — no system spec existed for the payments E2E experience; now covers browse → drill → complete flow, overdue derivation, filters, and loan closure
+- **Repayment schedule (system)** — no system spec existed for viewing the schedule; now covers schedule visibility, table rendering, invoice display, overdue/late-fee summary, and navigation
 
 ## Next Steps
-- No additional high-value gaps were identified in the guarded disbursement and invoice test slice after this pass.
+- Run tests in CI
+- Add edge cases for concurrent payment completion (race conditions)
+- Consider adding system spec for password-protected payment operations by non-admin users

@@ -80,6 +80,17 @@ RSpec.describe Loan, type: :model do
       expect(loan.total_scheduled_amount).to eq(843_750)
     end
   end
+
+  describe "#total_late_fees_cents" do
+    it "returns the summed late fees in cents and defaults to zero" do
+      expect(loan.total_late_fees_cents).to eq(0)
+
+      create(:payment, :with_late_fee, loan:, installment_number: 1)
+      create(:payment, loan:, installment_number: 2, late_fee_cents: 500)
+
+      expect(loan.total_late_fees_cents).to eq(Payments::LateFeePolicy.flat_fee_cents + 500)
+    end
+  end
 end
 require "rails_helper"
 
@@ -279,6 +290,15 @@ RSpec.describe Loan do
       expect(build(:loan, :overdue).may_resolve_overdue?).to be true
       expect(build(:loan, :active).may_resolve_overdue?).to be false
       expect(build(:loan, :closed).may_resolve_overdue?).to be false
+    end
+
+    it "may_close? is true only from active and overdue" do
+      expect(build(:loan, :active).may_close?).to be true
+      expect(build(:loan, :overdue).may_close?).to be true
+      expect(build(:loan, :created).may_close?).to be false
+      expect(build(:loan, :documentation_in_progress).may_close?).to be false
+      expect(build(:loan, :ready_for_disbursement).may_close?).to be false
+      expect(build(:loan, :closed).may_close?).to be false
     end
   end
 

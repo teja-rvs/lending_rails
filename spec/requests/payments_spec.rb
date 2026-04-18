@@ -13,6 +13,10 @@ RSpec.describe "Payments", type: :request do
     post session_path, params: { email_address: user.email_address, password: "password123!" }
   end
 
+  def formatted_money(cents)
+    ApplicationController.helpers.humanized_money_with_symbol(Money.new(cents, "INR"))
+  end
+
   # Seed the loan_receivable account so RecordRepayment can transfer from it.
   # Mirrors the post-disbursement ledger state without running the full disburse service.
   def seed_receivable_for(loan, amount_cents: loan.principal_amount_cents || 4_500_000)
@@ -154,6 +158,23 @@ RSpec.describe "Payments", type: :request do
       expect(flash[:notice]).to include("LOAN-5801")
       expect(flash[:notice]).to include("#2")
       expect(payment.reload).to be_completed
+    end
+
+    it "closes the loan when the final remaining payment is completed without changing the success flash" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5801A")
+      create(:payment, :completed, loan:, installment_number: 1, due_date: Date.current - 20.days)
+      final_payment = create(:payment, :pending, loan:, installment_number: 2, due_date: Date.current + 3.days)
+      seed_receivable_for(loan, amount_cents: final_payment.total_amount_cents)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(final_payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to redirect_to(payment_path(final_payment, from: "payments"))
+      expect(flash[:notice]).to eq("Payment ##{final_payment.installment_number} for #{loan.loan_number} recorded as completed.")
+      expect(final_payment.reload).to be_completed
+      expect(loan.reload).to be_closed
     end
 
     it "creates a payment invoice and posts ledger lines on successful completion" do
@@ -323,7 +344,7 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "overdue derivation freshness (Story 5.5)" do
-    it "marks a pending-past-due payment overdue on GET /payments/:id" do
+    it "marks a pending-past-due payment overdue and applies the late fee on GET /payments/:id" do
       user = create(:user, email_address: "admin@example.com")
       loan = create(:loan, :active, :with_details, disbursement_date: Date.current - 60.days)
       payment = create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current - 3.days)
@@ -333,6 +354,9 @@ RSpec.describe "Payments", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(payment.reload).to be_overdue
+      expect(payment.late_fee_cents).to eq(Payments::LateFeePolicy.flat_fee_cents)
+      assert_select "dt", text: "Late fee"
+      assert_select "dd", text: formatted_money(Payments::LateFeePolicy.flat_fee_cents)
     end
 
     it "derives overdue payments on GET /payments index" do
@@ -373,6 +397,19 @@ RSpec.describe "Payments", type: :request do
       expect(response).to redirect_to(payment_path(overdue_payment, from: "payments"))
       expect(overdue_payment.reload).to be_completed
       expect(loan.reload).to be_active
+    end
+
+    it "renders successfully for a completed payment whose loan closes during the refresh" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, disbursement_date: Date.current - 60.days)
+      payment = create(:payment, :completed, loan: loan, installment_number: 1, due_date: Date.current - 5.days)
+
+      sign_in_as(user)
+      get payment_path(payment, from: "payments")
+
+      expect(response).to have_http_status(:ok)
+      expect(payment.reload).to be_completed
+      expect(loan.reload).to be_closed
     end
   end
 end

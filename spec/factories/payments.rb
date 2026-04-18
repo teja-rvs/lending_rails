@@ -29,5 +29,9 @@ FactoryBot.define do
     trait :overdue do
       status { "overdue" }
     end
+
+    trait :with_late_fee do
+      late_fee_cents { Payments::LateFeePolicy.flat_fee_cents }
+    end
   end
 end

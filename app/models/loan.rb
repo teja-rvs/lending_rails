@@ -145,6 +145,10 @@ class Loan < ApplicationRecord
     payments.sum(:total_amount_cents)
   end
 
+  def total_late_fees_cents
+    payments.sum(:late_fee_cents)
+  end
+
   def editable_details?
     %i[created documentation_in_progress ready_for_disbursement].include?(aasm.current_state)
   end

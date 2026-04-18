@@ -13,6 +13,10 @@ RSpec.describe "Loans", type: :request do
     post session_path, params: { email_address: user.email_address, password: "password123!" }
   end
 
+  def formatted_money(cents)
+    ApplicationController.helpers.humanized_money_with_symbol(Money.new(cents, "INR"))
+  end
+
   it "redirects unauthenticated visitors away from the loans list" do
     get loans_path
 
@@ -557,6 +561,35 @@ RSpec.describe "Loans", type: :request do
       assert_select "span", text: "Overdue"
       assert_select "dd", text: "1"
       expect(loan.reload).to be_overdue
+    end
+
+    it "shows total late fees assessed on the loan repayment summary when a late fee is derived" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5950A", disbursement_date: Date.current - 60.days)
+      payment = create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current - 2.days)
+
+      sign_in_as(user)
+      get loan_path(loan, from: "loans")
+
+      expect(response).to have_http_status(:ok)
+      expect(payment.reload).to be_overdue
+      expect(payment.late_fee_cents).to eq(Payments::LateFeePolicy.flat_fee_cents)
+      assert_select "dt", text: "Total late fees assessed"
+      assert_select "dd", text: formatted_money(Payments::LateFeePolicy.flat_fee_cents)
+      assert_select "a[href='#{payment_path(payment, from: "loans")}']", text: "Open payment"
+    end
+
+    it "renders the loan as Closed when all payments have been completed" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5951A", disbursement_date: Date.current - 60.days)
+      create(:payment, :completed, loan: loan, installment_number: 1, due_date: Date.current - 30.days)
+
+      sign_in_as(user)
+      get loan_path(loan, from: "loans")
+
+      expect(response).to have_http_status(:ok)
+      expect(loan.reload).to be_closed
+      assert_select "span", text: "Closed"
     end
 
     it "leaves an active loan as Active when only future-dated payments exist" do

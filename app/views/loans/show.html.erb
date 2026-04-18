@@ -461,6 +461,13 @@
           <dt class="text-sm font-medium text-slate-500">Total scheduled amount</dt>
           <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(Money.new(@loan.total_scheduled_amount, "INR")) %></dd>
         </div>
+
+        <div class="sm:col-span-2 lg:col-span-4">
+          <dt class="text-sm font-medium text-slate-500">Total late fees assessed</dt>
+          <dd class="mt-2 text-lg font-semibold text-slate-950">
+            <%= @loan.total_late_fees_cents.positive? ? humanized_money_with_symbol(Money.new(@loan.total_late_fees_cents, "INR")) : "—" %>
+          </dd>
+        </div>
       </dl>
 
       <% next_pending = payments.find(&:pending?) %>

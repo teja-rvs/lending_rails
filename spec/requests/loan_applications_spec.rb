@@ -160,6 +160,71 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "td", text: "Rahul Singh", count: 0
   end
 
+  it "searches the applications list by borrower phone number" do
+    user = create(:user, email_address: "admin@example.com")
+    matching_borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    matching = create(:loan_application, borrower: matching_borrower, application_number: "APP-0103", status: "open")
+    other_borrower = create(:borrower, full_name: "Rahul Singh", phone_number: "91234 56789")
+    create(:loan_application, borrower: other_borrower, application_number: "APP-0104", status: "open")
+
+    sign_in_as(user)
+    get loan_applications_path, params: { q: "98765" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_application_path(matching, from: "applications")}']", text: matching.application_number
+    assert_select "td", text: "Rahul Singh", count: 0
+  end
+
+  it "searches the applications list by application number" do
+    user = create(:user, email_address: "admin@example.com")
+    matching = create(:loan_application, application_number: "APP-0105", status: "open")
+    create(:loan_application, application_number: "APP-0106", status: "open")
+
+    sign_in_as(user)
+    get loan_applications_path, params: { q: "APP-0105" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_application_path(matching, from: "applications")}']", text: matching.application_number
+    assert_select "a", text: "APP-0106", count: 0
+  end
+
+  it "applies search and status filters together on the applications list" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    matching = create(:loan_application, borrower:, application_number: "APP-0107", status: "approved")
+    create(:loan_application, borrower:, application_number: "APP-0108", status: "open")
+
+    sign_in_as(user)
+    get loan_applications_path, params: { q: "Asha", status: "approved" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_application_path(matching, from: "applications")}']", text: matching.application_number
+    assert_select "a", text: "APP-0108", count: 0
+  end
+
+  it "shows 'No applications match' empty state when search returns no results" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan_application, application_number: "APP-0109", status: "open")
+
+    sign_in_as(user)
+    get loan_applications_path, params: { q: "nonexistent" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "No applications match the current filters"
+    assert_select "a", text: "Clear filters"
+  end
+
+  it "preserves the status filter in the search form via hidden field" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan_application, application_number: "APP-0110", status: "approved")
+
+    sign_in_as(user)
+    get loan_applications_path, params: { status: "approved" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "input[type='hidden'][name='status'][value='approved']"
+  end
+
   it "filters the applications list by multi-status comma param" do
     user = create(:user, email_address: "admin@example.com")
     open_app = create(:loan_application, application_number: "APP-0201", status: "open")

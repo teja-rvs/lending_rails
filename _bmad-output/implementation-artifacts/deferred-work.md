@@ -53,3 +53,10 @@
 - Test specs use inconsistent auth strategies: `post session_path` in loan_applications vs `sign_in_as` in loans/payments. [spec/requests/loan_applications_spec.rb, spec/requests/loans_spec.rb]
 - Currency hardcoded to "INR" in dashboard summary widgets. [app/views/dashboard/show.html.erb:56,62]
 - No unit test exercising `FilteredListQuery#normalized_status` with Array input directly. Covered by integration tests. [app/queries/loan_applications/filtered_list_query.rb:28, app/queries/loans/filtered_list_query.rb:28]
+
+## Deferred from: code review of story 6-3-search-and-investigate-across-linked-lending-records (2026-04-18)
+
+- No database index on `borrowers.phone_number_normalized` for ILIKE search. Three query objects now ILIKE-match against this column; without a `pg_trgm` index, searches will degrade at scale. Pre-existing schema concern. [app/queries/*/filtered_list_query.rb]
+- Tripled raw SQL search predicate across three query objects. Identical `OR borrowers.phone_number_normalized ILIKE :query` in `LoanApplications::FilteredListQuery`, `Loans::FilteredListQuery`, and `Payments::FilteredListQuery`. Pre-existing duplication pattern (the `full_name ILIKE` clause was already duplicated). [app/queries/*/filtered_list_query.rb]
+- Test setup duplication: every test creates `create(:user, email_address: "admin@example.com")` independently. Pre-existing pattern across all request specs. [spec/requests/*_spec.rb]
+- No special-character test for phone search input (`%`, `_`, `+`). `sanitize_sql_like` is used correctly; general test hardening task. [spec/requests/*_spec.rb]

@@ -38,7 +38,7 @@ module LoanApplications
         query = "%#{LoanApplication.sanitize_sql_like(search)}%"
 
         relation.joins(:borrower).where(
-          "loan_applications.application_number ILIKE :query OR borrowers.full_name ILIKE :query",
+          "loan_applications.application_number ILIKE :query OR borrowers.full_name ILIKE :query OR borrowers.phone_number_normalized ILIKE :query",
           query:
         )
       end

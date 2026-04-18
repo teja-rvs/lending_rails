@@ -56,10 +56,10 @@
 
         <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div class="space-y-2">
-            <%= label_tag :q, "Search by loan number or borrower name", class: "block text-sm font-medium text-slate-700" %>
+            <%= label_tag :q, "Search by loan number, borrower name, or phone", class: "block text-sm font-medium text-slate-700" %>
             <%= search_field_tag :q,
                 @search_query,
-                placeholder: "LOAN-0123 or Asha Patel",
+                placeholder: "Loan number, borrower name, or phone",
                 autocomplete: "off",
                 class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
           </div>

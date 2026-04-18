@@ -114,7 +114,7 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_link(matching.application_number, href: loan_application_path(matching, from: "applications"))
     expect(page).not_to have_content("APP-0102")
 
-    fill_in "Search by application number or borrower name", with: "Asha"
+    fill_in "Search by application number, borrower name, or phone", with: "Asha"
     click_button "Search applications"
 
     expect(page).to have_current_path(loan_applications_path, ignore_query: true)

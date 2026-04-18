@@ -111,6 +111,21 @@ RSpec.describe "Loans", type: :request do
     assert_select "td", text: "Rahul Singh", count: 0
   end
 
+  it "searches the loans list by borrower phone number" do
+    user = create(:user, email_address: "admin@example.com")
+    matching_borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    matching = create(:loan, borrower: matching_borrower, loan_number: "LOAN-0113")
+    other_borrower = create(:borrower, full_name: "Rahul Singh", phone_number: "91234 56789")
+    create(:loan, borrower: other_borrower, loan_number: "LOAN-0224")
+
+    sign_in_as(user)
+    get loans_path, params: { q: "98765" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_path(matching, from: "loans")}']", text: matching.loan_number
+    assert_select "td", text: "Rahul Singh", count: 0
+  end
+
   it "filters the loans list by multi-status comma param" do
     user = create(:user, email_address: "admin@example.com")
     active_loan = create(:loan, :active, :with_details, loan_number: "LOAN-0201")
@@ -208,6 +223,50 @@ RSpec.describe "Loans", type: :request do
     assert_select "input[type='submit'][value='Save loan details']"
     assert_select "form.button_to[action='#{begin_documentation_loan_path(loan, from: "loans")}']"
     assert_select "button[disabled='disabled']", text: "Proceed toward disbursement"
+  end
+
+  it "renders linked application link on the loan show page when application exists" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0201", status: "approved")
+    loan = create(
+      :loan,
+      borrower:,
+      loan_application: application,
+      loan_number: "LOAN-2010",
+      status: "created",
+      borrower_full_name_snapshot: "Asha Patel",
+      borrower_phone_number_snapshot: borrower.phone_number_normalized
+    )
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_application_path(application)}']", text: "Application: APP-0201"
+  end
+
+  it "does not render linked application link on the loan show page when application is absent" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :created, loan_number: "LOAN-2012", loan_application: nil)
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a", text: /Application:/, count: 0
+  end
+
+  it "renders 'View all payments' link on the loan show page when payments exist" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, loan_number: "LOAN-2011")
+    create(:payment, loan:, installment_number: 1, due_date: Date.current + 10.days)
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{payments_path(q: loan.loan_number)}']", text: "View all payments"
   end
 
   it "saves editable pre-disbursement details for signed-in admins" do

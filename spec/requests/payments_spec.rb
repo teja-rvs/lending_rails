@@ -74,6 +74,37 @@ RSpec.describe "Payments", type: :request do
     assert_select "span.border-slate-200.bg-slate-100.text-slate-700", text: "Pending"
   end
 
+  it "searches the payments list by borrower phone number" do
+    user = create(:user, email_address: "admin@example.com")
+    matching_borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    matching_loan = create(:loan, :active, :with_details, borrower: matching_borrower, loan_number: "LOAN-5510")
+    matching_payment = create(:payment, loan: matching_loan, installment_number: 1, due_date: Date.current + 5.days)
+    other_borrower = create(:borrower, full_name: "Rahul Singh", phone_number: "91234 56789")
+    other_loan = create(:loan, :active, :with_details, borrower: other_borrower, loan_number: "LOAN-5511")
+    create(:payment, loan: other_loan, installment_number: 1, due_date: Date.current + 5.days)
+
+    sign_in_as(user)
+    get payments_path, params: { q: "98765" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{payment_path(matching_payment, from: "payments")}']"
+    assert_select "td", text: "Rahul Singh", count: 0
+  end
+
+  it "applies search and view filters together on the payments list" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    loan = create(:loan, :active, :with_details, borrower:, loan_number: "LOAN-5512")
+    pending = create(:payment, :pending, loan:, installment_number: 1, due_date: Date.current + 3.days)
+    create(:payment, :completed, loan:, installment_number: 2, due_date: Date.current - 5.days)
+
+    sign_in_as(user)
+    get payments_path, params: { q: "Asha", view: "upcoming" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{payment_path(pending, from: "payments")}']"
+  end
+
   it "renders a constrained list when view=upcoming is applied and matching payments exist" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
@@ -187,6 +218,44 @@ RSpec.describe "Payments", type: :request do
     assert_select "h2", text: "Payment completed"
     assert_select "form[action*='mark_completed']", count: 0
     assert_select "input[type='submit']", count: 0
+  end
+
+  it "renders linked application link on the payment show page when loan has application" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, application_number: "APP-0301", status: "approved")
+    loan = create(:loan, :active, :with_details, borrower:, loan_application: application, loan_number: "LOAN-5710")
+    payment = create(:payment, loan:, installment_number: 1, due_date: Date.current + 5.days)
+
+    sign_in_as(user)
+    get payment_path(payment, from: "payments")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{loan_application_path(application)}']", text: application.application_number
+  end
+
+  it "does not render linked application link on the payment show page when application is absent" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, loan_number: "LOAN-5712", loan_application: nil)
+    payment = create(:payment, loan:, installment_number: 1, due_date: Date.current + 5.days)
+
+    sign_in_as(user)
+    get payment_path(payment, from: "payments")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "dt", text: "Linked application", count: 0
+  end
+
+  it "renders 'View all payments for this loan' link on the payment show page" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, loan_number: "LOAN-5711")
+    payment = create(:payment, loan:, installment_number: 1, due_date: Date.current + 5.days)
+
+    sign_in_as(user)
+    get payment_path(payment, from: "payments")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a[href='#{payments_path(q: loan.loan_number)}']", text: /All payments for LOAN-5711/
   end
 
   describe "PATCH /payments/:id/mark_completed" do

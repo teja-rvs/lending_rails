@@ -2,6 +2,7 @@ class PaymentsController < ApplicationController
   before_action :set_payment, only: %i[show mark_completed]
 
   def index
+    Payments::DeriveOverdueStates.call
     @search_query = params[:q].to_s.squish
     @status_filter = normalized_status_filter
     @view_filter = normalized_view_filter
@@ -16,6 +17,8 @@ class PaymentsController < ApplicationController
   end
 
   def show
+    Loans::RefreshStatus.call(loan: @payment.loan)
+    set_payment
   end
 
   def mark_completed
@@ -27,6 +30,7 @@ class PaymentsController < ApplicationController
     )
 
     if result.success?
+      Loans::RefreshStatus.call(loan: result.payment.loan)
       redirect_to payment_path(@payment, from: params[:from]),
                   notice: "Payment ##{@payment.installment_number} for #{@payment.loan.loan_number} recorded as completed."
     else

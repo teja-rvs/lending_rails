@@ -9,6 +9,8 @@ class LoansController < ApplicationController
   end
 
   def show
+    Loans::RefreshStatus.call(loan: @loan)
+    set_loan
     set_disbursement_readiness
     @document_upload = @loan.document_uploads.build(uploaded_by: Current.user)
     @payments = @loan.payments.includes(:invoice).ordered

@@ -265,6 +265,21 @@ RSpec.describe Loan do
 
       expect { loan.disburse! }.to raise_error(AASM::InvalidTransition)
     end
+
+    it "may_mark_overdue? is true only from :active" do
+      expect(build(:loan, :active).may_mark_overdue?).to be true
+      expect(build(:loan, :created).may_mark_overdue?).to be false
+      expect(build(:loan, :documentation_in_progress).may_mark_overdue?).to be false
+      expect(build(:loan, :ready_for_disbursement).may_mark_overdue?).to be false
+      expect(build(:loan, :overdue).may_mark_overdue?).to be false
+      expect(build(:loan, :closed).may_mark_overdue?).to be false
+    end
+
+    it "may_resolve_overdue? is true only from :overdue" do
+      expect(build(:loan, :overdue).may_resolve_overdue?).to be true
+      expect(build(:loan, :active).may_resolve_overdue?).to be false
+      expect(build(:loan, :closed).may_resolve_overdue?).to be false
+    end
   end
 
   describe "display helpers" do

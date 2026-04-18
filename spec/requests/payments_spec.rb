@@ -321,4 +321,58 @@ RSpec.describe "Payments", type: :request do
     assert_select "a[href='#{loans_path}']", text: "Loans"
     assert_select "a[href='#{loan_path(loan, from: "loans")}']", text: "LOAN-5801"
   end
+
+  describe "overdue derivation freshness (Story 5.5)" do
+    it "marks a pending-past-due payment overdue on GET /payments/:id" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, disbursement_date: Date.current - 60.days)
+      payment = create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current - 3.days)
+
+      sign_in_as(user)
+      get payment_path(payment, from: "payments")
+
+      expect(response).to have_http_status(:ok)
+      expect(payment.reload).to be_overdue
+    end
+
+    it "derives overdue payments on GET /payments index" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, disbursement_date: Date.current - 60.days)
+      payment = create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current - 2.days)
+
+      sign_in_as(user)
+
+      expect { get payments_path }.to change { Payment.where(status: "overdue").count }.by(1)
+      expect(payment.reload).to be_overdue
+    end
+
+    it "shows the derived overdue payment on the view=overdue filter" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5910", disbursement_date: Date.current - 60.days)
+      payment = create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current - 2.days)
+
+      sign_in_as(user)
+      get payments_path, params: { view: "overdue" }
+
+      expect(response).to have_http_status(:ok)
+      expect(payment.reload).to be_overdue
+      assert_select "a[href='#{payment_path(payment, from: "payments")}']"
+    end
+
+    it "back-flips the loan from overdue to active when the last overdue payment is completed" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :overdue, :with_details, disbursement_date: Date.current - 60.days)
+      overdue_payment = create(:payment, :overdue, loan: loan, installment_number: 1, due_date: Date.current - 5.days)
+      create(:payment, :pending, loan: loan, installment_number: 2, due_date: Date.current + 20.days)
+      seed_receivable_for(loan)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(overdue_payment, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to redirect_to(payment_path(overdue_payment, from: "payments"))
+      expect(overdue_payment.reload).to be_completed
+      expect(loan.reload).to be_active
+    end
+  end
 end

@@ -200,6 +200,13 @@ RSpec.describe Payment, type: :model do
       expect(payment.reload.notes).to eq("original")
       expect { payment.update!(notes: "changed") }.to raise_error(ActiveRecord::ReadOnlyRecord)
     end
+
+    it "does not block the pending -> overdue AASM transition (Story 5.5 regression guard)" do
+      payment = create(:payment, :pending, due_date: Date.current - 1.day)
+
+      expect { payment.mark_overdue! }.not_to raise_error
+      expect(payment.reload).to be_overdue
+    end
   end
 
   describe "#editable?" do

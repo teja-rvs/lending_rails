@@ -543,4 +543,55 @@ RSpec.describe "Loans", type: :request do
     assert_select "button[disabled='disabled']", text: "Proceed toward disbursement"
     assert_select "button", text: "Confirm disbursement", count: 0
   end
+
+  describe "overdue derivation freshness (Story 5.5)" do
+    it "renders an active loan as Overdue when a pending-past-due payment exists" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5950", disbursement_date: Date.current - 60.days)
+      create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current - 2.days)
+
+      sign_in_as(user)
+      get loan_path(loan, from: "loans")
+
+      expect(response).to have_http_status(:ok)
+      assert_select "span", text: "Overdue"
+      assert_select "dd", text: "1"
+      expect(loan.reload).to be_overdue
+    end
+
+    it "leaves an active loan as Active when only future-dated payments exist" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5951")
+      create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current + 10.days)
+
+      sign_in_as(user)
+      get loan_path(loan, from: "loans")
+
+      expect(response).to have_http_status(:ok)
+      expect(loan.reload).to be_active
+    end
+
+    it "renders successfully for a ready_for_disbursement loan with no payments" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :ready_for_disbursement, :with_details, loan_number: "LOAN-5952")
+
+      sign_in_as(user)
+      get loan_path(loan, from: "loans")
+
+      expect(response).to have_http_status(:ok)
+      expect(loan.reload).to be_ready_for_disbursement
+    end
+
+    it "renders successfully for a closed loan without mutating state" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details, loan_number: "LOAN-5953", disbursement_date: Date.current - 90.days)
+      loan.update_columns(status: "closed")
+
+      sign_in_as(user)
+      get loan_path(loan, from: "loans")
+
+      expect(response).to have_http_status(:ok)
+      expect(loan.reload).to be_closed
+    end
+  end
 end

@@ -37,6 +37,9 @@ Rails.application.routes.draw do
       patch :replace
     end
   end
+  resources :payments, only: %i[index show], constraints: {
+    id: /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+  }
   mount MissionControl::Jobs::Engine, at: "/jobs"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

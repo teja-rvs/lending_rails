@@ -439,7 +439,7 @@ RSpec.describe "Loans", type: :request do
   it "renders the repayment schedule section for active loans with generated payments" do
     user = create(:user, email_address: "admin@example.com")
     loan = create(:loan, :active, :with_details, loan_number: "LOAN-5006A")
-    create(:payment, loan:, installment_number: 1, due_date: Date.new(2026, 5, 16))
+    first_payment = create(:payment, loan:, installment_number: 1, due_date: Date.new(2026, 5, 16))
     create(:payment, loan:, installment_number: 2, due_date: Date.new(2026, 6, 16))
 
     sign_in_as(user)
@@ -455,9 +455,15 @@ RSpec.describe "Loans", type: :request do
     assert_select "th", text: "Interest"
     assert_select "th", text: "Total"
     assert_select "th", text: "Status"
+    assert_select "th", text: "Open"
     assert_select "td", text: "1"
     assert_select "td", text: "2"
     assert_select "span.border-slate-200.bg-slate-100.text-slate-700", text: "Pending", count: 2
+    assert_select "dt", text: "Next payment due"
+    assert_select "dt", text: "Completed installments"
+    assert_select "dt", text: "Pending installments"
+    assert_select "dt", text: "Overdue installments"
+    assert_select "a[href='#{payment_path(first_payment, from: "loans")}']", text: "Open payment"
   end
 
   it "does not render the repayment schedule section before disbursement" do

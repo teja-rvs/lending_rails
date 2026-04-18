@@ -1,0 +1,217 @@
+<% content_for :title, "Payments | lending_rails" %>
+<% filtered_results = @search_query.present? || @status_filter.present? || @view_filter.present? || @due_window_filter.present? %>
+<% status_tones = {
+  "pending" => :neutral,
+  "completed" => :success,
+  "overdue" => :warning
+} %>
+<% payment_statuses = Payment.aasm.states.map { |state| state.name.to_s } %>
+<% view_options = [
+  [ "all", "All" ],
+  [ "upcoming", "Upcoming" ],
+  [ "overdue", "Overdue" ],
+  [ "completed", "Completed" ]
+] %>
+<% due_windows = [
+  [ nil, "All" ],
+  [ "overdue_by_any", "Overdue by any" ],
+  [ "today", "Due today" ],
+  [ "this_week", "Due this week" ],
+  [ "next_7_days", "Due next 7 days" ],
+  [ "this_month", "Due this month" ]
+] %>
+<% show_due_window_filter = @view_filter != "completed" && @status_filter != "completed" %>
+
+<section class="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8">
+  <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+    <%= link_to "Workspace", root_path, class: "font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-950 hover:decoration-slate-500" %>
+    <span aria-hidden="true" class="text-slate-300">/</span>
+    <span class="font-medium text-slate-950">Payments</span>
+  </nav>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div class="max-w-3xl space-y-3">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Repayment servicing</p>
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Payments</h1>
+        <p class="text-sm leading-6 text-slate-600">
+          Focus on the repayment installments that need attention now. Filter by operational view, repayment state, or due-date window to work through upcoming and overdue payments.
+        </p>
+      </div>
+
+      <%= link_to "Return to workspace", root_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+    </div>
+
+    <%= form_with url: payments_path, method: :get, class: "mt-8 space-y-4" do %>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <% if @view_filter.present? %>
+          <%= hidden_field_tag :view, @view_filter %>
+        <% end %>
+        <% if @status_filter.present? %>
+          <%= hidden_field_tag :status, @status_filter %>
+        <% end %>
+        <% if @due_window_filter.present? %>
+          <%= hidden_field_tag :due_window, @due_window_filter %>
+        <% end %>
+
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div class="space-y-2">
+            <%= label_tag :q, "Search by loan number or borrower name", class: "block text-sm font-medium text-slate-700" %>
+            <%= search_field_tag :q,
+                @search_query,
+                placeholder: "LOAN-0123 or Asha Patel",
+                autocomplete: "off",
+                class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10" %>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <%= submit_tag "Search payments", name: nil, class: "inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2" %>
+            <% if filtered_results %>
+              <%= link_to "Clear filters", payments_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-3">
+          <div class="flex flex-wrap gap-3">
+            <% view_options.each do |value, label| %>
+              <% selected = value == "all" ? @view_filter.blank? : @view_filter == value %>
+              <% href = value == "all" ? payments_path(q: @search_query.presence) : payments_path(q: @search_query.presence, view: value) %>
+              <%= link_to href,
+                  class: [
+                    "inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2",
+                    selected ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950"
+                  ].join(" ") do %>
+                <%= label %>
+              <% end %>
+            <% end %>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <% payment_statuses.each do |status| %>
+              <% selected = @status_filter == status %>
+              <%= link_to payments_path(q: @search_query.presence, view: @view_filter.presence, status: status),
+                  class: [
+                    "inline-flex rounded-full transition focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2",
+                    (selected ? "ring-2 ring-slate-300 ring-offset-1" : "")
+                  ].join(" ") do %>
+                <%= render Shared::StatusBadgeComponent.new(
+                  label: status.humanize,
+                  tone: status_tones.fetch(status, :neutral)
+                ) %>
+              <% end %>
+            <% end %>
+          </div>
+
+          <% if show_due_window_filter %>
+            <div class="flex flex-wrap gap-3 border-t border-slate-200 pt-4">
+              <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Due window</span>
+              <% due_windows.each do |value, label| %>
+                <% selected = value.nil? ? @due_window_filter.blank? : @due_window_filter == value %>
+                <% href = payments_path(q: @search_query.presence, view: @view_filter.presence, status: @status_filter.presence, due_window: value) %>
+                <%= link_to href,
+                    class: [
+                      "inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2",
+                      selected ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950"
+                    ].join(" ") do %>
+                  <%= label %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @payments.any? %>
+      <div class="mt-8 flex items-center justify-between gap-4">
+        <p class="text-sm text-slate-600">
+          <span class="font-semibold text-slate-950"><%= pluralize(@payments.size, "payment") %></span>
+          <%= filtered_results ? "match the current search and status filters." : "are visible in the repayment workspace." %>
+        </p>
+        <% if filtered_results %>
+          <p class="text-sm text-slate-500">
+            <%= @search_query.present? ? "Search: #{@search_query}" : "Showing filtered payments" %>
+          </p>
+        <% end %>
+      </div>
+
+      <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr class="text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <th scope="col" class="px-5 py-4">Payment</th>
+                <th scope="col" class="px-5 py-4">Borrower</th>
+                <th scope="col" class="px-5 py-4">Due date</th>
+                <th scope="col" class="px-5 py-4">Principal</th>
+                <th scope="col" class="px-5 py-4">Interest</th>
+                <th scope="col" class="px-5 py-4">Total</th>
+                <th scope="col" class="px-5 py-4">Status</th>
+                <th scope="col" class="px-5 py-4">Open</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white text-sm text-slate-700">
+              <% @payments.each do |payment| %>
+                <tr>
+                  <td class="px-5 py-4">
+                    <div class="flex flex-col gap-1">
+                      <%= link_to "#{payment.loan.loan_number} · ##{payment.installment_number}",
+                          payment_path(payment, from: "payments"),
+                          class: "font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-700 hover:decoration-slate-500" %>
+                      <span class="text-xs text-slate-500">Installment #<%= payment.installment_number %></span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4 font-medium text-slate-900"><%= payment.loan.borrower.full_name %></td>
+                  <td class="px-5 py-4 text-slate-600">
+                    <div class="flex flex-col gap-1">
+                      <span><%= payment.due_date.to_fs(:long) %></span>
+                      <span class="text-xs text-slate-500"><%= payment_due_hint(payment) %></span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4 text-slate-700"><%= humanized_money_with_symbol(payment.principal_amount) %></td>
+                  <td class="px-5 py-4 text-slate-700"><%= humanized_money_with_symbol(payment.interest_amount) %></td>
+                  <td class="px-5 py-4 font-semibold text-slate-950"><%= humanized_money_with_symbol(payment.total_amount) %></td>
+                  <td class="px-5 py-4">
+                    <%= render Shared::StatusBadgeComponent.new(label: payment.status_label, tone: payment.status_tone) %>
+                  </td>
+                  <td class="px-5 py-4">
+                    <%= link_to "Open payment", payment_path(payment, from: "payments"), class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% elsif @has_payments && filtered_results %>
+      <section class="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-8">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-amber-700">Filtered results</p>
+        <h2 class="mt-4 text-2xl font-semibold text-slate-950">No payments match the current filters</h2>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-700">
+          <% if @view_filter == "overdue" %>
+            No payments are currently marked overdue. Overdue derivation runs as part of a later story, so this list may remain empty until those facts are recorded.
+          <% elsif @view_filter == "completed" %>
+            No payments have been marked completed yet. Completion is recorded through a guarded flow introduced in a later step.
+          <% else %>
+            Clear the current search, view, or due-window filter to return to the broader list of repayment work.
+          <% end %>
+        </p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <%= link_to "Clear filters", payments_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+        </div>
+      </section>
+    <% else %>
+      <section class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Empty workspace</p>
+        <h2 class="mt-4 text-2xl font-semibold text-slate-950">No repayment records yet</h2>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+          Repayment installments appear here once a loan has been disbursed. The disbursement step generates the schedule that drives upcoming and overdue work.
+        </p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <%= link_to "View loans", loans_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
+        </div>
+      </section>
+    <% end %>
+  </section>
+</section>

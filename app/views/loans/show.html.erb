@@ -463,6 +463,28 @@
         </div>
       </dl>
 
+      <% next_pending = payments.find(&:pending?) %>
+      <dl class="mt-6 grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <dt class="text-sm font-medium text-slate-500">Next payment due</dt>
+          <dd class="mt-2 text-lg font-semibold text-slate-950">
+            <%= next_pending ? "#{next_pending.due_date.to_fs(:long)} — #{payment_due_hint(next_pending)}" : "—" %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-slate-500">Completed installments</dt>
+          <dd class="mt-2 text-lg font-semibold text-slate-950"><%= payments.count(&:completed?) %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-slate-500">Pending installments</dt>
+          <dd class="mt-2 text-lg font-semibold text-slate-950"><%= payments.count(&:pending?) %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-slate-500">Overdue installments</dt>
+          <dd class="mt-2 text-lg font-semibold text-slate-950"><%= payments.count(&:overdue?) %></dd>
+        </div>
+      </dl>
+
       <div class="mt-8 overflow-hidden rounded-2xl border border-slate-200">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-slate-200">
@@ -474,6 +496,7 @@
                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Interest</th>
                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Total</th>
                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Status</th>
+                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Open</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 bg-white">
@@ -486,6 +509,9 @@
                   <td class="whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-950"><%= humanized_money_with_symbol(payment.total_amount) %></td>
                   <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700">
                     <%= render Shared::StatusBadgeComponent.new(label: payment.status_label, tone: payment.status_tone) %>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-4 text-right text-sm">
+                    <%= link_to "Open payment", payment_path(payment, from: "loans"), class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
                   </td>
                 </tr>
               <% end %>

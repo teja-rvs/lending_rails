@@ -343,7 +343,7 @@ RSpec.describe "Payments", type: :request do
     assert_select "a[href='#{loan_path(loan, from: "loans")}']", text: "LOAN-5801"
   end
 
-  describe "overdue derivation freshness (Story 5.5)" do
+  describe "overdue derivation freshness on payment views" do
     it "marks a pending-past-due payment overdue and applies the late fee on GET /payments/:id" do
       user = create(:user, email_address: "admin@example.com")
       loan = create(:loan, :active, :with_details, disbursement_date: Date.current - 60.days)

@@ -201,7 +201,7 @@ RSpec.describe Payment, type: :model do
       expect { payment.update!(notes: "changed") }.to raise_error(ActiveRecord::ReadOnlyRecord)
     end
 
-    it "does not block the pending -> overdue AASM transition (Story 5.5 regression guard)" do
+    it "does not block the pending -> overdue AASM transition" do
       payment = create(:payment, :pending, due_date: Date.current - 1.day)
 
       expect { payment.mark_overdue! }.not_to raise_error

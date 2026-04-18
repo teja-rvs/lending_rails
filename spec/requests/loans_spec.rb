@@ -548,7 +548,7 @@ RSpec.describe "Loans", type: :request do
     assert_select "button", text: "Confirm disbursement", count: 0
   end
 
-  describe "overdue derivation freshness (Story 5.5)" do
+  describe "overdue derivation freshness on loan show" do
     it "renders an active loan as Overdue when a pending-past-due payment exists" do
       user = create(:user, email_address: "admin@example.com")
       loan = create(:loan, :active, :with_details, loan_number: "LOAN-5950", disbursement_date: Date.current - 60.days)

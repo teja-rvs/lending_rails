@@ -160,6 +160,72 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "td", text: "Rahul Singh", count: 0
   end
 
+  it "filters the applications list by multi-status comma param" do
+    user = create(:user, email_address: "admin@example.com")
+    open_app = create(:loan_application, application_number: "APP-0201", status: "open")
+    in_progress_app = create(:loan_application, application_number: "APP-0202", status: "in progress")
+    create(:loan_application, application_number: "APP-0203", status: "approved")
+    create(:loan_application, application_number: "APP-0204", status: "rejected")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path, params: { status: "open,in progress" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a", text: open_app.application_number
+    assert_select "a", text: in_progress_app.application_number
+    assert_select "a", text: "APP-0203", count: 0
+    assert_select "a", text: "APP-0204", count: 0
+  end
+
+  it "ignores invalid statuses in a multi-status comma param" do
+    user = create(:user, email_address: "admin@example.com")
+    open_app = create(:loan_application, application_number: "APP-0301", status: "open")
+    create(:loan_application, application_number: "APP-0302", status: "approved")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path, params: { status: "open,bogus" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a", text: open_app.application_number
+    assert_select "a", text: "APP-0302", count: 0
+  end
+
+  it "renders filter context banner when single-status filter is applied" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan_application, application_number: "APP-0601", status: "approved")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path, params: { status: "approved" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div.bg-slate-50", text: /approved applications/i
+    assert_select "a", text: "Clear filters"
+  end
+
+  it "renders filter context banner when multi-status filter is applied" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan_application, application_number: "APP-0401", status: "open")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path, params: { status: "open,in progress" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div.bg-slate-50", text: /open or in progress applications/i
+    assert_select "a", text: "Clear filters"
+  end
+
+  it "renders drill-in empty state for multi-status filter with no results" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan_application, application_number: "APP-0501", status: "approved")
+
+    post session_path, params: { email_address: user.email_address, password: "password123!" }
+    get loan_applications_path, params: { status: "open,in progress" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: /No open or in progress applications/
+    assert_select "a", text: "Return to dashboard"
+  end
+
   it "renders borrower lending context within the application workspace" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")

@@ -91,8 +91,13 @@ class LoanApplicationsController < ApplicationController
     end
 
     def normalized_status_filter
-      candidate = params[:status].to_s.squish.downcase.presence
-      candidate if LoanApplication::STATUSES.include?(candidate)
+      raw = params[:status].to_s.squish.presence
+      return nil if raw.blank?
+
+      candidates = raw.split(",").map { |s| s.strip.downcase }.select { |s| LoanApplication::STATUSES.include?(s) }
+      return nil if candidates.empty?
+
+      candidates.length == 1 ? candidates.first : candidates
     end
 
     def loan_application_redirect_path

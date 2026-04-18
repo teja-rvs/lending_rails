@@ -1,5 +1,7 @@
 <% content_for :title, "Applications | lending_rails" %>
-<% filtered_results = @search_query.present? || @status_filter.present? %>
+<% multi_status = @status_filter.is_a?(Array) %>
+<% status_filter_values = multi_status ? @status_filter : [@status_filter].compact %>
+<% filtered_results = @search_query.present? || status_filter_values.any? %>
 <% status_tones = {
   "open" => :warning,
   "in progress" => :warning,
@@ -30,8 +32,8 @@
 
     <%= form_with url: loan_applications_path, method: :get, class: "mt-8 space-y-4" do %>
       <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <% if @status_filter.present? %>
-          <%= hidden_field_tag :status, @status_filter %>
+        <% if status_filter_values.any? %>
+          <%= hidden_field_tag :status, multi_status ? @status_filter.join(",") : @status_filter %>
         <% end %>
 
         <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
@@ -53,8 +55,17 @@
         </div>
 
         <div class="mt-5 flex flex-wrap gap-3">
+          <% all_selected = status_filter_values.empty? %>
+          <%= link_to loan_applications_path(q: @search_query.presence),
+              class: [
+                "inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2",
+                all_selected ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950"
+              ].join(" ") do %>
+            All
+          <% end %>
+
           <% LoanApplication::STATUSES.each do |status| %>
-            <% selected = @status_filter == status %>
+            <% selected = status_filter_values.include?(status) %>
             <%= link_to loan_applications_path(q: @search_query.presence, status: status),
                 class: [
                   "inline-flex rounded-full transition focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2",
@@ -67,6 +78,15 @@
             <% end %>
           <% end %>
         </div>
+      </div>
+    <% end %>
+
+    <% if status_filter_values.any? %>
+      <div class="mt-8 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-700">
+        <span>
+          Showing <%= status_filter_values.map { |s| s.split.map(&:capitalize).join(" ") }.join(" or ").downcase %> applications
+        </span>
+        <%= link_to "Clear filters", loan_applications_path, class: "font-semibold text-indigo-600 hover:text-indigo-800 transition" %>
       </div>
     <% end %>
 
@@ -119,13 +139,25 @@
     <% elsif @has_applications && filtered_results %>
       <section class="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-8">
         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-amber-700">Filtered results</p>
-        <h2 class="mt-4 text-2xl font-semibold text-slate-950">No applications match the current filters</h2>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-700">
-          Clear the current search or status filter to return to the broader list of operational application work.
-        </p>
-        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-          <%= link_to "Clear filters", loan_applications_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
-        </div>
+        <% if multi_status %>
+          <% filter_label = status_filter_values.map { |s| s.split.map(&:capitalize).join(" ") }.join(" or ").downcase %>
+          <h2 class="mt-4 text-2xl font-semibold text-slate-950">No <%= filter_label %> applications</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-700">
+            No <%= filter_label %> applications at this time.
+          </p>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <%= link_to "Return to dashboard", root_path, class: "inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
+            <%= link_to "Clear filters", loan_applications_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+          </div>
+        <% else %>
+          <h2 class="mt-4 text-2xl font-semibold text-slate-950">No applications match the current filters</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-700">
+            Clear the current search or status filter to return to the broader list of operational application work.
+          </p>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <%= link_to "Clear filters", loan_applications_path, class: "inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950" %>
+          </div>
+        <% end %>
       </section>
     <% else %>
       <section class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8">

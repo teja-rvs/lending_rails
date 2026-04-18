@@ -99,8 +99,62 @@ RSpec.describe "Payments", type: :request do
     get payments_path, params: { view: "overdue" }
 
     expect(response).to have_http_status(:ok)
-    assert_select "h2", text: "No payments match the current filters"
+    assert_select "h2", text: "No overdue payments"
     assert_select "a[href='#{payments_path}']", text: "Clear filters"
+  end
+
+  it "renders filter context banner for overdue view" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details, disbursement_date: Date.current - 60.days)
+    create(:payment, :overdue, loan: loan, installment_number: 1, due_date: Date.current - 2.days)
+
+    sign_in_as(user)
+    get payments_path, params: { view: "overdue" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div.bg-slate-50", text: /overdue payments/i
+    assert_select "a", text: "Clear filters"
+  end
+
+  it "renders filter context banner for upcoming view" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details)
+    create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current + 3.days)
+
+    sign_in_as(user)
+    get payments_path, params: { view: "upcoming" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div.bg-slate-50", text: /upcoming payments/i
+    assert_select "a", text: "Clear filters"
+  end
+
+  it "renders drill-in empty state for overdue with positive message" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details)
+    create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current + 5.days)
+
+    sign_in_as(user)
+    get payments_path, params: { view: "overdue" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "No overdue payments"
+    assert_select "p", text: /all repayments are on track/
+    assert_select "a", text: "Return to dashboard"
+  end
+
+  it "renders drill-in empty state for upcoming with informational message" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :active, :with_details)
+    create(:payment, :completed, loan: loan, installment_number: 1, due_date: Date.current - 5.days)
+
+    sign_in_as(user)
+    get payments_path, params: { view: "upcoming" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: "No upcoming payments"
+    assert_select "p", text: /No upcoming payments in the next 7 days/
+    assert_select "a", text: "Return to dashboard"
   end
 
   it "renders a payment detail page with the guarded completion form for pending payments" do

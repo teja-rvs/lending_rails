@@ -111,6 +111,72 @@ RSpec.describe "Loans", type: :request do
     assert_select "td", text: "Rahul Singh", count: 0
   end
 
+  it "filters the loans list by multi-status comma param" do
+    user = create(:user, email_address: "admin@example.com")
+    active_loan = create(:loan, :active, :with_details, loan_number: "LOAN-0201")
+    overdue_loan = create(:loan, :overdue, :with_details, loan_number: "LOAN-0202")
+    create(:loan, :created, loan_number: "LOAN-0203")
+    create(:loan, :closed, :with_details, loan_number: "LOAN-0204")
+
+    sign_in_as(user)
+    get loans_path, params: { status: "active,overdue" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a", text: active_loan.loan_number
+    assert_select "a", text: overdue_loan.loan_number
+    assert_select "a", text: "LOAN-0203", count: 0
+    assert_select "a", text: "LOAN-0204", count: 0
+  end
+
+  it "ignores invalid statuses in a multi-status comma param" do
+    user = create(:user, email_address: "admin@example.com")
+    active_loan = create(:loan, :active, :with_details, loan_number: "LOAN-0301")
+    create(:loan, :closed, :with_details, loan_number: "LOAN-0302")
+
+    sign_in_as(user)
+    get loans_path, params: { status: "active,bogus" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "a", text: active_loan.loan_number
+    assert_select "a", text: "LOAN-0302", count: 0
+  end
+
+  it "renders filter context banner when single-status filter is applied" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan, :closed, :with_details, loan_number: "LOAN-0601")
+
+    sign_in_as(user)
+    get loans_path, params: { status: "closed" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div.bg-slate-50", text: /closed loans/i
+    assert_select "a", text: "Clear filters"
+  end
+
+  it "renders filter context banner when multi-status filter is applied" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan, :active, :with_details, loan_number: "LOAN-0401")
+
+    sign_in_as(user)
+    get loans_path, params: { status: "active,overdue" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div.bg-slate-50", text: /active or overdue loans/i
+    assert_select "a", text: "Clear filters"
+  end
+
+  it "renders drill-in empty state for multi-status filter with no results" do
+    user = create(:user, email_address: "admin@example.com")
+    create(:loan, :created, loan_number: "LOAN-0501")
+
+    sign_in_as(user)
+    get loans_path, params: { status: "active,overdue" }
+
+    expect(response).to have_http_status(:ok)
+    assert_select "h2", text: /No active or overdue loans/
+    assert_select "a", text: "Return to dashboard"
+  end
+
   it "renders the linked loan lifecycle detail for signed-in admins" do
     user = create(:user, email_address: "admin@example.com")
     borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")

@@ -29,14 +29,14 @@
         title: "Open applications",
         count: @open_applications_count,
         tone: :neutral,
-        href: loan_applications_path(status: "open"),
+        href: loan_applications_path(status: "open,in progress"),
         label: "View all"
       ) %>
       <%= render Dashboard::TriageWidgetComponent.new(
         title: "Active loans",
         count: @active_loans_count,
         tone: :neutral,
-        href: loans_path(status: "active"),
+        href: loans_path(status: "active,overdue"),
         label: "View all"
       ) %>
     </div>
@@ -53,11 +53,15 @@
       ) %>
       <%= render Dashboard::SummaryWidgetComponent.new(
         title: "Total disbursed",
-        value: humanized_money_with_symbol(Money.new(@portfolio.total_disbursed_cents, "INR"))
+        value: humanized_money_with_symbol(Money.new(@portfolio.total_disbursed_cents, "INR")),
+        href: loans_path,
+        label: "View all"
       ) %>
       <%= render Dashboard::SummaryWidgetComponent.new(
         title: "Total repayment",
-        value: humanized_money_with_symbol(Money.new(@portfolio.total_repayment_cents, "INR"))
+        value: humanized_money_with_symbol(Money.new(@portfolio.total_repayment_cents, "INR")),
+        href: payments_path,
+        label: "View all"
       ) %>
     </div>
   </section>

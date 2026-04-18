@@ -1,5 +1,5 @@
 # generated: 2026-03-30T22:54:36+05:30
-# last_updated: 2026-04-19T00:30:00+0530
+# last_updated: 2026-04-19T00:00:00+0530
 # project: lending_rails
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-30T22:54:36+05:30
-last_updated: 2026-04-19T00:30:00+0530
+last_updated: 2026-04-18T00:00:00+0530
 project: lending_rails
 project_key: NOKEY
 tracking_system: file-system
@@ -79,7 +79,7 @@ development_status:
   epic-5-retrospective: optional
   epic-6: in-progress
   6-1-build-the-action-first-operational-dashboard: done
-  6-2-drill-from-dashboard-into-filtered-operational-views: backlog
+  6-2-drill-from-dashboard-into-filtered-operational-views: done
   6-3-search-and-investigate-across-linked-lending-records: backlog
   6-4-record-audit-history-and-protect-operational-records: backlog
   6-5-preserve-derived-state-integrity-and-historical-snapshots: backlog

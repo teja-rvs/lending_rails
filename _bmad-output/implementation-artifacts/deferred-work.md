@@ -41,3 +41,15 @@
 - Duplicated `self.call(...)` boilerplate across all 5 dashboard query classes. Same pattern exists across all query objects in the project — should be extracted to `ApplicationQuery` base class as a project-wide refactor. [app/queries/dashboard/*.rb]
 - System specs use `match: :first` and `visit` hacks to resolve nav link ambiguity after adding the global nav bar. Tests still pass but are slightly weaker in exercising link discoverability. [spec/system/*_spec.rb]
 - Nav bar logic defined inline in the application layout (array of tuples, iteration, `current_page?` logic). Should be extracted to a helper or ViewComponent for maintainability as nav grows. [app/views/layouts/application.html.erb:30-48]
+
+## Deferred from: code review of story 6-2-drill-from-dashboard-into-filtered-operational-views (2026-04-18)
+
+- Status pill click in multi-status mode replaces the filter with a single status instead of toggling. UX enhancement — current single-select pill behavior is the standard pattern across all views; toggle would improve drill-in context retention. [app/views/loan_applications/index.html.erb:60, app/views/loans/index.html.erb:71]
+- Duplicated `normalized_status_filter` logic across `LoanApplicationsController` and `LoansController`. Nearly identical comma-splitting, downcasing, and allowlist validation. Should be extracted to a shared concern. [app/controllers/loan_applications_controller.rb:93, app/controllers/loans_controller.rb:109]
+- Polymorphic return type (String vs Array) from `normalized_status_filter` forces all downstream consumers (views, queries) to branch on `is_a?(Array)`. Returning Array consistently would simplify. [app/controllers/loan_applications_controller.rb:100, app/controllers/loans_controller.rb:117]
+- Hardcoded status combinations in dashboard view (`"open,in progress"`, `"active,overdue"`) are magic strings. Should be derived from constants or model methods. [app/views/dashboard/show.html.erb:32,39]
+- No upper bound on comma-separated status count in URL params. Low risk given allowlist validation strips invalid entries. [app/controllers/loan_applications_controller.rb:97, app/controllers/loans_controller.rb:114]
+- Payments filter-context banner uses a different pattern (chain of if/elsif on view_filter strings) than loans/applications views (dynamic label from filter values). [app/views/payments/index.html.erb:126-146]
+- Test specs use inconsistent auth strategies: `post session_path` in loan_applications vs `sign_in_as` in loans/payments. [spec/requests/loan_applications_spec.rb, spec/requests/loans_spec.rb]
+- Currency hardcoded to "INR" in dashboard summary widgets. [app/views/dashboard/show.html.erb:56,62]
+- No unit test exercising `FilteredListQuery#normalized_status` with Array input directly. Covered by integration tests. [app/queries/loan_applications/filtered_list_query.rb:28, app/queries/loans/filtered_list_query.rb:28]

@@ -25,6 +25,12 @@ module Loans
       end
 
       def normalized_status(value)
+        if value.is_a?(Array)
+          valid_statuses = Loan.aasm.states.map { |state| state.name.to_s }
+          validated = value.select { |s| valid_statuses.include?(s) }
+          return validated.presence
+        end
+
         candidate = value.to_s.squish.downcase.presence
         candidate if Loan.aasm.states.map { |state| state.name.to_s }.include?(candidate)
       end

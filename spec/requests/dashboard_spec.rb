@@ -141,9 +141,11 @@ RSpec.describe "Dashboard", type: :request do
     expect(response).to have_http_status(:ok)
     assert_select "a[href='#{payments_path(view: "overdue")}']", text: "View all"
     assert_select "a[href='#{payments_path(view: "upcoming")}']", text: "View all"
-    assert_select "a[href='#{loan_applications_path(status: "open")}']", text: "View all"
-    assert_select "a[href='#{loans_path(status: "active")}']", text: "View all"
+    assert_select "a[href='#{loan_applications_path(status: "open,in progress")}']", text: "View all"
+    assert_select "a[href='#{loans_path(status: "active,overdue")}']", text: "View all"
     assert_select "a[href='#{loans_path(status: "closed")}']", text: "View all"
+    assert_select "a[href='#{loans_path}']", text: "View all"
+    assert_select "a[href='#{payments_path}']", text: "View all"
   end
 
   it "renders navigation links" do

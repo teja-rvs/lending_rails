@@ -25,6 +25,11 @@ module LoanApplications
       end
 
       def normalized_status(value)
+        if value.is_a?(Array)
+          validated = value.select { |s| LoanApplication::STATUSES.include?(s) }
+          return validated.presence
+        end
+
         candidate = value.to_s.squish.downcase.presence
         candidate if LoanApplication::STATUSES.include?(candidate)
       end

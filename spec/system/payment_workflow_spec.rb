@@ -107,7 +107,7 @@ RSpec.describe "Payment workflow", type: :system do
 
     visit payments_path(view: "overdue")
 
-    expect(page).to have_content("No payments match the current filters")
+    expect(page).to have_content("No overdue payments")
     expect(page).to have_link("Clear filters")
   end
 

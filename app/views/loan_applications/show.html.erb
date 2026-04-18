@@ -52,14 +52,16 @@
 
       <div>
         <dt class="text-sm font-medium text-slate-500">Borrower snapshot</dt>
-        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan_application.borrower_full_name_snapshot || @loan_application.borrower.full_name %></dd>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan_application.borrower_full_name_display %></dd>
       </div>
 
       <div>
         <dt class="text-sm font-medium text-slate-500">Snapshot phone number</dt>
-        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan_application.borrower_phone_number_snapshot || @loan_application.borrower.phone_number_normalized %></dd>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan_application.borrower_phone_number_display %></dd>
       </div>
     </dl>
+
+    <%= render "snapshot_divergence", record: @loan_application, record_label: "application" %>
   </section>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">

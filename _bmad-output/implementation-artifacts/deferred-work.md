@@ -65,3 +65,8 @@
 
 - `DeletionProtection` concern uses `before_destroy` callback which does not guard `Model.delete`, `Model.delete_all`, or `Model.where(...).delete_all`. These bypass ActiveRecord callbacks entirely. FR70 is met at the application layer (destroy), but not at the raw SQL layer. A database-level trigger or revoked DELETE privilege would close this gap project-wide.
 - `spec/models/concerns/deletion_protection_spec.rb` is a near-duplicate of the shared example already exercised via `borrower_spec.rb`. Minor test file hygiene — not blocking.
+
+## Deferred from: code review of story 6-5-preserve-derived-state-integrity-and-historical-snapshots (2026-04-19)
+
+- Snapshot immutability guard is bypassable via `update_columns`, `update_attribute`, or raw SQL — no database-level constraint (trigger, generated column) backs the `on: :update` validation. Pre-existing architectural choice; application-layer validations are the project standard.
+- Display helper fallback silently returns live borrower data when snapshot is nil — consumer of `borrower_full_name_display`/`borrower_phone_number_display` cannot distinguish historical snapshot data from current live data. Pre-existing pattern established in Loan model.

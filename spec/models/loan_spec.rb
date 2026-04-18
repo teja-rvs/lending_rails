@@ -308,6 +308,34 @@ RSpec.describe Loan do
     end
   end
 
+  describe "snapshot immutability" do
+    it "prevents changing borrower_full_name_snapshot on a persisted record" do
+      loan = create(:loan)
+
+      loan.borrower_full_name_snapshot = "Changed Name"
+
+      expect(loan).not_to be_valid
+      expect(loan.errors[:borrower_full_name_snapshot]).to include("cannot be changed after creation")
+    end
+
+    it "prevents changing borrower_phone_number_snapshot on a persisted record" do
+      loan = create(:loan)
+
+      loan.borrower_phone_number_snapshot = "+910000000000"
+
+      expect(loan).not_to be_valid
+      expect(loan.errors[:borrower_phone_number_snapshot]).to include("cannot be changed after creation")
+    end
+
+    it "allows initial creation with snapshot values" do
+      loan = create(:loan)
+
+      expect(loan).to be_persisted
+      expect(loan.borrower_full_name_snapshot).to be_present
+      expect(loan.borrower_phone_number_snapshot).to be_present
+    end
+  end
+
   describe "display helpers" do
     it "returns the expected tones for lifecycle states" do
       expect(build(:loan, :created).status_tone).to eq(:neutral)

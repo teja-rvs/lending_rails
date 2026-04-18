@@ -81,6 +81,24 @@
       </div>
     </dl>
 
+    <%= render "snapshot_divergence", record: @loan, record_label: "loan" %>
+
+    <% if @loan.overdue? %>
+      <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4" role="note" aria-label="Derived state explanation">
+        <p class="text-sm font-semibold text-slate-900">This loan's overdue status was derived from overdue payment conditions.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          When one or more payments pass their due date without completion, the system automatically transitions the loan to overdue based on recorded payment facts.
+        </p>
+      </div>
+    <% elsif @loan.closed? %>
+      <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4" role="note" aria-label="Derived state explanation">
+        <p class="text-sm font-semibold text-slate-900">This loan was closed automatically when all payments were completed.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          Loan closure is derived from the completion status of every scheduled payment rather than a manual action.
+        </p>
+      </div>
+    <% end %>
+
     <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
       <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Linked records</p>
       <div class="mt-4 flex flex-wrap gap-3">

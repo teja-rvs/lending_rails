@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe Loans::CreateFromApplication do
   describe ".call" do
     it "creates a created loan from an approved application" do
-      borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+      borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
       create(:loan, loan_number: "LOAN-0003")
       loan_application = create(:loan_application, :approved, borrower:)
 
@@ -22,6 +22,21 @@ RSpec.describe Loans::CreateFromApplication do
         borrower_phone_number_snapshot: borrower.phone_number_normalized
       )
       expect(loan_application.reload.loan).to eq(result.loan)
+    end
+
+    it "snapshots the borrower's current name at loan-creation time, not the application snapshot" do
+      borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+      loan_application = create(:loan_application, :approved, borrower:)
+
+      expect(loan_application.borrower_full_name_snapshot).to eq("Asha Patel")
+
+      borrower.update!(full_name: "Asha R. Patel")
+
+      result = described_class.call(loan_application:)
+
+      expect(result).to be_success
+      expect(result.loan.borrower_full_name_snapshot).to eq("Asha R. Patel")
+      expect(result.loan.borrower_full_name_snapshot).not_to eq(loan_application.borrower_full_name_snapshot)
     end
 
     it "blocks when the application is not approved" do

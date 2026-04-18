@@ -50,6 +50,7 @@ class Loan < ApplicationRecord
     in: INTEREST_MODES
   }, on: :details_update
   validate :validate_interest_details, on: :details_update
+  validate :snapshot_fields_immutable, on: :update
 
   aasm column: :status, whiny_transitions: true do
     state :created, initial: true
@@ -247,6 +248,15 @@ class Loan < ApplicationRecord
   end
 
   private
+    def snapshot_fields_immutable
+      if borrower_full_name_snapshot_changed?
+        errors.add(:borrower_full_name_snapshot, "cannot be changed after creation")
+      end
+      if borrower_phone_number_snapshot_changed?
+        errors.add(:borrower_phone_number_snapshot, "cannot be changed after creation")
+      end
+    end
+
     def validate_interest_details
       case interest_mode
       when "rate"

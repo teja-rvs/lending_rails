@@ -1,0 +1,34 @@
+<% snapshot_name = record.borrower_full_name_snapshot %>
+<% snapshot_phone = record.borrower_phone_number_snapshot %>
+<% live_name = record.borrower&.full_name %>
+<% live_phone = record.borrower&.phone_number_normalized %>
+<% if snapshot_name.present? && snapshot_phone.present? && (snapshot_name != live_name || snapshot_phone != live_phone) %>
+  <div class="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4" role="note" aria-label="Borrower snapshot divergence">
+    <p class="text-sm font-semibold text-blue-900">Borrower details have changed since this <%= record_label %> was created.</p>
+    <p class="mt-2 text-sm leading-6 text-blue-800">
+      The snapshot preserves the borrower context that existed at decision time.
+    </p>
+    <dl class="mt-3 grid gap-3 sm:grid-cols-2">
+      <% if snapshot_name != live_name %>
+        <div>
+          <dt class="text-xs font-medium text-blue-700">Name at <%= record_label %> time</dt>
+          <dd class="mt-1 text-sm font-semibold text-blue-900"><%= snapshot_name %></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium text-blue-700">Current borrower name</dt>
+          <dd class="mt-1 text-sm font-semibold text-blue-900"><%= live_name %></dd>
+        </div>
+      <% end %>
+      <% if snapshot_phone != live_phone %>
+        <div>
+          <dt class="text-xs font-medium text-blue-700">Phone at <%= record_label %> time</dt>
+          <dd class="mt-1 text-sm font-semibold text-blue-900"><%= snapshot_phone %></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium text-blue-700">Current borrower phone</dt>
+          <dd class="mt-1 text-sm font-semibold text-blue-900"><%= live_phone %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </div>
+<% end %>

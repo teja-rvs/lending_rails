@@ -22,6 +22,21 @@ RSpec.describe LoanApplications::Create do
       )
     end
 
+    it "captures the borrower's name and phone at creation time, unaffected by later borrower changes" do
+      borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+
+      result = described_class.call(borrower:)
+
+      expect(result).to be_success
+      expect(result.loan_application.borrower_full_name_snapshot).to eq("Asha Patel")
+      expect(result.loan_application.borrower_phone_number_snapshot).to eq("+919876543210")
+
+      borrower.update!(full_name: "Asha R. Patel", phone_number: "+91 98765 99999")
+
+      expect(result.loan_application.reload.borrower_full_name_snapshot).to eq("Asha Patel")
+      expect(result.loan_application.borrower_phone_number_snapshot).to eq("+919876543210")
+    end
+
     it "retries when a generated application number collides" do
       borrower = create(:borrower)
       collided_record = build(

@@ -134,6 +134,15 @@
       </section>
     <% end %>
 
+    <% if @payment.overdue? %>
+      <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4" role="note" aria-label="Derived state explanation">
+        <p class="text-sm font-semibold text-slate-900">This payment was marked overdue because its due date passed without completion.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          Overdue status is derived from recorded payment facts — when a pending payment's due date is in the past, the system transitions it to overdue automatically.
+        </p>
+      </div>
+    <% end %>
+
     <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
       <p class="text-sm font-medium text-slate-500">Due date</p>
       <p class="mt-2 text-xl font-semibold text-slate-950"><%= @payment.due_date.to_fs(:long) %></p>

@@ -7,20 +7,43 @@ RSpec.describe LoanApplication, type: :model do
     it_behaves_like "deletion protected"
   end
 
+  describe "snapshot presence validations" do
+    it "requires borrower snapshot fields" do
+      loan_application = build(
+        :loan_application,
+        borrower_full_name_snapshot: nil,
+        borrower_phone_number_snapshot: nil
+      )
+
+      expect(loan_application).not_to be_valid
+      expect(loan_application.errors[:borrower_full_name_snapshot]).to include("can't be blank")
+      expect(loan_application.errors[:borrower_phone_number_snapshot]).to include("can't be blank")
+    end
+  end
+
   describe "application number generation" do
     it "assigns the next APP number when one is not provided" do
       create(:loan_application, application_number: "APP-0007")
 
-      loan_application = described_class.create!(borrower: create(:borrower), status: "open")
+      borrower = create(:borrower)
+      loan_application = described_class.create!(
+        borrower: borrower,
+        status: "open",
+        borrower_full_name_snapshot: borrower.full_name,
+        borrower_phone_number_snapshot: borrower.phone_number_normalized
+      )
 
       expect(loan_application.application_number).to eq("APP-0008")
     end
 
     it "preserves an explicit application number" do
+      borrower = create(:borrower)
       loan_application = described_class.create!(
-        borrower: create(:borrower),
+        borrower: borrower,
         application_number: "APP-0420",
-        status: "open"
+        status: "open",
+        borrower_full_name_snapshot: borrower.full_name,
+        borrower_phone_number_snapshot: borrower.phone_number_normalized
       )
 
       expect(loan_application.application_number).to eq("APP-0420")
@@ -75,6 +98,62 @@ RSpec.describe LoanApplication, type: :model do
 
       expect(loan_application.valid?(:details_update)).to be(false)
       expect(loan_application.errors[:proposed_interest_mode]).to include("is not included in the list")
+    end
+  end
+
+  describe "snapshot immutability" do
+    it "prevents changing borrower_full_name_snapshot on a persisted record" do
+      loan_application = create(:loan_application)
+
+      loan_application.borrower_full_name_snapshot = "Changed Name"
+
+      expect(loan_application).not_to be_valid
+      expect(loan_application.errors[:borrower_full_name_snapshot]).to include("cannot be changed after creation")
+    end
+
+    it "prevents changing borrower_phone_number_snapshot on a persisted record" do
+      loan_application = create(:loan_application)
+
+      loan_application.borrower_phone_number_snapshot = "+910000000000"
+
+      expect(loan_application).not_to be_valid
+      expect(loan_application.errors[:borrower_phone_number_snapshot]).to include("cannot be changed after creation")
+    end
+
+    it "allows initial creation with snapshot values" do
+      loan_application = create(:loan_application)
+
+      expect(loan_application).to be_persisted
+      expect(loan_application.borrower_full_name_snapshot).to be_present
+      expect(loan_application.borrower_phone_number_snapshot).to be_present
+    end
+  end
+
+  describe "display helpers" do
+    it "returns the snapshot value when present" do
+      borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+      loan_application = create(:loan_application,
+        borrower: borrower,
+        borrower_full_name_snapshot: "Asha Patel",
+        borrower_phone_number_snapshot: "+919876543210"
+      )
+
+      borrower.update!(full_name: "Asha R. Patel", phone_number: "+91 98765 99999")
+
+      expect(loan_application.borrower_full_name_display).to eq("Asha Patel")
+      expect(loan_application.borrower_phone_number_display).to eq("+919876543210")
+    end
+
+    it "falls back to live borrower data when snapshot is nil" do
+      borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+      loan_application = build(:loan_application,
+        borrower: borrower,
+        borrower_full_name_snapshot: nil,
+        borrower_phone_number_snapshot: nil
+      )
+
+      expect(loan_application.borrower_full_name_display).to eq("Asha Patel")
+      expect(loan_application.borrower_phone_number_display).to eq("+919876543210")
     end
   end
 

@@ -41,6 +41,8 @@ class LoanApplication < ApplicationRecord
   normalizes :proposed_interest_mode, with: ->(value) { value.to_s.squish.presence&.downcase }
 
   validates :application_number, presence: true, uniqueness: true
+  validates :borrower_full_name_snapshot, presence: true
+  validates :borrower_phone_number_snapshot, presence: true
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :requested_amount, presence: true, numericality: {
     greater_than: 0
@@ -55,6 +57,7 @@ class LoanApplication < ApplicationRecord
   validates :proposed_interest_mode, presence: true, inclusion: {
     in: PROPOSED_INTEREST_MODES
   }, on: :details_update
+  validate :snapshot_fields_immutable, on: :update
 
   def self.next_application_number
     highest_sequence = where("application_number LIKE ?", "APP-%")
@@ -84,6 +87,14 @@ class LoanApplication < ApplicationRecord
 
   def editable_pre_decision_details?
     !FINAL_DECISION_STATUSES.include?(status)
+  end
+
+  def borrower_full_name_display
+    borrower_full_name_snapshot.presence || borrower&.full_name
+  end
+
+  def borrower_phone_number_display
+    borrower_phone_number_snapshot.presence || borrower&.phone_number_normalized
   end
 
   def decision_notes_display
@@ -158,6 +169,15 @@ class LoanApplication < ApplicationRecord
   end
 
   private
+    def snapshot_fields_immutable
+      if borrower_full_name_snapshot_changed?
+        errors.add(:borrower_full_name_snapshot, "cannot be changed after creation")
+      end
+      if borrower_phone_number_snapshot_changed?
+        errors.add(:borrower_phone_number_snapshot, "cannot be changed after creation")
+      end
+    end
+
     def assign_application_number
       self.application_number ||= self.class.next_application_number
     end

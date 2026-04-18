@@ -664,6 +664,69 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "input[type='submit'][value='Save application details']", count: 0
   end
 
+  it "renders snapshot values on the loan application show page" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+    application = create(:loan_application,
+      borrower: borrower,
+      application_number: "APP-0801",
+      status: "open",
+      borrower_full_name_snapshot: "Asha Patel",
+      borrower_phone_number_snapshot: "+919876543210"
+    )
+
+    sign_in_as(user)
+    get loan_application_path(application)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "dt", text: "Borrower snapshot"
+    assert_select "dd", text: "Asha Patel"
+    assert_select "dt", text: "Snapshot phone number"
+    assert_select "dd", text: "+919876543210"
+  end
+
+  it "shows the snapshot divergence indicator when borrower data has changed since the snapshot" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+    application = create(:loan_application,
+      borrower: borrower,
+      application_number: "APP-0802",
+      status: "open",
+      borrower_full_name_snapshot: "Asha Patel",
+      borrower_phone_number_snapshot: "+919876543210"
+    )
+
+    borrower.update!(full_name: "Asha R. Patel")
+
+    sign_in_as(user)
+    get loan_application_path(application)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div[role='note'][aria-label='Borrower snapshot divergence']" do
+      assert_select "p", text: "Borrower details have changed since this application was created."
+      assert_select "dd", text: "Asha Patel"
+      assert_select "dd", text: "Asha R. Patel"
+    end
+  end
+
+  it "does not show the snapshot divergence indicator when borrower data matches the snapshot" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+    application = create(:loan_application,
+      borrower: borrower,
+      application_number: "APP-0803",
+      status: "open",
+      borrower_full_name_snapshot: "Asha Patel",
+      borrower_phone_number_snapshot: "+919876543210"
+    )
+
+    sign_in_as(user)
+    get loan_application_path(application)
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div[role='note'][aria-label='Borrower snapshot divergence']", count: 0
+  end
+
   it "renders the Record history section when the loan application has PaperTrail versions" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, application_number: "APP-0701", status: "open")

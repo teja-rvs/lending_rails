@@ -753,6 +753,103 @@ RSpec.describe "Loans", type: :request do
     end
   end
 
+  it "renders snapshot values on the loan show page" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+    loan = create(:loan, :created, loan_number: "LOAN-8001",
+      borrower: borrower,
+      borrower_full_name_snapshot: "Asha Patel",
+      borrower_phone_number_snapshot: "+919876543210"
+    )
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "dt", text: "Borrower snapshot"
+    assert_select "dd", text: "Asha Patel"
+    assert_select "dt", text: "Snapshot phone number"
+    assert_select "dd", text: "+919876543210"
+  end
+
+  it "shows the snapshot divergence indicator when borrower data has changed since the loan snapshot" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+    loan = create(:loan, :created, loan_number: "LOAN-8002",
+      borrower: borrower,
+      borrower_full_name_snapshot: "Asha Patel",
+      borrower_phone_number_snapshot: "+919876543210"
+    )
+
+    borrower.update!(full_name: "Asha R. Patel")
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div[role='note'][aria-label='Borrower snapshot divergence']" do
+      assert_select "p", text: "Borrower details have changed since this loan was created."
+      assert_select "dd", text: "Asha Patel"
+      assert_select "dd", text: "Asha R. Patel"
+    end
+  end
+
+  it "does not show the snapshot divergence indicator when borrower data matches the loan snapshot" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "+91 98765 43210")
+    loan = create(:loan, :created, loan_number: "LOAN-8003",
+      borrower: borrower,
+      borrower_full_name_snapshot: "Asha Patel",
+      borrower_phone_number_snapshot: "+919876543210"
+    )
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div[role='note'][aria-label='Borrower snapshot divergence']", count: 0
+  end
+
+  it "shows the derived state explanation when the loan is overdue" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower)
+    loan = create(:loan, :overdue, :with_details, borrower: borrower, disbursement_date: Date.current - 60.days)
+    create(:payment, :overdue, loan: loan, installment_number: 1, due_date: Date.current - 5.days)
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div[role='note'][aria-label='Derived state explanation']" do
+      assert_select "p", text: "This loan's overdue status was derived from overdue payment conditions."
+    end
+  end
+
+  it "shows the derived state explanation when the loan is closed" do
+    user = create(:user, email_address: "admin@example.com")
+    borrower = create(:borrower)
+    loan = create(:loan, :closed, :with_details, borrower: borrower, disbursement_date: Date.current - 90.days)
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div[role='note'][aria-label='Derived state explanation']" do
+      assert_select "p", text: "This loan was closed automatically when all payments were completed."
+    end
+  end
+
+  it "does not show the derived state explanation for non-terminal loan states" do
+    user = create(:user, email_address: "admin@example.com")
+    loan = create(:loan, :created)
+
+    sign_in_as(user)
+    get loan_path(loan, from: "loans")
+
+    expect(response).to have_http_status(:ok)
+    assert_select "div[role='note'][aria-label='Derived state explanation']", count: 0
+  end
+
   it "renders the Record history section on the loan show page when versions exist" do
     user = create(:user, email_address: "admin@example.com")
     loan = create(:loan, :documentation_in_progress)

@@ -2,6 +2,7 @@ module Payments
   class MarkCompleted < ApplicationService
     BLOCKED_ALREADY_COMPLETED = "This payment has already been completed.".freeze
     BLOCKED_INVALID_STATE = "This payment cannot be completed from its current state.".freeze
+    BLOCKED_OUT_OF_ORDER = "Earlier installments must be completed first.".freeze
 
     Result = Struct.new(:payment, :error, keyword_init: true) do
       def success?
@@ -35,6 +36,8 @@ module Payments
           locked_error = BLOCKED_ALREADY_COMPLETED
         elsif !payment.may_mark_completed?
           locked_error = BLOCKED_INVALID_STATE
+        elsif earlier_installments_incomplete?
+          locked_error = BLOCKED_OUT_OF_ORDER
         else
           payment.payment_date = @payment_date
           payment.payment_mode = @payment_mode
@@ -53,6 +56,13 @@ module Payments
 
     private
       attr_reader :payment
+
+      def earlier_installments_incomplete?
+        payment.loan.payments
+          .where("installment_number < ?", payment.installment_number)
+          .where.not(status: "completed")
+          .exists?
+      end
 
       def blocked(message)
         Result.new(payment: payment, error: message)

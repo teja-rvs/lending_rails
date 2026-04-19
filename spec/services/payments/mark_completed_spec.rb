@@ -110,6 +110,40 @@ RSpec.describe Payments::MarkCompleted do
       expect(result.error).to eq("wire_transfer is not a supported payment mode.")
     end
 
+    it "blocks when earlier installments are not yet completed" do
+      loan = create(:loan, :active, :with_details)
+      create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current + 1.month)
+      later = create(:payment, :pending, loan: loan, installment_number: 2, due_date: Date.current + 2.months)
+
+      result = described_class.call(payment: later, payment_date: Date.current, payment_mode: "cash")
+
+      expect(result).to be_blocked
+      expect(result.error).to eq(Payments::MarkCompleted::BLOCKED_OUT_OF_ORDER)
+      expect(later.reload).to be_pending
+    end
+
+    it "allows completion when all earlier installments are already completed" do
+      loan = create(:loan, :active, :with_details)
+      create(:payment, :completed, loan: loan, installment_number: 1, due_date: Date.current - 1.month)
+      second = create(:payment, :pending, loan: loan, installment_number: 2, due_date: Date.current + 1.month)
+
+      result = described_class.call(payment: second, payment_date: Date.current, payment_mode: "cash")
+
+      expect(result).to be_success
+      expect(second.reload).to be_completed
+    end
+
+    it "allows the first installment to be completed regardless" do
+      loan = create(:loan, :active, :with_details)
+      first = create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current + 1.month)
+      create(:payment, :pending, loan: loan, installment_number: 2, due_date: Date.current + 2.months)
+
+      result = described_class.call(payment: first, payment_date: Date.current, payment_mode: "cash")
+
+      expect(result).to be_success
+      expect(first.reload).to be_completed
+    end
+
     it "blocks when AASM cannot transition" do
       payment = create(:payment, :pending)
       allow_any_instance_of(Payment).to receive(:may_mark_completed?).and_return(false)

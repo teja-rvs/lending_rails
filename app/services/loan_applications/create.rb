@@ -1,7 +1,5 @@
 module LoanApplications
   class Create < ApplicationService
-    MAX_APPLICATION_NUMBER_RETRIES = 3
-
     Result = Struct.new(:loan_application, :eligibility, keyword_init: true) do
       def success?
         loan_application.persisted?
@@ -36,33 +34,17 @@ module LoanApplications
       end
 
       def create_loan_application!
-        attempts = 0
+        LoanApplication.transaction do
+          loan_application = LoanApplication.create_with_next_application_number!(
+            borrower:,
+            status: "open",
+            borrower_full_name_snapshot: borrower.full_name,
+            borrower_phone_number_snapshot: borrower.phone_number_normalized
+          )
 
-        begin
-          attempts += 1
-
-          LoanApplication.transaction do
-            loan_application = LoanApplication.create!(
-              borrower:,
-              status: "open",
-              borrower_full_name_snapshot: borrower.full_name,
-              borrower_phone_number_snapshot: borrower.phone_number_normalized
-            )
-
-            LoanApplications::InitializeReviewWorkflow.call(loan_application:)
-            loan_application
-          end
-        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => error
-          raise unless duplicate_application_number_error?(error) && attempts < MAX_APPLICATION_NUMBER_RETRIES
-
-          retry
+          LoanApplications::InitializeReviewWorkflow.call(loan_application:)
+          loan_application
         end
-      end
-
-      def duplicate_application_number_error?(error)
-        return true if error.is_a?(ActiveRecord::RecordNotUnique)
-
-        error.record.errors.of_kind?(:application_number, :taken)
       end
   end
 end

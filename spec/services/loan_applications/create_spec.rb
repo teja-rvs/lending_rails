@@ -37,30 +37,18 @@ RSpec.describe LoanApplications::Create do
       expect(result.loan_application.borrower_phone_number_snapshot).to eq("+919876543210")
     end
 
-    it "retries when a generated application number collides" do
-      borrower = create(:borrower)
-      collided_record = build(
-        :loan_application,
-        borrower:,
-        application_number: "APP-0002"
-      )
-      collided_record.errors.add(:application_number, :taken)
-      attempts = 0
+    it "uses serialized allocation to prevent application number collisions" do
+      borrower1 = create(:borrower, phone_number: "+91 98765 00001")
+      borrower2 = create(:borrower, phone_number: "+91 98765 00002")
 
-      allow(LoanApplication).to receive(:create!) do |**attributes|
-        attempts += 1
-        raise ActiveRecord::RecordInvalid.new(collided_record) if attempts == 1
+      result1 = described_class.call(borrower: borrower1)
+      result2 = described_class.call(borrower: borrower2)
 
-        described_class = LoanApplication
-        described_class.new(attributes).tap(&:save!)
-      end
-
-      result = described_class.call(borrower:)
-
-      expect(result).to be_success
-      expect(result.loan_application).to be_persisted
-      expect(result.loan_application.application_number).to match(/\AAPP-\d{4}\z/)
-      expect(attempts).to eq(2)
+      expect(result1).to be_success
+      expect(result2).to be_success
+      expect(result1.loan_application.application_number).not_to eq(result2.loan_application.application_number)
+      expect(result1.loan_application.application_number).to match(/\AAPP-\d{4}\z/)
+      expect(result2.loan_application.application_number).to match(/\AAPP-\d{4}\z/)
     end
 
     it "blocks creation when the borrower has a blocking application" do

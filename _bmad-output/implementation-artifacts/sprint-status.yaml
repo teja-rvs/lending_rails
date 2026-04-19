@@ -1,5 +1,5 @@
 # generated: 2026-03-30T22:54:36+05:30
-# last_updated: 2026-04-19T23:30:00+0530
+# last_updated: 2026-04-20T00:00:00+0530
 # project: lending_rails
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-30T22:54:36+05:30
-last_updated: 2026-04-19T23:30:00+0530
+last_updated: 2026-04-20T00:00:00+0530
 project: lending_rails
 project_key: NOKEY
 tracking_system: file-system
@@ -69,18 +69,18 @@ development_status:
   4-4-validate-disbursement-readiness: done
   4-5-execute-guarded-disbursement-create-financial-records-and-lock-the-loan: done
   epic-4-retrospective: done
-  epic-5: in-progress
+  epic-5: done
   5-1-generate-the-repayment-schedule-from-disbursement: done
   5-2-view-upcoming-and-overdue-repayment-work: done
   5-3-mark-payments-completed-with-locked-financial-history: done
   5-4-generate-payment-financial-records-and-preserve-the-accounting-boundary: done
   5-5-derive-overdue-payment-and-loan-states: done
   5-6-apply-late-fees-and-close-loans-from-completed-repayment-facts: done
-  epic-5-retrospective: optional
-  epic-6: in-progress
+  epic-5-retrospective: done
+  epic-6: done
   6-1-build-the-action-first-operational-dashboard: done
   6-2-drill-from-dashboard-into-filtered-operational-views: done
   6-3-search-and-investigate-across-linked-lending-records: done
   6-4-record-audit-history-and-protect-operational-records: done
   6-5-preserve-derived-state-integrity-and-historical-snapshots: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done

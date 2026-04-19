@@ -262,6 +262,22 @@ Enable the admin to manage repayment schedules, record completed payments, track
 Enable the admin to access an action-first dashboard, investigate the full lending portfolio through dashboard drill-ins, and rely on searchable, linked, and trustworthy record history.
 **FRs covered:** FR57, FR58, FR59, FR60, FR61, FR62, FR63, FR64, FR65, FR66, FR67, FR68, FR69, FR70, FR73, FR74
 
+## Canonical Review-Step Vocabulary
+
+The PRD describes the fixed MVP review workflow using prose names ("history checking", "phone screening", "verification"). The implementation defines these as machine-readable step keys in `ReviewStep::WORKFLOW_DEFINITION`. This table is the canonical mapping between planning language and code:
+
+| Position | PRD Prose Name | Code `step_key` | Code Display `label` |
+|----------|----------------|-----------------|----------------------|
+| 1 | History checking | `history_check` | History check |
+| 2 | Phone screening | `phone_screening` | Phone screening |
+| 3 | Verification | `verification` | Verification |
+
+**Review-step statuses** (FR19): `initialized`, `approved`, `rejected`, `waiting for details` — identical in PRD and code.
+
+**Application statuses** (FR18): `open`, `in progress`, `approved`, `rejected`, `cancelled` — identical in PRD and code.
+
+The PRD's "other required steps" clause allows future expansion. Adding a step requires only a new entry in `WORKFLOW_DEFINITION` and a migration to seed it on existing applications if needed.
+
 ## Epic 1: Secure Admin Access and Operational Workspace
 
 Enable the admin to securely sign in, enter the lending operations workspace, and use the product as the system's controlled entry point.

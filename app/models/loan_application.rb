@@ -68,6 +68,13 @@ class LoanApplication < ApplicationRecord
     "APP-#{((highest_sequence || 0) + 1).to_s.rjust(4, "0")}"
   end
 
+  def self.create_with_next_application_number!(**attributes)
+    transaction do
+      connection.execute("LOCK TABLE #{connection.quote_table_name(table_name)} IN EXCLUSIVE MODE")
+      create!(**attributes, application_number: next_application_number)
+    end
+  end
+
   def status_tone
     case status
     when "approved"

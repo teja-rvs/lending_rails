@@ -382,6 +382,21 @@ RSpec.describe "Payments", type: :request do
       expect(flash.now[:alert]).to eq("wire_transfer is not a supported payment mode.")
     end
 
+    it "re-renders with the out-of-order alert when earlier installments are incomplete" do
+      user = create(:user, email_address: "admin@example.com")
+      loan = create(:loan, :active, :with_details)
+      create(:payment, :pending, loan: loan, installment_number: 1, due_date: Date.current + 1.month)
+      later = create(:payment, :pending, loan: loan, installment_number: 2, due_date: Date.current + 2.months)
+
+      sign_in_as(user)
+      patch mark_completed_payment_path(later, from: "payments"),
+            params: { payment: { payment_date: Date.current, payment_mode: "cash" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash.now[:alert]).to eq("Earlier installments must be completed first.")
+      expect(later.reload).to be_pending
+    end
+
     it "re-renders with the idempotency alert when completing twice" do
       user = create(:user, email_address: "admin@example.com")
       payment = create(:payment, :completed)

@@ -7,3 +7,4 @@ log/*.log
 coverage/
 tmp/cache/bootsnap/
 tmp/pids/*.pid
+tmp/storage/

@@ -38,6 +38,24 @@
 - Spec: `evolution/specs/evo-02-spec.md`
 - Test report: `evolution/test-reports/evo-02-test-report.md`
 
+### EVO-03: Whole-Rupee Installments
+
+| Phase | Status | Date |
+|-------|--------|------|
+| [A] Analyze | Skipped (targeted change from user request) | 2026-04-20 |
+| [S] Scope | Done | 2026-04-20 |
+| [D] Design | Done | 2026-04-20 |
+| [I] Implement | Done | 2026-04-20 |
+| [T] Test | Done (8/8 criteria passed, 761 examples, 0 failures) | 2026-04-20 |
+| [P] Deploy | Pending | — |
+
+**Branch:** `evolution/evo-03-whole-rupee-installments`
+
+**Artifacts:**
+- Scenario: `evolution/scenarios/evo-03-whole-rupee-installments.md`
+- Spec: `evolution/specs/evo-03-spec.md`
+- Test report: `evolution/test-reports/evo-03-test-report.md`
+
 ## Backlog
 
 _(No additional improvements scoped yet.)_

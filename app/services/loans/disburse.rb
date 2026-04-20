@@ -32,6 +32,7 @@ module Loans
         return blocked(readiness.blocked_summary) unless readiness.ready_for_disbursement_action?
 
         return blocked("Principal amount must be set before disbursement.") if loan.principal_amount.blank?
+        return blocked("Net disbursement amount must be positive.") if loan.net_disbursement_amount_cents <= 0
 
         loan.disbursement_date = Date.current
         loan.disburse!
@@ -45,7 +46,7 @@ module Loans
         invoice = invoice_result.invoice
 
         DoubleEntry.transfer(
-          Money.new(loan.principal_amount_cents, "INR"),
+          Money.new(loan.net_disbursement_amount_cents, "INR"),
           from: clearing,
           to: receivable,
           code: :disbursement,

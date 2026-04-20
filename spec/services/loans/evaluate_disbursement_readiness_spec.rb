@@ -28,7 +28,7 @@ RSpec.describe Loans::EvaluateDisbursementReadiness do
       expect(financial_item).to have_attributes(
         key: :financial_details_complete,
         label: "Required financial details are complete",
-        detail: "Principal, tenure, repayment frequency, and interest details satisfy the pre-disbursement validation rules.",
+        detail: "Principal, processing fee, tenure, repayment frequency, and interest details satisfy the pre-disbursement validation rules.",
         next_step: "No action needed."
       )
       expect(financial_item).to be_met

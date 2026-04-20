@@ -17,7 +17,8 @@ RSpec.describe LoanApplications::Create do
         [
           [ "history_check", 1, "initialized" ],
           [ "phone_screening", 2, "initialized" ],
-          [ "verification", 3, "initialized" ]
+          [ "request_details", 3, "initialized" ],
+          [ "verification", 4, "initialized" ]
         ]
       )
     end

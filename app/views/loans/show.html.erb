@@ -406,9 +406,21 @@
               <dt class="text-sm font-medium text-emerald-800">Invoice number</dt>
               <dd class="mt-2 text-lg font-semibold text-slate-950"><%= disbursement_invoice.invoice_number %></dd>
             </div>
+          <% end %>
 
+          <div>
+            <dt class="text-sm font-medium text-emerald-800">Principal amount</dt>
+            <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(@loan.principal_amount) %></dd>
+          </div>
+
+          <div>
+            <dt class="text-sm font-medium text-emerald-800">Processing fee</dt>
+            <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(@loan.processing_fee) %></dd>
+          </div>
+
+          <% if disbursement_invoice %>
             <div>
-              <dt class="text-sm font-medium text-emerald-800">Disbursed amount</dt>
+              <dt class="text-sm font-medium text-emerald-800">Disbursed amount (net)</dt>
               <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(disbursement_invoice.amount) %></dd>
             </div>
           <% end %>
@@ -436,17 +448,34 @@
               Disbursement records the release of funds, creates the disbursement invoice, posts accounting entries, and locks the loan for active servicing.
             </p>
           </div>
+        </div>
 
-          <% if readiness_ready %>
+        <% if readiness_ready %>
+          <dl class="mt-8 grid gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:grid-cols-3">
+            <div>
+              <dt class="text-sm font-medium text-slate-500">Principal amount</dt>
+              <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(@loan.principal_amount) %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-slate-500">Processing fee</dt>
+              <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(@loan.processing_fee) %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-slate-500">Net disbursement amount</dt>
+              <dd class="mt-2 text-lg font-semibold text-slate-950"><%= humanized_money_with_symbol(@loan.net_disbursement_amount) %></dd>
+            </div>
+          </dl>
+
+          <div class="mt-6 flex justify-end">
             <%= button_to "Confirm disbursement",
                 disburse_loan_path(@loan, from: detail_source),
                 method: :patch,
                 data: {
-                  turbo_confirm: "You are about to disburse #{@loan.loan_number}.\n\nThis action records the disbursement date, creates the disbursement invoice, posts accounting entries, and locks the loan for active servicing.\n\nLoan details will no longer be editable after disbursement.\n\nThis action cannot be undone."
+                  turbo_confirm: "You are about to disburse #{@loan.loan_number}.\n\nNet disbursement amount: #{humanized_money_with_symbol(@loan.net_disbursement_amount)}\n#{@loan.processing_fee_cents.positive? ? "(Principal #{humanized_money_with_symbol(@loan.principal_amount)} minus processing fee #{humanized_money_with_symbol(@loan.processing_fee)})" : "(No processing fee)"}\n\nThis action records the disbursement date, creates the disbursement invoice, posts accounting entries, and locks the loan for active servicing.\n\nLoan details will no longer be editable after disbursement.\n\nThis action cannot be undone."
                 },
                 class: "inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/15 focus:ring-offset-2" %>
-          <% end %>
-        </div>
+          </div>
+        <% end %>
 
         <% unless readiness_ready %>
           <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4" role="status" aria-live="polite">
@@ -608,6 +637,17 @@
         </div>
 
         <div class="space-y-2">
+          <%= form.label :processing_fee, "Processing fee", class: "block text-sm font-medium text-slate-700" %>
+          <%= form.number_field :processing_fee,
+              required: editable,
+              disabled: !editable,
+              min: 0,
+              step: "0.01",
+              value: format("%.2f", @loan.processing_fee.to_d),
+              class: "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100" %>
+        </div>
+
+        <div class="space-y-2">
           <%= form.label :tenure_in_months, "Tenure (months)", class: "block text-sm font-medium text-slate-700" %>
           <%= form.number_field :tenure_in_months,
               required: editable,
@@ -701,6 +741,16 @@
       <div>
         <dt class="text-sm font-medium text-slate-500">Principal amount</dt>
         <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.principal_amount_display %></dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Processing fee</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.processing_fee_display %></dd>
+      </div>
+
+      <div>
+        <dt class="text-sm font-medium text-slate-500">Net disbursement amount</dt>
+        <dd class="mt-2 text-lg font-semibold text-slate-950"><%= @loan.net_disbursement_display %></dd>
       </div>
 
       <div>

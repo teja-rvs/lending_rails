@@ -20,6 +20,7 @@ class Loan < ApplicationRecord
   has_paper_trail
 
   monetize :principal_amount_cents, allow_nil: true
+  monetize :processing_fee_cents
   monetize :total_interest_amount_cents, allow_nil: true
 
   normalizes :loan_number, with: ->(value) { value.to_s.squish.presence }
@@ -49,7 +50,11 @@ class Loan < ApplicationRecord
   validates :interest_mode, presence: true, inclusion: {
     in: INTEREST_MODES
   }, on: :details_update
+  validates :processing_fee, presence: true, numericality: {
+    greater_than_or_equal_to: 0
+  }, on: :details_update
   validate :validate_interest_details, on: :details_update
+  validate :processing_fee_less_than_principal, on: :details_update
   validate :snapshot_fields_immutable, on: :update
 
   aasm column: :status, whiny_transitions: true do
@@ -173,6 +178,24 @@ class Loan < ApplicationRecord
     format("%.2f", principal_amount.to_d)
   end
 
+  def processing_fee_display
+    format("%.2f", processing_fee.to_d)
+  end
+
+  def net_disbursement_amount_cents
+    (principal_amount_cents || 0) - processing_fee_cents
+  end
+
+  def net_disbursement_amount
+    Money.new(net_disbursement_amount_cents, "INR")
+  end
+
+  def net_disbursement_display
+    return "Not provided yet" if principal_amount.blank?
+
+    format("%.2f", net_disbursement_amount.to_d)
+  end
+
   def tenure_display
     return "Not provided yet" if tenure_in_months.blank?
 
@@ -265,6 +288,14 @@ class Loan < ApplicationRecord
       when "total_interest_amount"
         errors.add(:total_interest_amount, "can't be blank") if total_interest_amount.blank?
         errors.add(:interest_rate, "must be blank when interest mode is total interest amount") if interest_rate.present?
+      end
+    end
+
+    def processing_fee_less_than_principal
+      return if processing_fee.blank? || principal_amount.blank?
+
+      if processing_fee_cents >= principal_amount_cents
+        errors.add(:processing_fee, "must be less than the principal amount")
       end
     end
 end

@@ -20,6 +20,24 @@
 - Spec: `evolution/specs/evo-01-spec.md`
 - Test report: `evolution/test-reports/evo-01-test-report.md`
 
+### EVO-02: Loan Processing Fee
+
+| Phase | Status | Date |
+|-------|--------|------|
+| [A] Analyze | Done (via PRD + codebase analysis) | 2026-04-20 |
+| [S] Scope | Done | 2026-04-20 |
+| [D] Design | Done | 2026-04-20 |
+| [I] Implement | Done | 2026-04-20 |
+| [T] Test | Done | 2026-04-20 |
+| [P] Deploy | Pending | — |
+
+**Branch:** `evolution/evo-02-loan-processing-fee`
+
+**Artifacts:**
+- Scenario: `evolution/scenarios/evo-02-loan-processing-fee.md`
+- Spec: `evolution/specs/evo-02-spec.md`
+- Test report: `evolution/test-reports/evo-02-test-report.md`
+
 ## Backlog
 
 _(No additional improvements scoped yet.)_

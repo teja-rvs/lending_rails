@@ -97,6 +97,7 @@ class LoansController < ApplicationController
     def loan_params
       params.require(:loan).permit(
         :principal_amount,
+        :processing_fee,
         :tenure_in_months,
         :repayment_frequency,
         :interest_mode,

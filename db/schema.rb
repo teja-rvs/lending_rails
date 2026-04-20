@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_085434) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_101150) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -161,6 +161,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_085434) do
     t.string "loan_number", null: false
     t.text "notes"
     t.bigint "principal_amount_cents"
+    t.bigint "processing_fee_cents", default: 0, null: false
     t.string "repayment_frequency"
     t.string "status", null: false
     t.integer "tenure_in_months"

@@ -2,6 +2,7 @@ module Loans
   class EvaluateDisbursementReadiness < ApplicationService
     FINANCIAL_DETAIL_ATTRIBUTES = %i[
       principal_amount
+      processing_fee
       tenure_in_months
       repayment_frequency
       interest_mode
@@ -86,7 +87,7 @@ module Loans
             key: :financial_details_complete,
             met: true,
             label: "Required financial details are complete",
-            detail: "Principal, tenure, repayment frequency, and interest details satisfy the pre-disbursement validation rules.",
+            detail: "Principal, processing fee, tenure, repayment frequency, and interest details satisfy the pre-disbursement validation rules.",
             next_step: "No action needed."
           )
         else

@@ -558,7 +558,7 @@ RSpec.describe "Loans", type: :request do
     assert_select "h2", text: "Disbursement"
     assert_select "dt", text: "Invoice number"
     assert_select "dd", text: invoice.invoice_number
-    assert_select "dt", text: "Disbursed amount"
+    assert_select "dt", text: "Disbursed amount (net)"
     expect(response.body).to match(/45,?000\.00/)
     assert_select "p", text: /Locked/
     assert_select "input[type='submit'][value='Save loan details']", count: 0

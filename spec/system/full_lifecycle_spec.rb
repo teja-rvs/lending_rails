@@ -90,7 +90,10 @@ RSpec.describe "Full lending lifecycle end-to-end", type: :system do
     expect(page).to have_content("2 months")
     expect(page).to have_content("Monthly")
 
-    # ── Phase 5: Progress through all three review steps ────────────────
+    # ── Phase 5: Progress through all four review steps ─────────────────
+    click_button "Approve step"
+    expect(page).to have_content("Review step approved successfully.")
+
     click_button "Approve step"
     expect(page).to have_content("Review step approved successfully.")
 
@@ -341,10 +344,11 @@ RSpec.describe "Full lending lifecycle end-to-end", type: :system do
     loan_application = LoanApplication.order(:created_at).last
     expect(page).to have_selector("h1", text: loan_application.application_number)
 
-    click_button "Reject application"
+    find("summary", text: "Reject step").click
+    fill_in "Rejection note", with: "Borrower does not meet eligibility criteria."
+    click_button "Confirm rejection"
 
-    expect(page).to have_content("Application rejected successfully.")
-    expect(page).to have_content("Rejected")
+    expect(page).to have_content("rejected")
     expect(page).not_to have_button("Approve application")
 
     # Verify borrower is eligible again after rejection

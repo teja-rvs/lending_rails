@@ -64,8 +64,8 @@ RSpec.describe Loans::GenerateRepaymentSchedule do
       expect(result).to be_success
       expect(total_interest_cents).to eq(562_500)
       expect(total_amount_cents).to eq(5_062_500)
-      expect(result.payments.first.total_amount_cents).to eq(421_875)
-      expect(result.payments.last.total_amount_cents).to eq(421_875)
+      expect(result.payments.first.total_amount_cents).to eq(421_900)
+      expect(result.payments.last.total_amount_cents).to eq(421_600)
     end
 
     it "uses the fixed total interest amount when that mode is selected" do
@@ -83,19 +83,20 @@ RSpec.describe Loans::GenerateRepaymentSchedule do
         :loan,
         :active,
         disbursement_date:,
-        principal_amount_cents: 100,
+        principal_amount_cents: 1_000_00,
         tenure_in_months: 3,
         repayment_frequency: "monthly",
         interest_mode: "total_interest_amount",
-        total_interest_amount_cents: 101
+        total_interest_amount_cents: 1_010_00
       )
 
       result = described_class.call(loan: loan)
 
       expect(result).to be_success
-      expect(result.payments.map(&:total_amount_cents)).to eq([ 67, 67, 67 ])
-      expect(result.payments.sum(&:principal_amount_cents)).to eq(100)
-      expect(result.payments.sum(&:interest_amount_cents)).to eq(101)
+      expect(result.payments.first(2).map(&:total_amount_cents)).to all(eq(670_00))
+      expect(result.payments.last.total_amount_cents).to eq(670_00)
+      expect(result.payments.sum(&:principal_amount_cents)).to eq(1_000_00)
+      expect(result.payments.sum(&:interest_amount_cents)).to eq(1_010_00)
       expect(result.payments).to all(satisfy { |payment| payment.interest_amount_cents >= 0 })
     end
 
@@ -118,11 +119,60 @@ RSpec.describe Loans::GenerateRepaymentSchedule do
       last_installment = result.payments.last
 
       expect(result).to be_success
-      expect(regular_installments.map(&:total_amount_cents)).to all(eq(441_666))
-      expect(last_installment.total_amount_cents).to eq(441_674)
+      expect(regular_installments.map(&:total_amount_cents)).to all(eq(441_700))
+      expect(last_installment.total_amount_cents).to eq(441_300)
+      expect(result.payments.sum(&:total_amount_cents)).to eq(5_300_000)
       expect(result.payments.sum(&:principal_amount_cents)).to eq(loan.principal_amount_cents)
       expect(result.payments.sum(&:interest_amount_cents)).to eq(800_000)
       expect(result.payments).to all(satisfy { |payment| payment.interest_amount_cents >= 0 })
+    end
+
+    it "rounds regular installments to whole rupees (multiples of 100 paise)" do
+      loan = create(:loan, :active, :with_total_interest_details, disbursement_date:)
+
+      result = described_class.call(loan: loan)
+      regular_installments = result.payments.first(11)
+
+      expect(result).to be_success
+      expect(regular_installments.map(&:total_amount_cents)).to all(satisfy { |c| (c % 100).zero? })
+    end
+
+    it "produces identical installments when the total divides evenly into whole rupees" do
+      loan = create(
+        :loan,
+        :active,
+        disbursement_date:,
+        principal_amount_cents: 300_000,
+        tenure_in_months: 3,
+        repayment_frequency: "monthly",
+        interest_mode: "total_interest_amount",
+        total_interest_amount_cents: 60_000
+      )
+
+      result = described_class.call(loan: loan)
+
+      expect(result).to be_success
+      expect(result.payments.map(&:total_amount_cents)).to all(eq(120_000))
+    end
+
+    it "applies banker's rounding at the rupee boundary (round half to even)" do
+      loan = create(
+        :loan,
+        :active,
+        disbursement_date:,
+        principal_amount_cents: 300_150,
+        tenure_in_months: 3,
+        repayment_frequency: "monthly",
+        interest_mode: "total_interest_amount",
+        total_interest_amount_cents: 0
+      )
+
+      result = described_class.call(loan: loan)
+
+      expect(result).to be_success
+      expect(result.payments.first.total_amount_cents).to eq(100_000)
+      expect(result.payments.last.total_amount_cents).to eq(100_150)
+      expect(result.payments.sum(&:total_amount_cents)).to eq(300_150)
     end
 
     it "blocks schedule generation when the loan is not active" do

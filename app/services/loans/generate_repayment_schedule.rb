@@ -136,14 +136,14 @@ module Loans
 
       def scheduled_installment_totals(total_amount_cents:, installment_count:)
         base_amount_cents = total_amount_cents / installment_count
+        rounded_base_cents = (base_amount_cents / 100.0).round(0, half: :even) * 100
 
         Array.new(installment_count) do |index|
-          installment_amount(
-            base_amount_cents: base_amount_cents,
-            total_amount_cents: total_amount_cents,
-            installment_number: index + 1,
-            installment_count: installment_count
-          )
+          if index + 1 < installment_count
+            rounded_base_cents
+          else
+            total_amount_cents - (rounded_base_cents * (installment_count - 1))
+          end
         end
       end
 
@@ -174,10 +174,5 @@ module Loans
         allocations
       end
 
-      def installment_amount(base_amount_cents:, total_amount_cents:, installment_number:, installment_count:)
-        return base_amount_cents unless installment_number == installment_count
-
-        total_amount_cents - (base_amount_cents * (installment_count - 1))
-      end
   end
 end

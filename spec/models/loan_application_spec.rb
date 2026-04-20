@@ -239,6 +239,7 @@ RSpec.describe LoanApplication, type: :model do
       loan_application = create(:loan_application, :in_progress)
       create(:review_step, :history_check, loan_application:, status: "approved")
       create(:review_step, :phone_screening, loan_application:, status: "approved")
+      create(:review_step, :request_details, loan_application:, status: "approved")
       create(:review_step, :verification, loan_application:, status: "approved")
 
       expect(loan_application).to be_approvable
@@ -248,6 +249,7 @@ RSpec.describe LoanApplication, type: :model do
       loan_application = create(:loan_application, :in_progress)
       create(:review_step, :history_check, loan_application:, status: "approved")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       expect(loan_application).not_to be_approvable
@@ -257,6 +259,7 @@ RSpec.describe LoanApplication, type: :model do
       loan_application = create(:loan_application, status: "open")
       create(:review_step, :history_check, loan_application:, status: "approved")
       create(:review_step, :phone_screening, loan_application:, status: "approved")
+      create(:review_step, :request_details, loan_application:, status: "approved")
       create(:review_step, :verification, loan_application:, status: "approved")
 
       expect(loan_application).not_to be_approvable

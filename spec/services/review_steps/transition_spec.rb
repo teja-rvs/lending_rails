@@ -6,6 +6,7 @@ RSpec.describe ReviewSteps::Transition do
       loan_application = create(:loan_application, status: "open")
       step = create(:review_step, :history_check, loan_application:, status: "initialized")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       expect {
@@ -19,6 +20,7 @@ RSpec.describe ReviewSteps::Transition do
       loan_application = create(:loan_application, status: "open")
       step = create(:review_step, :history_check, loan_application:, status: "initialized")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       expect(loan_application).to receive(:with_lock).and_call_original
@@ -73,6 +75,7 @@ RSpec.describe ReviewSteps::Transition do
       loan_application = create(:loan_application, status: "in progress")
       step = create(:review_step, :history_check, loan_application:, status: "approved")
       create(:review_step, :phone_screening, loan_application:, status: "approved")
+      create(:review_step, :request_details, loan_application:, status: "approved")
       create(:review_step, :verification, loan_application:, status: "approved")
 
       result = ReviewSteps::Approve.call(loan_application:, review_step_id: step.id)
@@ -85,6 +88,7 @@ RSpec.describe ReviewSteps::Transition do
       loan_application = create(:loan_application, status: "open")
       create(:review_step, :history_check, loan_application:, status: "initialized")
       non_current = create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       result = ReviewSteps::Approve.call(loan_application:, review_step_id: non_current.id)
@@ -97,8 +101,10 @@ RSpec.describe ReviewSteps::Transition do
       loan_application = create(:loan_application, status: "in progress")
       step = create(:review_step, :history_check, loan_application:, status: "rejected")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
+      create(:review_step, :verification, loan_application:, status: "initialized")
 
-      result = ReviewSteps::RequestDetails.call(loan_application:, review_step_id: step.id)
+      result = ReviewSteps::Approve.call(loan_application:, review_step_id: step.id)
 
       expect(result).to be_blocked
     end
@@ -107,6 +113,7 @@ RSpec.describe ReviewSteps::Transition do
       loan_application = create(:loan_application, status: "open")
       step = create(:review_step, :history_check, loan_application:, status: "initialized")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       ReviewSteps::Approve.call(loan_application:, review_step_id: step.id)
@@ -118,6 +125,7 @@ RSpec.describe ReviewSteps::Transition do
       loan_application = create(:loan_application, status: "in progress")
       step = create(:review_step, :history_check, loan_application:, status: "initialized")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       ReviewSteps::Approve.call(loan_application:, review_step_id: step.id)

@@ -16,6 +16,7 @@ RSpec.describe "LoanApplications", type: :request do
   def create_completed_review_workflow(loan_application)
     create(:review_step, :history_check, loan_application:, status: "approved")
     create(:review_step, :phone_screening, loan_application:, status: "approved")
+    create(:review_step, :request_details, loan_application:, status: "approved")
     create(:review_step, :verification, loan_application:, status: "approved")
   end
 
@@ -60,15 +61,12 @@ RSpec.describe "LoanApplications", type: :request do
   it "redirects unauthenticated visitors away from application decision actions" do
     approvable_application = create(:loan_application, status: "in progress")
     create_completed_review_workflow(approvable_application)
-    rejectable_application = create(:loan_application, status: "open")
+    cancellable_application = create(:loan_application, status: "open")
 
     patch approve_loan_application_path(approvable_application)
     expect(response).to redirect_to(new_session_path)
 
-    patch reject_loan_application_path(rejectable_application)
-    expect(response).to redirect_to(new_session_path)
-
-    patch cancel_loan_application_path(rejectable_application)
+    patch cancel_loan_application_path(cancellable_application)
     expect(response).to redirect_to(new_session_path)
   end
 
@@ -93,8 +91,15 @@ RSpec.describe "LoanApplications", type: :request do
     create(
       :review_step,
       loan_application: application,
-      step_key: "verification",
+      step_key: "request_details",
       position: 3,
+      status: "initialized"
+    )
+    create(
+      :review_step,
+      loan_application: application,
+      step_key: "verification",
+      position: 4,
       status: "initialized"
     )
 
@@ -111,6 +116,7 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "dd", text: "Phone screening"
     assert_select "li", text: /History check/
     assert_select "li", text: /Phone screening/
+    assert_select "li", text: /Request details/
     assert_select "li", text: /Verification/
     assert_select "h2", text: "Pre-decision application details"
     assert_select "label", text: "Requested amount"
@@ -291,40 +297,6 @@ RSpec.describe "LoanApplications", type: :request do
     assert_select "a", text: "Return to dashboard"
   end
 
-  it "renders borrower lending context within the application workspace" do
-    user = create(:user, email_address: "admin@example.com")
-    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
-    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
-    prior_application = create(:loan_application, borrower:, application_number: "APP-0009", status: "approved")
-    loan = create(:loan, borrower:, loan_application: prior_application, loan_number: "LOAN-0003", status: "active")
-
-    post session_path, params: { email_address: user.email_address, password: "password123!" }
-    get loan_application_path(application)
-
-    expect(response).to have_http_status(:ok)
-    assert_select "section#borrower-lending-context h2", text: "Borrower lending context"
-    assert_select "section#borrower-lending-context h3", text: "Borrower has active lending work"
-    assert_select "section#borrower-lending-context p", text: /1 blocking loan and 2 blocking applications linked to this borrower today\./
-    assert_select "section#borrower-lending-context a[href='#{borrower_path(borrower)}']", text: "View full borrower profile"
-    assert_select "section#borrower-lending-context a[href='#{loan_application_path(prior_application)}']", text: prior_application.application_number
-    assert_select "section#borrower-lending-context a[href='#{loan_path(loan)}']", text: loan.loan_number
-    assert_select "section#borrower-lending-context a[href='#{loan_application_path(application)}']", count: 0
-  end
-
-  it "shows an empty borrower lending context state when there is no prior history beyond the current application" do
-    user = create(:user, email_address: "admin@example.com")
-    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
-    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "open")
-
-    post session_path, params: { email_address: user.email_address, password: "password123!" }
-    get loan_application_path(application)
-
-    expect(response).to have_http_status(:ok)
-    assert_select "section#borrower-lending-context h2", text: "Borrower lending context"
-    assert_select "section#borrower-lending-context p", text: "No prior lending history for this borrower beyond the current application"
-    assert_select "section#borrower-lending-context a[href='#{borrower_path(borrower)}']", text: "View full borrower profile"
-  end
-
   it "backfills missing review steps on the application show page without duplicating them" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, application_number: "APP-0101", status: "open")
@@ -333,11 +305,11 @@ RSpec.describe "LoanApplications", type: :request do
 
     expect {
       get loan_application_path(application)
-    }.to change(ReviewStep, :count).by(3)
+    }.to change(ReviewStep, :count).by(4)
 
     expect(response).to have_http_status(:ok)
     expect(application.reload.review_steps.pluck(:step_key)).to eq(
-      %w[history_check phone_screening verification]
+      %w[history_check phone_screening request_details verification]
     )
 
     expect {
@@ -350,6 +322,7 @@ RSpec.describe "LoanApplications", type: :request do
     application = create(:loan_application, application_number: "APP-0101", status: "approved")
     create(:review_step, :history_check, loan_application: application, status: "approved")
     create(:review_step, :phone_screening, loan_application: application, status: "approved")
+    create(:review_step, :request_details, loan_application: application, status: "approved")
     create(:review_step, :verification, loan_application: application, status: "approved")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
@@ -358,7 +331,7 @@ RSpec.describe "LoanApplications", type: :request do
     expect(response).to have_http_status(:ok)
     assert_select "dt", text: "Active review step"
     assert_select "dd", text: "No active step"
-    assert_select "p", text: "Completed", count: 3
+    assert_select "p", text: "Completed", count: 4
     assert_select "p", text: "Current stage", count: 0
   end
 
@@ -367,6 +340,7 @@ RSpec.describe "LoanApplications", type: :request do
     application = create(:loan_application, application_number: "APP-0101", status: "open")
     current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
@@ -411,6 +385,7 @@ RSpec.describe "LoanApplications", type: :request do
     application = create(:loan_application, application_number: "APP-0101", status: "in progress")
     create(:review_step, :history_check, loan_application: application, status: "approved")
     create(:review_step, :phone_screening, loan_application: application, status: "rejected")
+    create(:review_step, :request_details, loan_application: application, status: "approved")
     create(:review_step, :verification, loan_application: application, status: "approved")
 
     sign_in_as(user)
@@ -423,42 +398,6 @@ RSpec.describe "LoanApplications", type: :request do
     expect(response).to have_http_status(:ok)
     assert_select "p", text: "This application can only be approved after every review step is approved."
     expect(application.reload.status).to eq("in progress")
-  end
-
-  it "lets a signed-in admin reject an application during review" do
-    user = create(:user, email_address: "admin@example.com")
-    application = create(:loan_application, application_number: "APP-0101", status: "open")
-
-    sign_in_as(user)
-    patch reject_loan_application_path(application), params: {
-      from: "applications",
-      decision_notes: "  Missing   supporting documents. "
-    }
-
-    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
-
-    follow_redirect!
-
-    expect(response).to have_http_status(:ok)
-    assert_select "p", text: "Application rejected successfully."
-    expect(application.reload.status).to eq("rejected")
-    expect(application.decision_notes).to eq("Missing supporting documents.")
-  end
-
-  it "blocks signed-in admins from rejecting an application after a final decision" do
-    user = create(:user, email_address: "admin@example.com")
-    application = create(:loan_application, application_number: "APP-0101", status: "approved")
-
-    sign_in_as(user)
-    patch reject_loan_application_path(application), params: { from: "applications" }
-
-    expect(response).to redirect_to(loan_application_path(application, from: "applications"))
-
-    follow_redirect!
-
-    expect(response).to have_http_status(:ok)
-    assert_select "p", text: "This application has already reached a final decision."
-    expect(application.reload.status).to eq("approved")
   end
 
   it "lets a signed-in admin cancel an application during review" do
@@ -516,31 +455,12 @@ RSpec.describe "LoanApplications", type: :request do
     expect(response).to redirect_to(loan_application_path(application, from: "applications"))
   end
 
-  it "lets a signed-in admin mark the current active review step as waiting for details" do
-    user = create(:user, email_address: "admin@example.com")
-    application = create(:loan_application, application_number: "APP-0101", status: "open")
-    current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
-    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
-    create(:review_step, :verification, loan_application: application, status: "initialized")
-
-    post session_path, params: { email_address: user.email_address, password: "password123!" }
-    patch request_details_loan_application_review_step_path(application, current_step)
-
-    expect(response).to redirect_to(loan_application_path(application))
-
-    follow_redirect!
-
-    expect(response).to have_http_status(:ok)
-    assert_select "p", text: "Review step marked as waiting for details."
-    assert_select "p", text: /waiting for details before review can continue/i
-    assert_select "dd", text: "History check"
-  end
-
   it "preserves the applications-list context after review-step progression" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, application_number: "APP-0101", status: "open")
     current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
@@ -554,6 +474,7 @@ RSpec.describe "LoanApplications", type: :request do
     application = create(:loan_application, application_number: "APP-0101", status: "in progress")
     create(:review_step, :history_check, loan_application: application, status: "initialized")
     non_current_step = create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
@@ -573,6 +494,7 @@ RSpec.describe "LoanApplications", type: :request do
     application = create(:loan_application, application_number: "APP-0101", status: "approved")
     current_step = create(:review_step, :history_check, loan_application: application, status: "initialized")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     post session_path, params: { email_address: user.email_address, password: "password123!" }
@@ -584,7 +506,6 @@ RSpec.describe "LoanApplications", type: :request do
 
     expect(response).to have_http_status(:ok)
     assert_select "p", text: "Review steps can no longer be updated after a final decision."
-    assert_select "p", text: "Review steps are locked because this application has already crossed a final decision boundary."
     assert_select "main form.button_to", count: 0
     expect(current_step.reload.status).to eq("initialized")
   end
@@ -762,6 +683,7 @@ RSpec.describe "LoanApplications", type: :request do
     application = create(:loan_application, application_number: "APP-0902", status: "in progress")
     create(:review_step, :history_check, loan_application: application, status: "approved")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     sign_in_as(user)

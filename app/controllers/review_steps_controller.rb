@@ -5,8 +5,14 @@ class ReviewStepsController < ApplicationController
     handle_result(ReviewSteps::Approve.call(loan_application: @loan_application, review_step_id: params[:id]))
   end
 
-  def request_details
-    handle_result(ReviewSteps::RequestDetails.call(loan_application: @loan_application, review_step_id: params[:id]))
+  def reject
+    handle_result(
+      ReviewSteps::Reject.call(
+        loan_application: @loan_application,
+        review_step_id: params[:id],
+        rejection_note: params[:rejection_note]
+      )
+    )
   end
 
   private

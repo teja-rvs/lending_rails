@@ -24,6 +24,7 @@ RSpec.describe "Loan application workflow", type: :system do
   def create_completed_review_workflow(loan_application)
     create(:review_step, :history_check, loan_application:, status: "approved")
     create(:review_step, :phone_screening, loan_application:, status: "approved")
+    create(:review_step, :request_details, loan_application:, status: "approved")
     create(:review_step, :verification, loan_application:, status: "approved")
   end
 
@@ -51,8 +52,9 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_content("Active review step")
     expect(page).to have_content("History check")
     expect(page).to have_content("Phone screening")
+    expect(page).to have_content("Request details")
     expect(page).to have_content("Verification")
-    expect(page).to have_content("Initialized", count: 3)
+    expect(page).to have_content("Initialized", count: 4)
 
     fill_in "Requested amount", with: "45000"
     fill_in "Requested tenure (months)", with: "10"
@@ -135,7 +137,7 @@ RSpec.describe "Loan application workflow", type: :system do
     visit loan_application_path(application)
 
     expect(page).to have_button("Approve application")
-    expect(page).to have_button("Reject application")
+    expect(page).not_to have_button("Reject application")
     expect(page).to have_button("Cancel application")
 
     click_button "Approve application"
@@ -149,7 +151,6 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_content("A loan has been created from this approved application")
     expect(page).to have_link("View loan → #{loan.loan_number}", href: loan_path(loan))
     expect(page).not_to have_button("Approve application")
-    expect(page).not_to have_button("Reject application")
     expect(page).not_to have_button("Cancel application")
 
     click_link "View loan → #{loan.loan_number}"
@@ -165,27 +166,32 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_link("View loan → #{loan.loan_number}", href: loan_path(loan))
   end
 
-  it "lets an admin reject an application during review" do
+  it "lets an admin reject a review step which auto-rejects the application" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, status: "in progress")
     create(:review_step, :history_check, loan_application: application, status: "approved")
-    create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    step = create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     sign_in_as(user)
     visit loan_application_path(application)
 
     expect(page).not_to have_button("Approve application")
-    expect(page).to have_button("Reject application")
+    expect(page).not_to have_button("Reject application")
     expect(page).to have_button("Cancel application")
 
-    click_button "Reject application"
+    within("li", text: "Phone screening") do
+      find("summary", text: "Reject step").click
+      fill_in "Rejection note", with: "Failed phone screening."
+      click_button "Confirm rejection"
+    end
 
     expect(page).to have_current_path(loan_application_path(application))
-    expect(page).to have_content("Application rejected successfully.")
+    expect(page).to have_content("Review step rejected. Application has been rejected.")
     expect(page).to have_content("Rejected")
+    expect(page).to have_content("Failed phone screening.")
     expect(page).not_to have_button("Approve application")
-    expect(page).not_to have_button("Reject application")
     expect(page).not_to have_button("Cancel application")
   end
 
@@ -194,13 +200,14 @@ RSpec.describe "Loan application workflow", type: :system do
     application = create(:loan_application, status: "open")
     create(:review_step, :history_check, loan_application: application, status: "initialized")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     sign_in_as(user)
     visit loan_application_path(application)
 
     expect(page).not_to have_button("Approve application")
-    expect(page).to have_button("Reject application")
+    expect(page).not_to have_button("Reject application")
     expect(page).to have_button("Cancel application")
 
     click_button "Cancel application"
@@ -209,7 +216,6 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_content("Application cancelled successfully.")
     expect(page).to have_content("Cancelled")
     expect(page).not_to have_button("Approve application")
-    expect(page).not_to have_button("Reject application")
     expect(page).not_to have_button("Cancel application")
   end
 
@@ -222,6 +228,7 @@ RSpec.describe "Loan application workflow", type: :system do
     )
     create(:review_step, :history_check, loan_application: application, status: "approved")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     sign_in_as(user)
@@ -229,7 +236,6 @@ RSpec.describe "Loan application workflow", type: :system do
 
     expect(page).to have_content("Borrower could not provide the required verification.")
     expect(page).not_to have_button("Approve application")
-    expect(page).not_to have_button("Reject application")
     expect(page).not_to have_button("Cancel application")
   end
 
@@ -251,58 +257,12 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_link(application.borrower.full_name, href: borrower_path(application.borrower))
   end
 
-  it "shows borrower lending context within the application workspace" do
-    user = create(:user, email_address: "admin@example.com")
-    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
-    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "in progress")
-    prior_application = create(:loan_application, borrower:, application_number: "APP-0009", status: "approved")
-    loan = create(:loan, borrower:, loan_application: prior_application, loan_number: "LOAN-0003", status: "active")
-
-    visit new_session_path
-
-    fill_in "Email address", with: user.email_address
-    fill_in "Password", with: "password123!"
-    click_button "Sign in"
-
-    visit loan_application_path(application)
-
-    within("#borrower-lending-context") do
-      expect(page).to have_content("Borrower lending context")
-      expect(page).to have_content("Borrower has active lending work")
-      expect(page).to have_link(prior_application.application_number, href: loan_application_path(prior_application))
-      expect(page).to have_link(loan.loan_number, href: loan_path(loan))
-      expect(page).to have_link("View full borrower profile", href: borrower_path(borrower))
-      expect(page).not_to have_link(application.application_number, href: loan_application_path(application))
-    end
-  end
-
-  it "shows a borrower-history empty state and lets the admin navigate to the borrower profile" do
-    user = create(:user, email_address: "admin@example.com")
-    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
-    application = create(:loan_application, borrower:, application_number: "APP-0101", status: "open")
-
-    visit new_session_path
-
-    fill_in "Email address", with: user.email_address
-    fill_in "Password", with: "password123!"
-    click_button "Sign in"
-
-    visit loan_application_path(application)
-
-    within("#borrower-lending-context") do
-      expect(page).to have_content("No prior lending history for this borrower beyond the current application")
-      click_link "View full borrower profile"
-    end
-
-    expect(page).to have_current_path(borrower_path(borrower))
-    expect(page).to have_selector("h1", text: borrower.full_name)
-  end
-
   it "lets an admin progress the current active review step from the application workspace" do
     user = create(:user, email_address: "admin@example.com")
     application = create(:loan_application, status: "open")
     create(:review_step, :history_check, loan_application: application, status: "initialized")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
     visit new_session_path
@@ -320,25 +280,20 @@ RSpec.describe "Loan application workflow", type: :system do
     expect(page).to have_content("In Progress")
   end
 
-  it "shows blocked-state guidance when the current step is waiting for details" do
+  it "shows the View borrower history link on the history check step card" do
     user = create(:user, email_address: "admin@example.com")
-    application = create(:loan_application, status: "open")
+    borrower = create(:borrower, full_name: "Asha Patel", phone_number: "98765 43210")
+    application = create(:loan_application, borrower:, status: "open")
     create(:review_step, :history_check, loan_application: application, status: "initialized")
     create(:review_step, :phone_screening, loan_application: application, status: "initialized")
+    create(:review_step, :request_details, loan_application: application, status: "initialized")
     create(:review_step, :verification, loan_application: application, status: "initialized")
 
-    visit new_session_path
-
-    fill_in "Email address", with: user.email_address
-    fill_in "Password", with: "password123!"
-    click_button "Sign in"
-
+    sign_in_as(user)
     visit loan_application_path(application)
-    click_button "Request details"
 
-    expect(page).to have_current_path(loan_application_path(application))
-    expect(page).to have_content("Review step marked as waiting for details.")
-    expect(page).to have_content("waiting for details before review can continue")
-    expect(page).to have_content("History check")
+    within("li", text: "History check") do
+      expect(page).to have_link("View borrower history →", href: borrower_path(borrower))
+    end
   end
 end

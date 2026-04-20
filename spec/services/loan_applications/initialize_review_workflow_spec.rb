@@ -11,7 +11,8 @@ RSpec.describe LoanApplications::InitializeReviewWorkflow do
         [
           [ "history_check", 1, "initialized" ],
           [ "phone_screening", 2, "initialized" ],
-          [ "verification", 3, "initialized" ]
+          [ "request_details", 3, "initialized" ],
+          [ "verification", 4, "initialized" ]
         ]
       )
     end
@@ -22,7 +23,7 @@ RSpec.describe LoanApplications::InitializeReviewWorkflow do
       expect {
         described_class.call(loan_application:)
         described_class.call(loan_application:)
-      }.to change(ReviewStep, :count).by(3)
+      }.to change(ReviewStep, :count).by(4)
     end
   end
 end

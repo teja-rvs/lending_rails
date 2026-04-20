@@ -1,5 +1,5 @@
 class LoanApplicationsController < ApplicationController
-  before_action :set_loan_application, only: %i[show update approve reject cancel]
+  before_action :set_loan_application, only: %i[show update approve cancel]
 
   def index
     @search_query = params[:q].to_s.squish
@@ -25,7 +25,6 @@ class LoanApplicationsController < ApplicationController
   def show
     LoanApplications::InitializeReviewWorkflow.call(loan_application: @loan_application)
     @loan_application = LoanApplication.includes(:borrower, :review_steps, :loans).find(@loan_application.id)
-    load_borrower_history
   end
 
   def update
@@ -39,7 +38,6 @@ class LoanApplicationsController < ApplicationController
     elsif result.locked?
       redirect_to loan_application_redirect_path, alert: @loan_application.errors.full_messages.to_sentence
     else
-      load_borrower_history
       render :show, status: :unprocessable_content
     end
   end
@@ -52,13 +50,6 @@ class LoanApplicationsController < ApplicationController
     else
       redirect_to loan_application_redirect_path, alert: result.error
     end
-  end
-
-  def reject
-    handle_decision_result(
-      LoanApplications::Reject.call(loan_application: @loan_application, decision_notes: params[:decision_notes]),
-      success_message: "Application rejected successfully."
-    )
   end
 
   def cancel
@@ -81,13 +72,6 @@ class LoanApplicationsController < ApplicationController
         :proposed_interest_mode,
         :request_notes
       )
-    end
-
-    def load_borrower_history
-      @borrower_history = Borrowers::HistoryQuery.call(id: @loan_application.borrower_id)
-      @borrower_history_records = @borrower_history.linked_records.reject do |record|
-        record.type == "application" && record.identifier == @loan_application.application_number
-      end
     end
 
     def normalized_status_filter

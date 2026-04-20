@@ -6,6 +6,7 @@ RSpec.describe ReviewSteps::Approve do
       loan_application = create(:loan_application, status: "open")
       current_step = create(:review_step, :history_check, loan_application:, status: "initialized")
       next_step = create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       result = described_class.call(loan_application:, review_step_id: current_step.id)
@@ -21,6 +22,7 @@ RSpec.describe ReviewSteps::Approve do
       loan_application = create(:loan_application, status: "in progress")
       current_step = create(:review_step, :history_check, loan_application:, status: "waiting for details")
       next_step = create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       result = described_class.call(loan_application:, review_step_id: current_step.id)
@@ -34,6 +36,7 @@ RSpec.describe ReviewSteps::Approve do
       loan_application = create(:loan_application, status: "in progress")
       create(:review_step, :history_check, loan_application:, status: "initialized")
       non_current_step = create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       result = described_class.call(loan_application:, review_step_id: non_current_step.id)
@@ -48,6 +51,7 @@ RSpec.describe ReviewSteps::Approve do
       loan_application = create(:loan_application, status: "open")
       current_step = create(:review_step, :history_check, loan_application:, status: "initialized")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       expect(loan_application).to receive(:with_lock).and_call_original
@@ -59,6 +63,7 @@ RSpec.describe ReviewSteps::Approve do
       loan_application = create(:loan_application, status: "approved")
       current_step = create(:review_step, :history_check, loan_application:, status: "initialized")
       create(:review_step, :phone_screening, loan_application:, status: "initialized")
+      create(:review_step, :request_details, loan_application:, status: "initialized")
       create(:review_step, :verification, loan_application:, status: "initialized")
 
       result = described_class.call(loan_application:, review_step_id: current_step.id)

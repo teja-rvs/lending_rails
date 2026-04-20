@@ -8,12 +8,12 @@ RSpec.describe ReviewStep, type: :model do
   end
 
   describe "workflow definition" do
-    it "exposes the fixed MVP review sequence from one canonical place" do
+    it "exposes the fixed review sequence from one canonical place" do
       expect(described_class.workflow_definition.map(&:step_key)).to eq(
-        %w[history_check phone_screening verification]
+        %w[history_check phone_screening request_details verification]
       )
       expect(described_class.workflow_definition.map(&:label)).to eq(
-        [ "History check", "Phone screening", "Verification" ]
+        [ "History check", "Phone screening", "Request details", "Verification" ]
       )
     end
   end
@@ -87,8 +87,15 @@ RSpec.describe ReviewStep, type: :model do
       create(
         :review_step,
         loan_application:,
-        step_key: "verification",
+        step_key: "request_details",
         position: 3,
+        status: "initialized"
+      )
+      create(
+        :review_step,
+        loan_application:,
+        step_key: "verification",
+        position: 4,
         status: "initialized"
       )
 
@@ -99,6 +106,7 @@ RSpec.describe ReviewStep, type: :model do
       loan_application = create(:loan_application)
       create(:review_step, :history_check, loan_application:, status: "approved")
       create(:review_step, :phone_screening, loan_application:, status: "approved")
+      create(:review_step, :request_details, loan_application:, status: "approved")
       create(:review_step, :verification, loan_application:, status: "rejected")
 
       expect(described_class.active_for(loan_application.review_steps)).to be_nil

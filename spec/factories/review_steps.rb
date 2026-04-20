@@ -15,9 +15,14 @@ FactoryBot.define do
       position { 2 }
     end
 
+    trait :request_details do
+      step_key { "request_details" }
+      position { 3 }
+    end
+
     trait :verification do
       step_key { "verification" }
-      position { 3 }
+      position { 4 }
     end
   end
 end

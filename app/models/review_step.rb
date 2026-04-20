@@ -15,7 +15,8 @@ class ReviewStep < ApplicationRecord
   WORKFLOW_DEFINITION = [
     WorkflowDefinition.new(step_key: "history_check", label: "History check", position: 1),
     WorkflowDefinition.new(step_key: "phone_screening", label: "Phone screening", position: 2),
-    WorkflowDefinition.new(step_key: "verification", label: "Verification", position: 3)
+    WorkflowDefinition.new(step_key: "request_details", label: "Request details", position: 3),
+    WorkflowDefinition.new(step_key: "verification", label: "Verification", position: 4)
   ].freeze
 
   belongs_to :loan_application
@@ -23,6 +24,7 @@ class ReviewStep < ApplicationRecord
 
   normalizes :step_key, with: ->(value) { value.to_s.squish.presence&.downcase }
   normalizes :status, with: ->(value) { value.to_s.squish.presence&.downcase }
+  normalizes :rejection_note, with: ->(value) { value.to_s.squish.presence }
 
   scope :ordered, -> { order(:position) }
 
@@ -75,5 +77,13 @@ class ReviewStep < ApplicationRecord
 
   def final?
     FINAL_STATUSES.include?(status)
+  end
+
+  def history_check?
+    step_key == "history_check"
+  end
+
+  def request_details?
+    step_key == "request_details"
   end
 end

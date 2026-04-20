@@ -5,6 +5,7 @@ RSpec.describe LoanApplications::Approve do
     def create_approved_workflow(loan_application)
       create(:review_step, :history_check, loan_application:, status: "approved")
       create(:review_step, :phone_screening, loan_application:, status: "approved")
+      create(:review_step, :request_details, loan_application:, status: "approved")
       create(:review_step, :verification, loan_application:, status: "approved")
     end
 
@@ -35,6 +36,7 @@ RSpec.describe LoanApplications::Approve do
       loan_application = create(:loan_application, status: "in progress")
       create(:review_step, :history_check, loan_application:, status: "approved")
       create(:review_step, :phone_screening, loan_application:, status: "rejected")
+      create(:review_step, :request_details, loan_application:, status: "approved")
       create(:review_step, :verification, loan_application:, status: "approved")
 
       result = nil

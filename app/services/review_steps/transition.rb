@@ -29,8 +29,13 @@ module ReviewSteps
         return blocked_result("Only the current active review step can be updated.") unless review_step.id == active_step.id
         return blocked_result(blocked_status_message(review_step)) unless allowed_statuses.include?(review_step.status)
 
+        validation_error = validate_before_transition
+        return blocked_result(validation_error) if validation_error.present?
+
+        apply_step_changes(review_step)
         review_step.update!(status: next_status)
         promote_application_status!
+        after_step_transition(review_step)
         loan_application.review_steps.reset
 
         success_result(review_step)
@@ -78,6 +83,16 @@ module ReviewSteps
 
       def success_message
         raise NotImplementedError
+      end
+
+      def validate_before_transition
+        nil
+      end
+
+      def apply_step_changes(_review_step)
+      end
+
+      def after_step_transition(_review_step)
       end
   end
 end

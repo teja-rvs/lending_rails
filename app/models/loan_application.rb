@@ -132,6 +132,13 @@ class LoanApplication < ApplicationRecord
     ReviewStep.active_for(review_steps)
   end
 
+  def pre_decision_details_complete?
+    requested_amount.present? &&
+      requested_tenure_in_months.present? &&
+      requested_repayment_frequency.present? &&
+      proposed_interest_mode.present?
+  end
+
   def loan
     return loans.first if association(:loans).loaded?
 

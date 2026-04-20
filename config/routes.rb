@@ -11,13 +11,14 @@ Rails.application.routes.draw do
   } do
     member do
       patch :approve
-      patch :reject
       patch :cancel
     end
 
     resources :review_steps, only: [] do
-      patch :approve, on: :member
-      patch :request_details, on: :member
+      member do
+        patch :approve
+        patch :reject
+      end
     end
   end
   resources :loans, only: %i[index show update], constraints: {

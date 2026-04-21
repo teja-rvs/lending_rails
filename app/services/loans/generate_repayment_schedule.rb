@@ -87,25 +87,17 @@ module Loans
         when "monthly"
           (1..loan.tenure_in_months).map { |offset| loan.disbursement_date + offset.months }
         when "bi-weekly"
-          rolling_due_dates(2.weeks)
+          fixed_interval_due_dates(interval: 2.weeks, multiplier: 2)
         when "weekly"
-          rolling_due_dates(1.week)
+          fixed_interval_due_dates(interval: 1.week, multiplier: 4)
         else
           []
         end
       end
 
-      def rolling_due_dates(interval)
-        due_dates = []
-        current_due_date = loan.disbursement_date + interval
-        schedule_end_date = loan.disbursement_date + loan.tenure_in_months.months
-
-        while current_due_date <= schedule_end_date
-          due_dates << current_due_date
-          current_due_date += interval
-        end
-
-        due_dates
+      def fixed_interval_due_dates(interval:, multiplier:)
+        installment_count = loan.tenure_in_months * multiplier
+        (1..installment_count).map { |offset| loan.disbursement_date + (interval * offset) }
       end
 
       def create_payments!(due_dates:, installment_totals:)

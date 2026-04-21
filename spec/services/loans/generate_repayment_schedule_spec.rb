@@ -20,7 +20,7 @@ RSpec.describe Loans::GenerateRepaymentSchedule do
       expect(loan.reload.payments.ordered).to eq(result.payments)
     end
 
-    it "supports bi-weekly schedules through the full loan tenure window" do
+    it "generates exactly tenure_in_months * 2 payments for bi-weekly schedules" do
       loan = create(
         :loan,
         :active,
@@ -32,12 +32,12 @@ RSpec.describe Loans::GenerateRepaymentSchedule do
       result = described_class.call(loan: loan)
 
       expect(result).to be_success
-      expect(result.payments.size).to eq(26)
+      expect(result.payments.size).to eq(24)
       expect(result.payments.first.due_date).to eq(Date.new(2026, 4, 30))
-      expect(result.payments.last.due_date).to eq(Date.new(2027, 4, 15))
+      expect(result.payments.last.due_date).to eq(Date.new(2027, 3, 18))
     end
 
-    it "supports weekly schedules through the full loan tenure window" do
+    it "generates exactly tenure_in_months * 4 payments for weekly schedules" do
       loan = create(
         :loan,
         :active,
@@ -49,9 +49,27 @@ RSpec.describe Loans::GenerateRepaymentSchedule do
       result = described_class.call(loan: loan)
 
       expect(result).to be_success
-      expect(result.payments.size).to eq(52)
+      expect(result.payments.size).to eq(48)
       expect(result.payments.first.due_date).to eq(Date.new(2026, 4, 23))
-      expect(result.payments.last.due_date).to eq(Date.new(2027, 4, 15))
+      expect(result.payments.last.due_date).to eq(Date.new(2027, 3, 18))
+    end
+
+    it "generates 18 payments for a 9-month bi-weekly loan" do
+      loan = create(
+        :loan,
+        :active,
+        :with_details,
+        disbursement_date:,
+        tenure_in_months: 9,
+        repayment_frequency: "bi-weekly"
+      )
+
+      result = described_class.call(loan: loan)
+
+      expect(result).to be_success
+      expect(result.payments.size).to eq(18)
+      expect(result.payments.first.due_date).to eq(Date.new(2026, 4, 30))
+      expect(result.payments.last.due_date).to eq(Date.new(2026, 12, 24))
     end
 
     it "calculates simple interest from the annual rate for rate-based loans" do

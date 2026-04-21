@@ -1,0 +1,40 @@
+name: lending-rails
+
+services:
+  db:
+    image: postgres:17-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    environment:
+      POSTGRES_USER: lending_rails
+      POSTGRES_PASSWORD: lending_rails
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lending_rails"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: .
+    ports:
+      - "3000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env.docker
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: lending_rails
+      DB_PASSWORD: lending_rails
+      LENDING_RAILS_DATABASE_PASSWORD: lending_rails
+      RAILS_LOG_LEVEL: debug
+      ADMIN_EMAIL_ADDRESSES: admin@example.com
+      ADMIN_PASSWORD: password123
+    volumes:
+      - rails_storage:/rails/storage
+
+volumes:
+  postgres_data:
+  rails_storage:

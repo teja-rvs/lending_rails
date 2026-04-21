@@ -1,3 +1,5 @@
+return unless defined?(StrongMigrations)
+
 # Mark existing migrations as safe
 StrongMigrations.start_after = 20260330173543
 

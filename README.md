@@ -60,6 +60,40 @@ The local PostgreSQL container in `compose.yaml` uses the same variables, so the
 
 `ADMIN_PASSWORD` should be set locally or via Rails credentials (`admin.password`) before running `bin/rails db:seed` or `bin/setup`.
 
+## Running with Docker (for testing / handoff)
+
+If you only need to run the application (no local Ruby/Rails install required), you just need **Docker Desktop**.
+
+1. Start the application:
+
+```bash
+docker compose -f docker-compose.test.yml up --build
+```
+
+2. Open **http://localhost:3000** in your browser.
+
+3. Log in with:
+
+| Field    | Value               |
+|----------|---------------------|
+| Email    | `admin@example.com` |
+| Password | `password123`       |
+
+The first run takes a few minutes to build the image. Subsequent starts are fast.
+
+### Stopping
+
+```bash
+docker compose -f docker-compose.test.yml down
+```
+
+### Full reset (wipe database and start fresh)
+
+```bash
+docker compose -f docker-compose.test.yml down -v
+docker compose -f docker-compose.test.yml up --build
+```
+
 ## Common Commands
 
 Prepare the database:

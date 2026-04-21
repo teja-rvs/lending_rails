@@ -1,0 +1,4 @@
+CREATE DATABASE lending_rails_production;
+CREATE DATABASE lending_rails_production_cache;
+CREATE DATABASE lending_rails_production_queue;
+CREATE DATABASE lending_rails_production_cable;
